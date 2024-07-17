@@ -3,7 +3,6 @@ package bizworks.backend.services;
 import bizworks.backend.models.Employee;
 import bizworks.backend.models.Salary;
 import bizworks.backend.repository.SalaryRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
