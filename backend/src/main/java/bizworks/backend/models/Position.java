@@ -17,6 +17,7 @@ public class Position {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String positionName;
+    private String description;
 
     @OneToMany(mappedBy = "position", cascade = CascadeType.MERGE)
     private List<Employee> employees;

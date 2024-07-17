@@ -22,9 +22,8 @@ public class Salary {
     private double bonusSalary;
     private double overtimeSalary;
     private double totalSalaryMonth;
-    private Date dateSalary;
     private double totalSalaryYear;
-
+    private Date dateSalary;
     @ManyToOne
     @JoinColumn(name = "empId")
     private Employee employee;
