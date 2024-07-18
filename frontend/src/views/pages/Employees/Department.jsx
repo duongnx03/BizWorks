@@ -22,23 +22,24 @@ const Department = () => {
     id: user.id,
     department: user.department,
   }));
+
   const columns = [
     {
       title: "#",
       dataIndex: "id",
-      sorter: (a, b) => a.id.length - b.id.length,
+      sorter: (a, b) => a.id - b.id,
       width: "10%",
     },
     {
       title: "Department Name",
       dataIndex: "department",
       sorter: (a, b) => a.department.length - b.department.length,
-      width: "80%",
+      width: "70%",
     },
     {
       title: "Action",
       className: "text-end",
-      render: () => (
+      render: (text, record) => (
         <div className="dropdown dropdown-action text-end">
           <Link
             to="#"
@@ -71,7 +72,9 @@ const Department = () => {
       sorter: (a, b) => a.length - b.length,
       width: "10%",
     },
+
   ];
+
   return (
     <>
       <div className="page-wrapper">
