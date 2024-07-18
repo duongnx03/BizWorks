@@ -1,1 +1,1 @@
-export const base_url = "/react/template";
+export const base_url = "/react/template-rtl";
