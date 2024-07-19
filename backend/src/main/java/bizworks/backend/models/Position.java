@@ -1,5 +1,6 @@
-package bizworks.backend.models;
+package com.example.projects.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,12 +18,12 @@ public class Position {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String positionName;
-    private String description;
 
-    @OneToMany(mappedBy = "position", cascade = CascadeType.MERGE)
-    private List<Employee> employees;
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
+    @JsonIgnoreProperties("positions")
     private Department department;
+
+    @OneToMany(mappedBy = "position", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Employee> employees;
 }

@@ -1,10 +1,13 @@
-package bizworks.backend.models;
+package com.example.projects.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -17,11 +20,11 @@ public class Department {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String departmentName;
-    private String description;
 
-    @OneToMany(mappedBy = "department", cascade = CascadeType.MERGE)
-    private List<Position> positions;
+    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("department") // Ignore the 'department' property in Position during serialization
+    private List<Position> positions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "department", cascade = CascadeType.MERGE)
+    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Employee> employees;
 }
