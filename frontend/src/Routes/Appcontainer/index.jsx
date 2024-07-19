@@ -196,6 +196,8 @@ import RecentFiles from "../../views/pages/MainPages/Apps/FileManager/recentFile
 import EmailContent from "../../views/pages/MainPages/Apps/Email/emailContent.jsx";
 import EmailView from "../../views/pages/MainPages/Apps/Email/emailView.jsx";
 import DealsDetails from "../../views/pages/Crm/DealsDetails.jsx";
+import ViolationType from "../../views/pages/Employees/ViolationType.jsx";
+import Violation from "../../views/pages/Employees/Violation.jsx";
 
 const AppContainer = () => {
   useEffect(() => {
@@ -909,6 +911,17 @@ const AppContainer = () => {
       path: "deals-details",
       element: <DealsDetails />,
     },
+    {
+      id: 132,
+      path: "violationTypes",
+      element: <ViolationType />,
+    },
+    {
+      id: 133,
+      path: "violations",
+      element: <Violation />,
+    },
+    
   ];
 
   const ChatRoutingeObjects = [
@@ -1151,6 +1164,7 @@ const AppContainer = () => {
       path: "users",
       element: <Users />,
     },
+    
   ];
  
   const SidebarLayout = () => (

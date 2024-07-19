@@ -135,6 +135,14 @@ export const SidebarData = [
           //   route: "/designations",
           // },
           {
+            menuValue: 'ViolationType',
+            route: "/violationTypes",
+          }, 
+          {
+            menuValue: 'Violation',
+            route: "/violations",
+          }, 
+          {
             menuValue: 'Timesheet',
             route: "/timesheet",
           },
