@@ -136,7 +136,7 @@ export const SidebarData = [
           // },
           {
             menuValue: 'ViolationType',
-            route: "/violationTypes",
+            route: "/violation-types",
           }, 
           {
             menuValue: 'Violation',

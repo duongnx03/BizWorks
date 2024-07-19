@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Table } from "antd";
 import axios from "axios";
@@ -9,18 +9,60 @@ import ViolationTypeModal from "../../../components/modelpopup/ViolationTypeModa
 import { base_url } from "../../../base_urls";
 
 const ViolationType = () => {
-  const [users, setUsers] = useState([]);
+  const [violationTypes, setViolationTypes] = useState([]);
+  const [editData, setEditData] = useState(null);
+  const [deleteId, setDeleteId] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const fetchViolationTypes = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/violation-types`);
+      setViolationTypes(response.data);
+    } catch (error) {
+      console.error("Error fetching violation types:", error);
+    }
+  };
 
   useEffect(() => {
-    axios
-      .get(base_url + "/api/department.json")
-      .then((res) => setUsers(res.data));
+    fetchViolationTypes();
   }, []);
 
-  const userElements = users.map((user, index) => ({
+  const handleAdd = async (data) => {
+    try {
+      await axios.post(`${base_url}/api/violation-types`, data);
+      fetchViolationTypes();
+    } catch (error) {
+      console.error("Error adding violation type:", error);
+    }
+  };
+
+  const handleEdit = async (id, data) => {
+    try {
+      await axios.put(`${base_url}/api/violation-types/${id}`, data);
+      fetchViolationTypes();
+    } catch (error) {
+      console.error("Error editing violation type:", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`${base_url}/api/violation-types/${deleteId}`);
+      fetchViolationTypes();
+      setDeleteId(null); // Clear the delete ID after successful deletion
+    } catch (error) {
+      console.error("Error deleting violation type:", error);
+    }
+  };
+  const handleClose = () => {
+    setShowDeleteModal(false);
+  };
+
+  const userElements = violationTypes.map((item, index) => ({
     key: index,
-    id: user.id,
-    department: user.department,
+    id: item.id,
+    violationType: item.type,
+    violationMoney: item.violationMoney,
   }));
 
   const columns = [
@@ -37,12 +79,12 @@ const ViolationType = () => {
       width: "70%",
     },
     {
-        title: "Violation Money",
-        dataIndex: "violationMoney", // Add this line
-        render: (text) => <span>${text}</span>, // Format as currency
-        sorter: (a, b) => a.violationMoney - b.violationMoney, // Add this line
-        width: "40%", // Adjust width as needed
-      },
+      title: "Violation Money",
+      dataIndex: "violationMoney",
+      render: (text) => <span>${text}</span>,
+      sorter: (a, b) => a.violationMoney - b.violationMoney,
+      width: "40%",
+    },
     {
       title: "Action",
       className: "text-end",
@@ -62,6 +104,7 @@ const ViolationType = () => {
               to="#"
               data-bs-toggle="modal"
               data-bs-target="#edit_violationType"
+              onClick={() => setEditData(record)}
             >
               <i className="fa fa-pencil m-r-5" /> Edit
             </Link>
@@ -70,6 +113,7 @@ const ViolationType = () => {
               to="#"
               data-bs-toggle="modal"
               data-bs-target="#delete"
+              onClick={() => setDeleteId(record.id)}
             >
               <i className="fa fa-trash m-r-5" /> Delete
             </Link>
@@ -79,7 +123,6 @@ const ViolationType = () => {
       sorter: (a, b) => a.length - b.length,
       width: "10%",
     },
-
   ];
 
   return (
@@ -111,8 +154,16 @@ const ViolationType = () => {
         </div>
       </div>
 
-      <ViolationTypeModal />
-      <DeleteModal Name="Delete ViolationType" />
+      <ViolationTypeModal
+        onAdd={handleAdd}
+        onEdit={handleEdit}
+        editData={editData}
+      />
+      <DeleteModal
+        Name="Delete ViolationType"
+        onConfirm={handleDelete}
+        onClose={handleClose}
+      />
     </>
   );
 };

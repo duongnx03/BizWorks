@@ -1,1 +1,1 @@
-export const base_url = "/react/template-rtl";
+export const base_url = "http://localhost:8080";

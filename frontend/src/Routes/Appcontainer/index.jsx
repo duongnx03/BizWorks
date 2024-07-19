@@ -913,7 +913,7 @@ const AppContainer = () => {
     },
     {
       id: 132,
-      path: "violationTypes",
+      path: "violation-types",
       element: <ViolationType />,
     },
     {
