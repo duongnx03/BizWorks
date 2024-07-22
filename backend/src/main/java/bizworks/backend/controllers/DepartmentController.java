@@ -1,8 +1,8 @@
-package com.example.projects.controllers;
+package com.example.bizwebsite.controllers;
 
-import com.example.projects.dtos.DepartmentDTO;
-import com.example.projects.models.Department;
-import com.example.projects.services.DepartmentService;
+import com.example.bizwebsite.dtos.DepartmentDTO;
+import com.example.bizwebsite.models.Department;
+import com.example.bizwebsite.services.DepartmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/departments")
+@CrossOrigin(origins = "http://localhost:3000")
 public class DepartmentController {
 
     @Autowired
@@ -24,21 +25,23 @@ public class DepartmentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Department> getDepartmentById(@PathVariable Long id) {
+    public ResponseEntity<DepartmentDTO> getDepartmentById(@PathVariable Long id) {
         return departmentService.getDepartmentById(id)
-                .map(ResponseEntity::ok)
+                .map(department -> ResponseEntity.ok(departmentService.convertToDTO(department)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<Department> createDepartment(@RequestBody DepartmentDTO departmentDTO) {
+    public ResponseEntity<DepartmentDTO> createDepartment(@RequestBody DepartmentDTO departmentDTO) {
         Department createdDepartment = departmentService.saveDepartment(departmentDTO);
-        return new ResponseEntity<>(createdDepartment, HttpStatus.CREATED);
+        return new ResponseEntity<>(departmentService.convertToDTO(createdDepartment), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Department> updateDepartment(@PathVariable Long id, @RequestBody Department departmentDetails) {
-        return ResponseEntity.ok(departmentService.updateDepartment(id, departmentDetails));
+    public ResponseEntity<DepartmentDTO> updateDepartment(@PathVariable Long id,
+            @RequestBody Department departmentDetails) {
+        Department updatedDepartment = departmentService.updateDepartment(id, departmentDetails);
+        return ResponseEntity.ok(departmentService.convertToDTO(updatedDepartment));
     }
 
     @DeleteMapping("/{id}")

@@ -1,4 +1,4 @@
-package com.example.projects.dtos;
+package com.example.bizwebsite.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,4 +12,6 @@ public class PositionDTO {
     private String positionName;
     private Long departmentId;
     private String departmentName;
+    private EmployeeDTO employee; // Thêm trường employeeId
+
 }
