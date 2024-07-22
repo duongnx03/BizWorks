@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Table } from "antd";
+import { Link, useNavigate } from "react-router-dom";
+import { Table, message, Button } from "antd";
 import axios from "axios";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import DeleteModal from "../../../components/modelpopup/DeleteModal";
@@ -9,18 +9,33 @@ import DepartmentModal from "../../../components/modelpopup/DepartmentModal";
 import { base_url } from "../../../base_urls";
 
 const Department = () => {
-  const [users, setUsers] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    axios
-      .get(base_url + "/api/department.json")
-      .then((res) => setUsers(res.data));
+    fetchDepartments();
   }, []);
 
-  const userElements = users.map((user, index) => ({
+  const fetchDepartments = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/departments`);
+      setDepartments(response.data);
+      setLoading(false);
+    } catch (error) {
+      message.error("Failed to fetch departments");
+      setLoading(false);
+    }
+  };
+
+  const handleDepartmentCreated = () => {
+    fetchDepartments(); // Refresh department list after creation
+  };
+
+  const departmentElements = departments.map((department, index) => ({
     key: index,
-    id: user.id,
-    department: user.department,
+    id: department.id,
+    department: department.departmentName,
   }));
 
   const columns = [
@@ -33,11 +48,11 @@ const Department = () => {
     {
       title: "Department Name",
       dataIndex: "department",
-      sorter: (a, b) => a.department.length - b.department.length,
+      sorter: (a, b) => a.department.localeCompare(b.department),
       width: "70%",
     },
     {
-      title: "Action",
+      title: "Actions",
       className: "text-end",
       render: (text, record) => (
         <div className="dropdown dropdown-action text-end">
@@ -50,14 +65,14 @@ const Department = () => {
             <i className="material-icons">more_vert</i>
           </Link>
           <div className="dropdown-menu dropdown-menu-right">
-            <Link
+            {/* <Link
               className="dropdown-item"
               to="#"
               data-bs-toggle="modal"
               data-bs-target="#edit_department"
             >
               <i className="fa fa-pencil m-r-5" /> Edit
-            </Link>
+            </Link> */}
             <Link
               className="dropdown-item"
               to="#"
@@ -67,12 +82,13 @@ const Department = () => {
               <i className="fa fa-trash m-r-5" /> Delete
             </Link>
           </div>
+          {/* <Button onClick={() => navigate(`/positions/${record.id}`)}>
+            View Positions
+          </Button> */}
         </div>
       ),
-      sorter: (a, b) => a.length - b.length,
-      width: "10%",
+      width: "20%",
     },
-
   ];
 
   return (
@@ -94,7 +110,8 @@ const Department = () => {
                 <SearchBox />
                 <Table
                   columns={columns}
-                  dataSource={userElements?.length > 0 ? userElements : []}
+                  dataSource={departmentElements}
+                  loading={loading}
                   className="table-striped"
                   rowKey={(record) => record.id}
                 />
@@ -104,8 +121,12 @@ const Department = () => {
         </div>
       </div>
 
-      <DepartmentModal />
-      <DeleteModal Name="Delete Department" />
+      <DepartmentModal onDepartmentCreated={handleDepartmentCreated} />
+      <DeleteModal
+        id={departments.length > 0 ? departments[0].id : null}
+        Name="Delete Department"
+        onDelete={fetchDepartments}
+      />
     </>
   );
 };

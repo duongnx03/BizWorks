@@ -1,14 +1,36 @@
-import React from "react";
+import React, { useState } from "react";
+import axios from "axios";
+import { message } from "antd";
+import { base_url } from "../../base_urls";
 
-const DepartmentModal = () => {
+const DepartmentModal = ({ onDepartmentCreated }) => {
+  const [departmentName, setDepartmentName] = useState("");
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.post(`${base_url}/api/departments`, {
+        departmentName: departmentName,
+      });
+
+      if (response.status === 201) {
+        message.success("Department created successfully");
+        // Update local state with the new department
+        onDepartmentCreated(); // This triggers the fetch and updates the UI
+        setDepartmentName(""); // Reset form field
+      } else {
+        message.error("Failed to create department");
+      }
+    } catch (error) {
+      message.error("Failed to create department");
+    }
+  };
+
   return (
     <>
       {/* Add Department Modal */}
-      <div
-        id="add_department"
-        className="modal custom-modal fade"
-        role="dialog"
-      >
+      <div id="add_department" className="modal custom-modal fade" role="dialog">
         <div className="modal-dialog modal-dialog-centered" role="document">
           <div className="modal-content">
             <div className="modal-header">
@@ -23,19 +45,25 @@ const DepartmentModal = () => {
               </button>
             </div>
             <div className="modal-body">
-              <form>
+              <form onSubmit={handleFormSubmit}>
                 <div className="input-block mb-3">
                   <label className="col-form-label">
                     Department Name <span className="text-danger">*</span>
                   </label>
-                  <input className="form-control" type="text" />
+                  <input
+                    className="form-control"
+                    type="text"
+                    value={departmentName}
+                    onChange={(e) => setDepartmentName(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="submit-section">
                   <button
                     className="btn btn-primary submit-btn"
+                    type="submit"
                     data-bs-dismiss="modal"
                     aria-label="Close"
-                    type="reset"
                   >
                     Submit
                   </button>
@@ -46,53 +74,6 @@ const DepartmentModal = () => {
         </div>
       </div>
       {/* /Add Department Modal */}
-      {/* Edit Department Modal */}
-      <div
-        id="edit_department"
-        className="modal custom-modal fade"
-        role="dialog"
-      >
-        <div className="modal-dialog modal-dialog-centered" role="document">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title">Edit Department</h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <span aria-hidden="true">×</span>
-              </button>
-            </div>
-            <div className="modal-body">
-              <form>
-                <div className="input-block mb-3">
-                  <label className="col-form-label">
-                    Department Name <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    className="form-control"
-                    defaultValue="IT Management"
-                    type="text"
-                  />
-                </div>
-                <div className="submit-section">
-                  <button
-                    className="btn btn-primary submit-btn"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                    type="reset"
-                  >
-                    Save
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* /Edit Department Modal */}
     </>
   );
 };

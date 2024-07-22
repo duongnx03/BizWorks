@@ -921,7 +921,11 @@ const AppContainer = () => {
       path: "violations",
       element: <Violation />,
     },
-    
+    // {
+    //   id: 134,
+    //   path: "positions",
+    //   element: <Position />,
+    // },
   ];
 
   const ChatRoutingeObjects = [
