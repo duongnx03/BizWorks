@@ -28,9 +28,18 @@ public class PositionService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
+    @Autowired
+    private EmployeeService employeeService; // Inject EmployeeService
+
     public List<PositionDTO> getAllPositions() {
         List<Position> positions = positionRepository.findAll();
         return positions.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<PositionDTO> getPositionsByDepartment(Long departmentId) {
+        return positionRepository.findByDepartmentId(departmentId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -93,15 +102,10 @@ public class PositionService {
         if (position.getEmployee() != null) {
             EmployeeDTO employeeDTO = new EmployeeDTO();
             employeeDTO.setId(position.getEmployee().getId());
-            employeeDTO.setFullname(position.getEmployee().getFullname());
-            employeeDTO.setDob(position.getEmployee().getDob());
-            employeeDTO.setAddress(position.getEmployee().getAddress());
-            employeeDTO.setGender(position.getEmployee().getGender());
-            employeeDTO.setEmail(position.getEmployee().getEmail());
-            employeeDTO.setPhone(position.getEmployee().getPhone());
-            employeeDTO.setAvatar(position.getEmployee().getAvatar());
-            employeeDTO.setStartDate(position.getEmployee().getStartDate());
-            employeeDTO.setEndDate(position.getEmployee().getEndDate());
+            employeeDTO.setFullname(employeeService.getEmployeeFullNameById(position.getEmployee().getId())); // Use
+                                                                                                              // EmployeeService
+                                                                                                              // to get
+                                                                                                              // fullname
             dto.setEmployee(employeeDTO);
         }
 

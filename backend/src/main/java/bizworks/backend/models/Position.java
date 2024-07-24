@@ -1,12 +1,10 @@
-package com.example.projects.models;
+package com.example.bizwebsite.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Entity
 @Table(name = "positions")
@@ -24,6 +22,8 @@ public class Position {
     @JsonIgnoreProperties("positions")
     private Department department;
 
-    @OneToMany(mappedBy = "position", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Employee> employees;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id") // Thay đổi tên cột nếu cần thiết
+    @JsonIgnoreProperties("positions")
+    private Employee employee; // Thêm liên kết đến Employee
 }

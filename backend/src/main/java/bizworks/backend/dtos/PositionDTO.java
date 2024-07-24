@@ -12,6 +12,6 @@ public class PositionDTO {
     private String positionName;
     private Long departmentId;
     private String departmentName;
-    private EmployeeDTO employee; // Thêm trường employeeId
+    private EmployeeDTO employee;
 
 }

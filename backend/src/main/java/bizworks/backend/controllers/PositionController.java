@@ -24,6 +24,12 @@ public class PositionController {
         return new ResponseEntity<>(positions, HttpStatus.OK);
     }
 
+    @GetMapping("/by-department")
+    public ResponseEntity<List<PositionDTO>> getPositionsByDepartment(@RequestParam Long departmentId) {
+        List<PositionDTO> positions = positionService.getPositionsByDepartment(departmentId);
+        return new ResponseEntity<>(positions, HttpStatus.OK);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Position> getPositionById(@PathVariable Long id) {
         return positionService.getPositionById(id)

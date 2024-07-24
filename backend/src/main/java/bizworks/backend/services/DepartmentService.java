@@ -8,6 +8,7 @@ import com.example.bizwebsite.models.TrainingProgram;
 import com.example.bizwebsite.repositories.DepartmentRepository;
 import com.example.bizwebsite.repositories.EmployeeRepository;
 import com.example.bizwebsite.repositories.PositionRepository;
+import com.example.bizwebsite.repositories.TrainingProgramRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,9 @@ public class DepartmentService {
     private PositionRepository positionRepository; // Cần có repository cho Position
     @Autowired
     private EmployeeRepository employeeRepository; // Cần có repository cho Employee
+
+    @Autowired
+    private TrainingProgramRepository trainingProgramRepository;
 
     // Method to fetch all departments and convert them to DTOs
     public List<DepartmentDTO> getAllDepartments() {
@@ -58,17 +62,22 @@ public class DepartmentService {
 
     // Method to delete a department by its ID
     public void deleteDepartment(Long id) {
-        Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Department not found with id: " + id));
+        try {
+            Department department = departmentRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Department not found with id: " + id));
 
-        // Check if there are associated training programs and delete them
-        List<TrainingProgram> trainingPrograms = department.getTrainingPrograms();
-        if (!trainingPrograms.isEmpty()) {
+            // Check if there are associated training programs and delete them
+            List<TrainingProgram> trainingPrograms = department.getTrainingPrograms();
+            if (!trainingPrograms.isEmpty()) {
+                trainingProgramRepository.deleteAll(trainingPrograms);
+            }
 
+            // Delete the department
+            departmentRepository.delete(department);
+        } catch (Exception e) {
+            e.printStackTrace(); // In lỗi ra console để kiểm tra
+            throw new RuntimeException("Error deleting department", e);
         }
-
-        // Delete the department
-        departmentRepository.delete(department);
     }
 
     // Method to update an existing department

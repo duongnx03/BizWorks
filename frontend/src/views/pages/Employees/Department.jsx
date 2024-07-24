@@ -1,6 +1,7 @@
+// src/views/pages/Department/Department.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Table, message, Button } from "antd";
+import { Table, message } from "antd";
 import axios from "axios";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import DeleteModal from "../../../components/modelpopup/DeleteModal";
@@ -11,7 +12,10 @@ import { base_url } from "../../../base_urls";
 const Department = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [departmentToDelete, setDepartmentToDelete] = useState(null);
+
+  const navigate = useNavigate();  // Add this line
 
   useEffect(() => {
     fetchDepartments();
@@ -32,6 +36,21 @@ const Department = () => {
     fetchDepartments(); // Refresh department list after creation
   };
 
+  const openDeleteModal = (id) => {
+    setDepartmentToDelete(id);  // Set the ID for deletion
+    setDeleteModalOpen(true);   // Open the modal
+  };
+
+  const handleDeleteModalClose = () => {
+    setDeleteModalOpen(false);  // Close the modal
+    setDepartmentToDelete(null); // Clear the ID
+  };
+
+  const handleDelete = () => {
+    fetchDepartments(); // Refresh department list after deletion
+    handleDeleteModalClose(); // Close modal
+  };
+
   const departmentElements = departments.map((department, index) => ({
     key: index,
     id: department.id,
@@ -49,7 +68,7 @@ const Department = () => {
       title: "Department Name",
       dataIndex: "department",
       sorter: (a, b) => a.department.localeCompare(b.department),
-      width: "70%",
+      width: "50%",
     },
     {
       title: "Actions",
@@ -65,29 +84,23 @@ const Department = () => {
             <i className="material-icons">more_vert</i>
           </Link>
           <div className="dropdown-menu dropdown-menu-right">
-            {/* <Link
-              className="dropdown-item"
-              to="#"
-              data-bs-toggle="modal"
-              data-bs-target="#edit_department"
-            >
-              <i className="fa fa-pencil m-r-5" /> Edit
-            </Link> */}
             <Link
               className="dropdown-item"
               to="#"
-              data-bs-toggle="modal"
-              data-bs-target="#delete"
+              onClick={() => openDeleteModal(record.id)}
             >
               <i className="fa fa-trash m-r-5" /> Delete
             </Link>
+            <Link
+              className="dropdown-item"
+              to={`/positions/${record.id}`}  
+            >
+              <i className="fa fa-eye m-r-5" /> View Positions
+            </Link>
           </div>
-          {/* <Button onClick={() => navigate(`/positions/${record.id}`)}>
-            View Positions
-          </Button> */}
         </div>
       ),
-      width: "20%",
+      width: "40%",
     },
   ];
 
@@ -122,11 +135,14 @@ const Department = () => {
       </div>
 
       <DepartmentModal onDepartmentCreated={handleDepartmentCreated} />
-      <DeleteModal
-        id={departments.length > 0 ? departments[0].id : null}
-        Name="Delete Department"
-        onDelete={fetchDepartments}
-      />
+      {deleteModalOpen && (
+        <DeleteModal
+          id={departmentToDelete}
+          Name="Delete Department"
+          onDelete={fetchDepartments}
+          onClose={handleDeleteModalClose}
+        />
+      )}
     </>
   );
 };

@@ -1,6 +1,6 @@
-package com.example.projects.repositories;
+package com.example.bizwebsite.repositories;
 
-import com.example.projects.models.Department;
+import com.example.bizwebsite.models.Department;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

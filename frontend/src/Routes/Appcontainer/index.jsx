@@ -198,7 +198,7 @@ import EmailView from "../../views/pages/MainPages/Apps/Email/emailView.jsx";
 import DealsDetails from "../../views/pages/Crm/DealsDetails.jsx";
 import ViolationType from "../../views/pages/Employees/ViolationType.jsx";
 import Violation from "../../views/pages/Employees/Violation.jsx";
-
+import Position from "../../views/pages/Employees/Position.jsx";
 const AppContainer = () => {
   useEffect(() => {
     localStorage.setItem("colorschema", "orange");
@@ -921,11 +921,11 @@ const AppContainer = () => {
       path: "violations",
       element: <Violation />,
     },
-    // {
-    //   id: 134,
-    //   path: "positions",
-    //   element: <Position />,
-    // },
+    {
+      id: 134,
+      path: "positions/:departmentId",      
+      element: <Position />
+    }
   ];
 
   const ChatRoutingeObjects = [
