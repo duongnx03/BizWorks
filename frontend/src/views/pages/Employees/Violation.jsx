@@ -1,63 +1,161 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Avatar_02, Avatar_09 } from "../../../Routes/ImagePath";
 import { Table } from "antd";
+import axios from "axios";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import SearchBox from "../../../components/SearchBox";
-import AddViolation from "../../../components/modelpopup/AddViolation";
+import ViolationModal from "../../../components/modelpopup/ViolationModal";
 import DeleteModal from "../../../components/modelpopup/DeleteModal";
+import { base_url } from "../../../base_urls";
+import { Avatar_02, Avatar_09 } from "../../../Routes/ImagePath";
 
 const Violation = () => {
-  const statsData = [
-    {
-      title: "Employee",
-      value: 2,
-      month: "this month",
-    },
-    {
-      title: "Count",
-      value: 2,
-      month: "this month",
-    },
-    {
-      title: "Pending Request",
-      value: 1,
-    },
-    {
-      title: "Rejected",
-      value: 0,
-    },
-  ];
-  const data = [
-    {
-      id: 1,
-      image: Avatar_02,
-      employee: "Dien",
-      role: "Web Designer",
-      reason: "Tied",
-      violationType: "Late",
-      date: "1 Jan 2023",
-      apimage: Avatar_09,
-      status: "New",
-    },
-    {
-        id: 2,
-        image: Avatar_02,
-        employee: "Tri",
-        role: "Web Designer",
-        reason: "Tied",
-        violationType: "Sleep",
-        date: "1 Jan 2023",
-        apimage: Avatar_09,
-        status: "Pending",
-      },
-  ];
+  const [violations, setViolations] = useState([]);
+  const [employees, setEmployees] = useState({});
+  const [violationTypes, setViolationTypes] = useState({});
+  const [deleteId, setDeleteId] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [statsData, setStatsData] = useState([]);
 
+  const fetchViolations = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/violations`);
+      setViolations(response.data);
+      
+      const employeeIds = response.data.map(v => v.employeeId);
+      const violationTypeIds = response.data.map(v => v.violationTypeId);
+      const uniqueEmployeeIds = [...new Set(employeeIds)];
+      const uniqueViolationTypeIds = [...new Set(violationTypeIds)];
+      
+      const employeePromises = uniqueEmployeeIds.map(id => axios.get(`${base_url}/api/employees/${id}`));
+      const violationTypePromises = uniqueViolationTypeIds.map(id => axios.get(`${base_url}/api/violation-types/${id}`));
+
+      const [employeeResponses, violationTypeResponses] = await Promise.all([
+        Promise.all(employeePromises),
+        Promise.all(violationTypePromises),
+      ]);
+
+      const employeesData = employeeResponses.reduce((acc, response) => {
+        acc[response.data.id] = response.data;
+        return acc;
+      }, {});
+
+      const violationTypesData = violationTypeResponses.reduce((acc, response) => {
+        acc[response.data.id] = response.data;
+        return acc;
+      }, {});
+
+      setEmployees(employeesData);
+      setViolationTypes(violationTypesData);
+      updateStats(response.data);
+    } catch (error) {
+      console.error("Error fetching violations:", error);
+    }
+  };
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/employees`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      return [];
+    }
+  };
+
+  const updateStats = async (violationsData) => {
+    try {
+      const employeesData = await fetchEmployees();
+      const totalEmployees = employeesData.length;
+      const totalViolations = violationsData.length;
+      const pendingViolations = violationsData.filter(v => v.status === "Pending").length;
+      const rejectedViolations = violationsData.filter(v => v.status === "Rejected").length;
+
+      setStatsData([
+        {
+          title: "Violation Employee",
+          value: totalEmployees,
+          month: "this month",
+        },
+        {
+          title: "Total Violation",
+          value: totalViolations,
+          month: "this month",
+        },
+        {
+          title: "Pending Request",
+          value: pendingViolations,
+        },
+        {
+          title: "Rejected",
+          value: rejectedViolations,
+        },
+      ]);
+    } catch (error) {
+      console.error("Error updating stats:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchViolations();
+  }, []);
+
+  const handleAdd = async (data) => {
+    try {
+      await axios.post(`${base_url}/api/violations`, data);
+      fetchViolations();
+    } catch (error) {
+      console.error("Error adding violation:", error);
+    }
+  };
+
+  const handleEdit = async (id, data) => {
+    try {
+      await axios.put(`${base_url}/api/violations/${id}`, data);
+      fetchViolations();
+    } catch (error) {
+      console.error("Error editing violation:", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`${base_url}/api/violations/${deleteId}`);
+      fetchViolations();
+      setDeleteId(null);
+      setShowDeleteModal(false);
+    } catch (error) {
+      console.error("Error deleting violation:", error);
+    }
+  };
+
+  const handleClose = () => {
+    setShowDeleteModal(false);
+  };
+
+  const userElements = violations.map((item, index) => ({
+    key: index,
+    id: item.id,
+    index: index + 1,
+    employeeId: item.employeeId,
+    employee: employees[item.employeeId]?.fullName || "Loading...",
+    role: item.role,
+    reason: item.reason,
+    violationTypeId: item.violationTypeId,
+    violationType: violationTypes[item.violationTypeId]?.type || "Loading...",
+    date: item.violationDate,
+    image: employees[item.employeeId]?.image || Avatar_02, 
+    apimage: employees[item.employeeId]?.apimage || Avatar_09,
+    status: item.status,
+  }));
+
+  
   const columns = [
     {
       title: "#",
-      dataIndex: "id",
-      sorter: (a, b) => a.id.length - b.id.length,
+      dataIndex: "index",
+      render: (text, record) => <span>{record.index}</span>,
+      sorter: (a, b) => a.index - b.index,
     },
     {
       title: "Employee",
@@ -82,7 +180,6 @@ const Violation = () => {
       dataIndex: "violationType",
       sorter: (a, b) => a.violationType.length - b.violationType.length,
     },
-
     {
       title: "Reason",
       dataIndex: "reason",
@@ -104,9 +201,9 @@ const Violation = () => {
                   ? "far fa-dot-circle text-purple"
                   : text === "Pending"
                   ? "far fa-dot-circle text-info"
-                  : text === "Approved"
-                  ? "far fa-dot-circle text-success"
-                  : "far fa-dot-circle text-danger"
+                  : text === "Rejected"
+                  ? "far fa-dot-circle text-danger"
+                  : "far fa-dot-circle text-success"
               }
             />{" "}
             {text}
@@ -148,6 +245,7 @@ const Violation = () => {
       ),
     },
   ];
+
   return (
     <>
       <div className="page-wrapper">
@@ -168,31 +266,33 @@ const Violation = () => {
                 <div className="stats-info">
                   <h6>{data.title}</h6>
                   <h4>
-                    {data.value} <span>{data.month}</span>
+                    {data.value} <small>{data.month}</small>
                   </h4>
                 </div>
               </div>
             ))}
           </div>
-          {/* /Overtime Statistics */}
           <div className="row">
             <div className="col-md-12">
               <div className="table-responsive">
-                <SearchBox />
                 <Table
-                  className="table-striped"
                   columns={columns}
-                  dataSource={data}
-                  rowKey={(record) => record.id}
+                  dataSource={userElements}
+                  className="table-striped"
+                  pagination={{ pageSize: 10 }}
                 />
               </div>
             </div>
           </div>
         </div>
-        {/* /Page Content */}
+        <ViolationModal onAdd={handleAdd}  onEdit={handleEdit}
+        />
+        <DeleteModal
+          show={showDeleteModal}
+          handleClose={handleClose}
+          handleDelete={handleDelete}
+        />
       </div>
-      <AddViolation />
-      <DeleteModal Name="Delete Violation" />
     </>
   );
 };

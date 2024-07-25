@@ -6,17 +6,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "forgot_passwords")
+@Table(name = "violation_types")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ForgotPassword {
+public class ViolationType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String verificationCode;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    private String type;
+    private Double violationMoney;
 }

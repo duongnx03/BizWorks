@@ -1,4 +1,4 @@
-package aptech.project.models;
+package bizworks.backend.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -26,7 +26,7 @@ public class Attendance {
     @JoinColumn(name = "empId")
     private Employee employee;
 
-    @OneToOne(mappedBy = "attendance", cascade = CascadeType.MERGE)
-    private OverTime overTime;
+//    @OneToOne(mappedBy = "attendance", cascade = CascadeType.MERGE)
+//    private OverTime overTime;
 }
 

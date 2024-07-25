@@ -41,7 +41,7 @@ const SalaryTable = () => {
       sorter: (a, b) => a.joiningDate.length - b.joiningDate.length,
     },
     {
-      title: "Role",
+      title: "Position",
       dataIndex: "roles",
       render: (text) => (
         <div className="dropdown">

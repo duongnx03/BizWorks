@@ -1,4 +1,4 @@
-package aptech.project.models;
+package bizworks.backend.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

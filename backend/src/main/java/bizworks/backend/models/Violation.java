@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,13 +17,15 @@ public class Violation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String violationType;
-    private double violationMoney;
-    private LocalDateTime violationDate;
-    private String reason;
-    private String status;
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "empId")
     private Employee employee;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "violationType_id")
+    private ViolationType violationType;
+
+    private LocalDate violationDate;
+    private String reason;
+    private String status;
 }

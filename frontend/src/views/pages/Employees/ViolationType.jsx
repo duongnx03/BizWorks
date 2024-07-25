@@ -61,6 +61,7 @@ const ViolationType = () => {
   const userElements = violationTypes.map((item, index) => ({
     key: index,
     id: item.id,
+    index: index + 1,
     violationType: item.type,
     violationMoney: item.violationMoney,
   }));
@@ -68,8 +69,9 @@ const ViolationType = () => {
   const columns = [
     {
       title: "#",
-      dataIndex: "id",
-      sorter: (a, b) => a.id - b.id,
+      dataIndex: "index",
+      render: (text, record) => <span>{record.index}</span>,
+      sorter: (a, b) => a.index - b.index,
       width: "10%",
     },
     {
