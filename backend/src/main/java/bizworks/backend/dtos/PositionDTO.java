@@ -13,5 +13,5 @@ public class PositionDTO {
     private Long departmentId;
     private String departmentName;
     private EmployeeDTO employee;
-
+    private Long employeeId; // Only keep the ID of the Employee
 }

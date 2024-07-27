@@ -199,6 +199,10 @@ import DealsDetails from "../../views/pages/Crm/DealsDetails.jsx";
 import ViolationType from "../../views/pages/Employees/ViolationType.jsx";
 import Violation from "../../views/pages/Employees/Violation.jsx";
 import Position from "../../views/pages/Employees/Position.jsx";
+  import TrainingProgram from "../../views/pages/Employees/TraniningProgram.jsx";
+  import TrainingDetails from "../../views/pages/Employees/TrainingProgramDetails.jsx";
+  import Attendance from "../../views/pages/Employees/Attendance.jsx";
+  import TrainingDays from "../../views/pages/Employees/TrainingDays.jsx";
 const AppContainer = () => {
   useEffect(() => {
     localStorage.setItem("colorschema", "orange");
@@ -925,7 +929,24 @@ const AppContainer = () => {
       id: 134,
       path: "positions/:departmentId",      
       element: <Position />
-    }
+    },
+    { id: 135, 
+      path: "training-programs", 
+      element: <TrainingProgram /> 
+    },
+    { id: 136,
+        path: 'training-programs/:id', 
+        element: <TrainingDetails /> 
+    },
+    { id: 137,
+      path: 'attendance/:trainingProgramId', 
+      element: <Attendance  /> 
+  },
+
+  { id: 138,
+    path: 'training-days/:trainingProgramId', 
+    element: <TrainingDays  /> 
+},
   ];
 
   const ChatRoutingeObjects = [

@@ -1,10 +1,12 @@
-package bizworks.backend.models;
+package com.example.bizwebsite.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Objects;
 
 @Entity
 @Table(name = "positions")
@@ -15,15 +17,29 @@ public class Position {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String positionName;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "department_id")
-    @JsonIgnoreProperties("positions")
     private Department department;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id") // Thay đổi tên cột nếu cần thiết
-    @JsonIgnoreProperties("positions")
-    private Employee employee; // Thêm liên kết đến Employee
+    @ManyToOne(cascade = CascadeType.PERSIST) // Ensure cascade type includes PERSIST
+    @JoinColumn(name = "employee_id")
+    private Employee employee;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        Position position = (Position) o;
+        return Objects.equals(id, position.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

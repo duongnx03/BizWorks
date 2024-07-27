@@ -1,4 +1,4 @@
-package bizworks.backend.models;
+package com.example.bizwebsite.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -14,20 +14,22 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({ "positions", "employees", "trainingPrograms" }) // Optional: to avoid recursive serialization
+                                                                        // issues
 public class Department {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "department_name")
     private String departmentName;
 
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("department") // Ignore the 'department' property in Position during serialization
+    @JsonIgnoreProperties("department")
     private List<Position> positions = new ArrayList<>();
 
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Employee> employees;
+    @JsonIgnoreProperties("department")
+    private List<Employee> employees = new ArrayList<>();
 
-    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TrainingProgram> trainingPrograms;
 }

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/departments")
@@ -26,27 +27,35 @@ public class DepartmentController {
 
     @GetMapping("/{id}")
     public ResponseEntity<DepartmentDTO> getDepartmentById(@PathVariable Long id) {
-        return departmentService.getDepartmentById(id)
-                .map(department -> ResponseEntity.ok(departmentService.convertToDTO(department)))
-                .orElse(ResponseEntity.notFound().build());
+        DepartmentDTO departmentDTO = departmentService.getDepartmentById(id);
+        if (departmentDTO != null) {
+            return ResponseEntity.ok(departmentDTO);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping
     public ResponseEntity<DepartmentDTO> createDepartment(@RequestBody DepartmentDTO departmentDTO) {
-        Department createdDepartment = departmentService.saveDepartment(departmentDTO);
-        return new ResponseEntity<>(departmentService.convertToDTO(createdDepartment), HttpStatus.CREATED);
+        // Attempt to save the department
+        Optional<Department> createdDepartmentOpt = departmentService.saveDepartment(departmentDTO);
+
+        // Check if the department was successfully created
+        if (createdDepartmentOpt.isPresent()) {
+            // Convert to DTO and return with HTTP 201 Created
+            DepartmentDTO departmentDTOResponse = departmentService.convertToDTO(createdDepartmentOpt.get());
+            return new ResponseEntity<>(departmentDTOResponse, HttpStatus.CREATED);
+        } else {
+            // Return with HTTP 409 Conflict if the department already exists
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<DepartmentDTO> updateDepartment(@PathVariable Long id,
-            @RequestBody Department departmentDetails) {
-        Department updatedDepartment = departmentService.updateDepartment(id, departmentDetails);
+            @RequestBody DepartmentDTO departmentDTO) {
+        Department updatedDepartment = departmentService.updateDepartment(id, departmentDTO);
         return ResponseEntity.ok(departmentService.convertToDTO(updatedDepartment));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
-        departmentService.deleteDepartment(id);
-        return ResponseEntity.noContent().build();
-    }
 }

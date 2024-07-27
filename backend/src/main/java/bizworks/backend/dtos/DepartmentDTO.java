@@ -13,5 +13,5 @@ public class DepartmentDTO {
     private Long id;
     private String departmentName;
     private List<PositionDTO> positions;
-    private EmployeeDTO employee;
+    private List<EmployeeDTO> employees;
 }

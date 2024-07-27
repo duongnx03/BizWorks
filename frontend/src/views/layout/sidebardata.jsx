@@ -160,12 +160,17 @@ export const SidebarData = [
             route: "/leaves-employee",
           },
           {
-            menuValue: 'Attendance (Employee)',
-            route: "/attendance-employee",
+            menuValue: 'Departments',
+            route: "/departments",
+          },
+
+          {
+            menuValue: 'Training Programs',
+            route: "/training-programs",
           },
           // {
-          //   menuValue: 'Designations',
-          //   route: "/designations",
+          //   menuValue: 'Attendance',
+          //   route: "/attendaces",
           // },
           {
             menuValue: 'Timesheet',

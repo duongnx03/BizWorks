@@ -28,12 +28,8 @@ public class PositionService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    @Autowired
-    private EmployeeService employeeService; // Inject EmployeeService
-
     public List<PositionDTO> getAllPositions() {
-        List<Position> positions = positionRepository.findAll();
-        return positions.stream()
+        return positionRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -54,58 +50,75 @@ public class PositionService {
 
         if (positionDTO.getDepartmentId() != null) {
             Department department = departmentRepository.findById(positionDTO.getDepartmentId())
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "Department not found with id: " + positionDTO.getDepartmentId()));
-            position.setDepartment(department);
-        } else if (positionDTO.getDepartmentName() != null) {
-            Department department = departmentRepository.findByDepartmentName(positionDTO.getDepartmentName())
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "Department not found with name: " + positionDTO.getDepartmentName()));
+                    .orElseThrow(() -> new EntityNotFoundException("Department not found"));
             position.setDepartment(department);
         }
 
-        if (positionDTO.getEmployee() != null && positionDTO.getEmployee().getId() != null) {
-            Employee employee = employeeRepository.findById(positionDTO.getEmployee().getId())
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "Employee not found with id: " + positionDTO.getEmployee().getId()));
+        if (positionDTO.getEmployeeId() != null) {
+            Employee employee = employeeRepository.findById(positionDTO.getEmployeeId())
+                    .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
             position.setEmployee(employee);
+            // Save employee if necessary (if employee is new or changed)
+            employeeRepository.save(employee);
         }
 
         return positionRepository.save(position);
     }
 
     public void deletePosition(Long id) {
+        Position position = positionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Position not found with id: " + id));
+
+        if (position.getEmployee() != null) {
+            position.getEmployee().setPosition(null);
+            employeeRepository.save(position.getEmployee());
+        }
+
         positionRepository.deleteById(id);
     }
 
-    public Position updatePosition(Long id, Position positionDetails) {
+    public Position updatePosition(Long id, PositionDTO positionDTO) {
         Position position = positionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Position not found"));
-        position.setPositionName(positionDetails.getPositionName());
-        position.setEmployee(positionDetails.getEmployee());
-        position.setDepartment(positionDetails.getDepartment());
+                .orElseThrow(() -> new EntityNotFoundException("Position not found with id: " + id));
+
+        position.setPositionName(positionDTO.getPositionName());
+
+        if (positionDTO.getDepartmentId() != null) {
+            Department department = departmentRepository.findById(positionDTO.getDepartmentId())
+                    .orElseThrow(() -> new EntityNotFoundException("Department not found"));
+            position.setDepartment(department);
+        } else {
+            position.setDepartment(null);
+        }
+
+        if (positionDTO.getEmployeeId() != null) {
+            Employee employee = employeeRepository.findById(positionDTO.getEmployeeId())
+                    .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
+            position.setEmployee(employee);
+            employee.setPosition(position);
+            employeeRepository.save(employee);
+        } else {
+            position.setEmployee(null);
+        }
+
         return positionRepository.save(position);
     }
 
-    private PositionDTO convertToDTO(Position position) {
+    // Change this method to public
+    public PositionDTO convertToDTO(Position position) {
         PositionDTO dto = new PositionDTO();
         dto.setId(position.getId());
         dto.setPositionName(position.getPositionName());
 
-        // Set department information
         if (position.getDepartment() != null) {
             dto.setDepartmentId(position.getDepartment().getId());
             dto.setDepartmentName(position.getDepartment().getDepartmentName());
         }
 
-        // Set employee information
         if (position.getEmployee() != null) {
             EmployeeDTO employeeDTO = new EmployeeDTO();
             employeeDTO.setId(position.getEmployee().getId());
-            employeeDTO.setFullname(employeeService.getEmployeeFullNameById(position.getEmployee().getId())); // Use
-                                                                                                              // EmployeeService
-                                                                                                              // to get
-                                                                                                              // fullname
+            employeeDTO.setFullname(position.getEmployee().getFullname());
             dto.setEmployee(employeeDTO);
         }
 
