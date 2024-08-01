@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 const DeleteModal = (props) => {
   return (
     <>
-      {/* Delete Performance Indicator Modal */}
       <div className="modal custom-modal fade" id="delete" role="dialog">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
@@ -16,7 +15,13 @@ const DeleteModal = (props) => {
               <div className="modal-btn delete-action">
                 <div className="row">
                   <div className="col-6">
-                    <Link to="#" className="btn btn-primary continue-btn">
+                    <Link 
+                      to="#" 
+                      className="btn btn-primary continue-btn" 
+                      onClick={() => {
+                       props.onConfirm().then(() => props.onClose());
+                      }}
+                    >
                       Delete
                     </Link>
                   </div>
@@ -25,6 +30,7 @@ const DeleteModal = (props) => {
                       to="#"
                       data-bs-dismiss="modal"
                       className="btn btn-primary cancel-btn"
+                      onClick={props.onClose} // Gọi hàm đóng modal
                     >
                       Cancel
                     </Link>
@@ -35,9 +41,9 @@ const DeleteModal = (props) => {
           </div>
         </div>
       </div>
-      {/* /Delete Performance Indicator Modal */}
     </>
   );
 };
+
 
 export default DeleteModal;

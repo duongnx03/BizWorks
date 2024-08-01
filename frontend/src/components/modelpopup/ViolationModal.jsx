@@ -97,7 +97,7 @@ const AddViolation = ({ violationData, onSave, onAdd }) => {
         <div className="modal-dialog modal-dialog-centered" role="document">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title">{violationData ? "Edit Violation" : "Add Violation"}</h5>
+              <h5 className="modal-title">{violationData ? "Edit Violation" :"Add Violation"}</h5>
               <button
                 type="button"
                 className="btn-close"
@@ -186,8 +186,103 @@ const AddViolation = ({ violationData, onSave, onAdd }) => {
           </div>
         </div>
       </div>
+      <div id="edit_violation" className="modal custom-modal fade" role="dialog">
+        <div className="modal-dialog modal-dialog-centered" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Edit Violation</h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+            <div className="modal-body">
+              <form>
+              <div className="input-block mb-3">
+                  <label className="col-form-label">
+                    Select Employee <span className="text-danger">*</span>
+                  </label>
+                  <Select
+                    options={employees}
+                    value={selectedEmployee}
+                    placeholder="Select"
+                    styles={customStyles}
+                    onChange={setSelectedEmployee}
+                  />
+                </div>
+                <div className="input-block mb-3">
+                  <label className="col-form-label">
+                    Select Violation Type <span className="text-danger">*</span>
+                  </label>
+                  <Select
+                    options={violationTypes}
+                    value={selectedViolationType}
+                    placeholder="Select"
+                    styles={customStyles}
+                    onChange={setSelectedViolationType}
+                  />
+                </div>
+                <div className="input-block mb-3">
+                  <label className="col-form-label">
+                    Date <span className="text-danger">*</span>
+                  </label>
+                  <div className="cal-icon">
+                    <DatePicker
+                      selected={selectedDate}
+                      onChange={handleDateChange}
+                      className="form-control"
+                      dateFormat="dd-MM-yyyy"
+                    />
+                  </div>
+                </div>
+                <div className="input-block mb-3">
+                  <label className="col-form-label">
+                    Reason <span className="text-danger">*</span>
+                  </label>
+                  <textarea
+                    rows={4}
+                    className="form-control"
+                    defaultValue={""}
+                  />
+                </div>
+                <div className="input-block mb-3">
+                  <label className="col-form-label">
+                    Status <span className="text-danger">*</span>
+                  </label>
+                  <Select
+                    options={[
+                      { value: 1, label: "Pending" },
+                      { value: 2, label: "Resolved" },
+                      { value: 3, label: "Rejected" },
+                    ]}
+                    value={selectedStatus}
+                    placeholder="Select"
+                    styles={customStyles}
+                    onChange={setSelectedStatus}
+                  />
+                </div>
+                <div className="submit-section">
+                  <button
+                    className="btn btn-primary submit-btn"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                    type="submit"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default AddViolation;
+

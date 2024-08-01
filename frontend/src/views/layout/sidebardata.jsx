@@ -350,7 +350,7 @@ export const SidebarData = [
         icon: "la la-money",
         subMenus: [
           {
-            menuValue: 'Employee Salary',
+            menuValue: 'Salary',
             route: "/salary",
           },
           {
