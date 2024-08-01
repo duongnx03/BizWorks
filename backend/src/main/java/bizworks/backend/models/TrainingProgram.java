@@ -1,25 +1,37 @@
-package bizworks.backend.models;
+package com.example.bizwebsite.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.util.List;
 
-@Entity
-@Table(name = "training_programs")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
+@Entity
+@Table(name = "training_programs")
 public class TrainingProgram {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String programName;
-    private String description;
-    private Date startDate;
-    private Date endDate;
-    private String status;
-    private String trainer;
+
+    private LocalDate startDate;
+
+    private LocalDate endDate;
+
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private Department department;
+
+    @ManyToOne
+    @JoinColumn(name = "trainer_id")
+    private Employee trainer;
+
+    @ManyToMany
+    @JoinTable(name = "training_program_employees", joinColumns = @JoinColumn(name = "training_program_id"), inverseJoinColumns = @JoinColumn(name = "employee_id"))
+    private List<Employee> employees;
 }

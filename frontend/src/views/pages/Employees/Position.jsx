@@ -3,8 +3,6 @@ import { Table, message, Button } from "antd";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import { base_url } from "../../../base_urls";
-import Breadcrumbs from "../../../components/Breadcrumbs";
-import SearchBox from "../../../components/SearchBox";
 import PositionModal from "../../../components/modelpopup/PositionModal";
 
 const Position = () => {
@@ -23,7 +21,7 @@ const Position = () => {
       const response = await axios.get(`${base_url}/api/positions/by-department`, {
         params: { departmentId }
       });
-      console.log("Positions data:", response.data); // Kiểm tra dữ liệu
+      console.log("Positions data:", response.data);
       setPositions(response.data);
     } catch (error) {
       message.error("Failed to fetch positions");
@@ -34,6 +32,7 @@ const Position = () => {
 
   const handlePositionCreated = () => {
     fetchPositions(); // Refresh the positions list
+    setIsModalVisible(false); // Close the modal after creation
   };
 
   const columns = [
@@ -60,8 +59,8 @@ const Position = () => {
   const positionElements = positions.map((position) => ({
     key: position.id,
     id: position.id,
-    positionName: position.positionName,
-    employeeName: position.employee ? position.employee.fullname : "N/A", // Hiển thị fullname
+    positionName: position.positionName || "N/A", // Use positionName from API
+    employeeName: position.employee ? position.employee.fullname : "N/A",
   }));
 
   return (
@@ -80,7 +79,6 @@ const Position = () => {
             </div>
             <div className="col-md-12">
               <div className="table-responsive">
-                <SearchBox />
                 <Table
                   columns={columns}
                   dataSource={positionElements}

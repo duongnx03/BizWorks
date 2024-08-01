@@ -1,7 +1,6 @@
-// src/views/pages/Department/Department.jsx
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Table, message } from "antd";
+import { Link } from "react-router-dom";
+import { Table, message, Button } from "antd";
 import axios from "axios";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import DeleteModal from "../../../components/modelpopup/DeleteModal";
@@ -15,8 +14,6 @@ const Department = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState(null);
 
-  const navigate = useNavigate();  // Add this line
-
   useEffect(() => {
     fetchDepartments();
   }, []);
@@ -24,7 +21,7 @@ const Department = () => {
   const fetchDepartments = async () => {
     try {
       const response = await axios.get(`${base_url}/api/departments`);
-      setDepartments(response.data);
+      setDepartments(response.data); // Adjust if the API response structure differs
       setLoading(false);
     } catch (error) {
       message.error("Failed to fetch departments");
@@ -37,22 +34,28 @@ const Department = () => {
   };
 
   const openDeleteModal = (id) => {
-    setDepartmentToDelete(id);  // Set the ID for deletion
-    setDeleteModalOpen(true);   // Open the modal
+    setDepartmentToDelete(id);
+    setDeleteModalOpen(true);
   };
 
   const handleDeleteModalClose = () => {
-    setDeleteModalOpen(false);  // Close the modal
-    setDepartmentToDelete(null); // Clear the ID
+    setDeleteModalOpen(false);
+    setDepartmentToDelete(null);
   };
 
-  const handleDelete = () => {
-    fetchDepartments(); // Refresh department list after deletion
-    handleDeleteModalClose(); // Close modal
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`${base_url}/api/departments/${departmentToDelete}`);
+      fetchDepartments(); // Refresh department list after deletion
+    } catch (error) {
+      message.error("Failed to delete department");
+    } finally {
+      handleDeleteModalClose(); // Close modal
+    }
   };
 
-  const departmentElements = departments.map((department, index) => ({
-    key: index,
+  const departmentElements = departments.map((department) => ({
+    key: department.id,
     id: department.id,
     department: department.departmentName,
   }));
@@ -93,7 +96,7 @@ const Department = () => {
             </Link>
             <Link
               className="dropdown-item"
-              to={`/positions/${record.id}`}  
+              to={`/positions/${record.id}`}
             >
               <i className="fa fa-eye m-r-5" /> View Positions
             </Link>
@@ -117,6 +120,17 @@ const Department = () => {
             name="Add Department"
           />
           {/* /Page Header */}
+          <div className="row mb-3">
+            <div className="col-md-12 text-end">
+              <Button
+                type="primary"
+                data-bs-toggle="modal"
+                data-bs-target="#add_department"
+              >
+                Add Department
+              </Button>
+            </div>
+          </div>
           <div className="row">
             <div className="col-md-12">
               <div className="table-responsive">
@@ -139,7 +153,7 @@ const Department = () => {
         <DeleteModal
           id={departmentToDelete}
           Name="Delete Department"
-          onDelete={fetchDepartments}
+          onDelete={handleDelete}
           onClose={handleDeleteModalClose}
         />
       )}

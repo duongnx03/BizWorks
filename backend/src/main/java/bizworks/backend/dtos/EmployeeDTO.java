@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Data
 @Builder
@@ -15,7 +14,7 @@ import java.util.Date;
 public class EmployeeDTO {
     private Long id;
     private String fullname;
-    private Date dob;
+    private LocalDate dob;
     private String address;
     private String gender;
     private String email;
@@ -23,6 +22,9 @@ public class EmployeeDTO {
     private String avatar;
     private LocalDate startDate;
     private LocalDate endDate;
-    private PositionDTO position;
-    private DepartmentDTO department;
+    private Long positionId; // ID of the position
+    private String positionName; // Optionally, position name
+    private Long departmentId; // ID of the department
+    private String departmentName; // Optionally, department name
+    private String role; // Optional field for role
 }

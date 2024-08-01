@@ -18,36 +18,43 @@ public class PositionController {
     @Autowired
     private PositionService positionService;
 
+    // Get all positions
     @GetMapping
     public ResponseEntity<List<PositionDTO>> getAllPositions() {
         List<PositionDTO> positions = positionService.getAllPositions();
         return new ResponseEntity<>(positions, HttpStatus.OK);
     }
 
+    // Get positions by department ID
     @GetMapping("/by-department")
     public ResponseEntity<List<PositionDTO>> getPositionsByDepartment(@RequestParam Long departmentId) {
         List<PositionDTO> positions = positionService.getPositionsByDepartment(departmentId);
         return new ResponseEntity<>(positions, HttpStatus.OK);
     }
 
+    // Get a position by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Position> getPositionById(@PathVariable Long id) {
+    public ResponseEntity<PositionDTO> getPositionById(@PathVariable Long id) {
         return positionService.getPositionById(id)
-                .map(ResponseEntity::ok)
+                .map(position -> ResponseEntity.ok(positionService.convertToDTO(position)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // Create a new position
     @PostMapping
-    public ResponseEntity<Position> createPosition(@RequestBody PositionDTO positionDTO) {
+    public ResponseEntity<PositionDTO> createPosition(@RequestBody PositionDTO positionDTO) {
         Position createdPosition = positionService.savePosition(positionDTO);
-        return new ResponseEntity<>(createdPosition, HttpStatus.CREATED);
+        return new ResponseEntity<>(positionService.convertToDTO(createdPosition), HttpStatus.CREATED);
     }
 
+    // Update an existing position
     @PutMapping("/{id}")
-    public ResponseEntity<Position> updatePosition(@PathVariable Long id, @RequestBody Position positionDetails) {
-        return ResponseEntity.ok(positionService.updatePosition(id, positionDetails));
+    public ResponseEntity<PositionDTO> updatePosition(@PathVariable Long id, @RequestBody PositionDTO positionDTO) {
+        Position updatedPosition = positionService.updatePosition(id, positionDTO);
+        return ResponseEntity.ok(positionService.convertToDTO(updatedPosition));
     }
 
+    // Delete a position
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePosition(@PathVariable Long id) {
         positionService.deletePosition(id);
