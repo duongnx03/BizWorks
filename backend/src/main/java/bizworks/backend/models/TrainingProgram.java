@@ -1,4 +1,4 @@
-package com.example.bizwebsite.models;
+package bizworks.backend.models;
 
 import jakarta.persistence.*;
 import lombok.Data;

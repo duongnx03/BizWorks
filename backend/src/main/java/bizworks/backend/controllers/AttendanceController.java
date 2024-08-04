@@ -1,10 +1,10 @@
 package bizworks.backend.controllers;
 
-import aptech.project.helpers.ApiResponse;
-import aptech.project.models.Attendance;
-import aptech.project.models.Employee;
-import aptech.project.services.AttendanceService;
-import aptech.project.services.EmployeeService;
+import bizworks.backend.helpers.ApiResponse;
+import bizworks.backend.models.Attendance;
+import bizworks.backend.models.Employee;
+import bizworks.backend.services.AttendanceService;
+import bizworks.backend.services.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

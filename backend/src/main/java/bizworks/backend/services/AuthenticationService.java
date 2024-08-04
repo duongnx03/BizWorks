@@ -1,10 +1,10 @@
-package aptech.project.services;
+package bizworks.backend.services;
 
-import aptech.project.dtos.AuthenticationRequest;
-import aptech.project.dtos.AuthenticationResponse;
-import aptech.project.dtos.UserDTO;
-import aptech.project.models.User;
-import aptech.project.repository.UserRepository;
+import bizworks.backend.dtos.AuthenticationRequest;
+import bizworks.backend.dtos.AuthenticationResponse;
+import bizworks.backend.dtos.UserDTO;
+import bizworks.backend.models.User;
+import bizworks.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;

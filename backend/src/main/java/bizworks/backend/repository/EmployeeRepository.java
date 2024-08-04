@@ -1,8 +1,6 @@
-package com.example.bizwebsite.repositories;
+package bizworks.backend.repository;
 
-import com.example.bizwebsite.models.Department;
-import com.example.bizwebsite.models.Employee;
-import com.example.bizwebsite.models.Position;
+import bizworks.backend.models.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

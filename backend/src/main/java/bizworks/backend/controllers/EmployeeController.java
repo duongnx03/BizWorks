@@ -1,7 +1,7 @@
-package com.example.bizwebsite.controllers;
+package bizworks.backend.controllers;
 
-import com.example.bizwebsite.dtos.EmployeeDTO;
-import com.example.bizwebsite.services.EmployeeService;
+import bizworks.backend.dtos.EmployeeDTO;
+import bizworks.backend.services.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

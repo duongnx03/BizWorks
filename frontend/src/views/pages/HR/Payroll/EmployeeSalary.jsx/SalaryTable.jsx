@@ -9,7 +9,7 @@ const SalaryTable = () => {
   const data = Salary.Salary;
   const columns = [
     {
-      title: "Name",
+      title: "Employee Name",
       dataIndex: "name",
       render: (text, record) => (
         <div className="table-avatar">
@@ -23,11 +23,11 @@ const SalaryTable = () => {
       ),
       sorter: (a, b) => a.name.length - b.name.length,
     },
-    {
-      title: "Employee ID",
-      dataIndex: "employeeId",
-      sorter: (a, b) => a.employeeId.length - b.employeeId.length,
-    },
+    // {
+    //   title: "Code",
+    //   dataIndex: "employeeId",
+    //   sorter: (a, b) => a.employeeId.length - b.employeeId.length,
+    // },
 
     {
       title: "Email",
@@ -77,14 +77,6 @@ const SalaryTable = () => {
       sorter: (a, b) => a.salary.length - b.salary.length,
     },
     {
-      title: "Payslip",
-      render: () => (
-        <Link className="btn btn-sm btn-primary" to="/salary-view">
-          Generate Slip
-        </Link>
-      ),
-    },
-    {
       title: "Action",
       render: () => (
         <div className="dropdown dropdown-action text-end">
@@ -115,6 +107,14 @@ const SalaryTable = () => {
             </Link>
           </div>
         </div>
+      ),
+    },
+    {
+      title: "Payslip",
+      render: () => (
+        <Link className="btn btn-sm btn-primary" to="/salary-view">
+          Generate Slip
+        </Link>
       ),
     },
   ];

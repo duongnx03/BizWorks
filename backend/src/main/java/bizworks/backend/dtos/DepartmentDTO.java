@@ -1,4 +1,4 @@
-package com.example.bizwebsite.dtos;
+package bizworks.backend.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

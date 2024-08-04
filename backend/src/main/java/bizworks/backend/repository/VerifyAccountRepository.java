@@ -1,6 +1,6 @@
-package aptech.project.repository;
+package bizworks.backend.repository;
 
-import aptech.project.models.VerifyAccount;
+import bizworks.backend.models.VerifyAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

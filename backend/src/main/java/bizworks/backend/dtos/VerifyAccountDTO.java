@@ -1,4 +1,4 @@
-package aptech.project.dtos;
+package bizworks.backend.dtos;
 
 import lombok.Data;
 

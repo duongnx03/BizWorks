@@ -20,15 +20,16 @@ const PaySlip = () => {
             <div className="card">
               <div className="card-body">
                 <h4 className="payslip-title">
-                  Payslip for the month of Feb 2019
+                  Payslip for the month of August 2024
                 </h4>
                 <div className="row">
                   <div className="col-sm-6 m-b-20">
                     <img src={Applogo} className="inv-logo" alt="Logo" />
                     <ul className="list-unstyled mb-0">
-                      <li>Dreamguy's Technologies</li>
-                      <li>3864 Quiet Valley Lane,</li>
-                      <li>Sherman Oaks, CA, 91403</li>
+                      <li>BizWork</li>
+                      <li>391A Nam Ky Khoi Nghia Street,</li>
+                      <li>Ward 14, District 3,</li>
+                      <li>HCM City, Vietnam, </li>
                     </ul>
                   </div>
                   <div className="col-sm-6 m-b-20">
@@ -36,7 +37,7 @@ const PaySlip = () => {
                       <h3 className="text-uppercase">Payslip #49029</h3>
                       <ul className="list-unstyled">
                         <li>
-                          Salary Month: <span>March, 2019</span>
+                          Salary Month: <span>August, 2024</span>
                         </li>
                       </ul>
                     </div>
@@ -47,13 +48,13 @@ const PaySlip = () => {
                     <ul className="list-unstyled">
                       <li>
                         <h5 className="mb-0">
-                          <strong>John Doe</strong>
+                          <strong>Tony Sama</strong>
                         </h5>
                       </li>
                       <li>
                         <span>Web Designer</span>
                       </li>
-                      <li>Employee ID: FT-0009</li>
+                      <li>Employee ID: BW-014</li>
                       <li>Joining Date: 1 Jan 2023</li>
                     </ul>
                   </div>
@@ -69,32 +70,32 @@ const PaySlip = () => {
                           <tr>
                             <td>
                               <strong>Basic Salary</strong>{" "}
-                              <span className="float-end">$6500</span>
+                              <span className="float-end">$2500</span>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>House Rent Allowance (H.R.A.)</strong>{" "}
-                              <span className="float-end">$55</span>
+                              <strong> Allowance</strong>{" "}
+                              <span className="float-end">$100</span>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>Conveyance</strong>{" "}
-                              <span className="float-end">$55</span>
+                              <strong>Bonus</strong>{" "}
+                              <span className="float-end">$150</span>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>Other Allowance</strong>{" "}
-                              <span className="float-end">$55</span>
+                              <strong>Overtime</strong>{" "}
+                              <span className="float-end">$550</span>
                             </td>
                           </tr>
                           <tr>
                             <td>
                               <strong>Total Earnings</strong>{" "}
                               <span className="float-end">
-                                <strong>$55</strong>
+                                <strong>$3300</strong>
                               </span>
                             </td>
                           </tr>
@@ -137,7 +138,7 @@ const PaySlip = () => {
                             <td>
                               <strong>Total Deductions</strong>{" "}
                               <span className="float-end">
-                                <strong>$59698</strong>
+                                <strong>$300</strong>
                               </span>
                             </td>
                           </tr>
@@ -147,8 +148,8 @@ const PaySlip = () => {
                   </div>
                   <div className="col-sm-12">
                     <p>
-                      <strong>Net Salary: $59698</strong> (Fifty nine thousand
-                      six hundred and ninety eight only.)
+                      <strong>Net Salary: $3000</strong> (Three thousand $
+                       only.)
                     </p>
                   </div>
                 </div>

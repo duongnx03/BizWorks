@@ -1,12 +1,12 @@
-package aptech.project.controllers;
+package bizworks.backend.controllers;
 
-import aptech.project.dtos.VerifyAccountDTO;
-import aptech.project.helpers.ApiResponse;
-import aptech.project.models.User;
-import aptech.project.models.VerifyAccount;
-import aptech.project.services.AuthenticationService;
-import aptech.project.services.MailService;
-import aptech.project.services.VerifyAccountService;
+import bizworks.backend.dtos.VerifyAccountDTO;
+import bizworks.backend.helpers.ApiResponse;
+import bizworks.backend.models.User;
+import bizworks.backend.models.VerifyAccount;
+import bizworks.backend.services.AuthenticationService;
+import bizworks.backend.services.MailService;
+import bizworks.backend.services.VerifyAccountService;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

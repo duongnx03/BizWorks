@@ -1,8 +1,8 @@
-package com.example.bizwebsite.controllers;
+package bizworks.backend.controllers;
 
-import com.example.bizwebsite.dtos.TrainingProgramDTO;
-import com.example.bizwebsite.models.TrainingProgram;
-import com.example.bizwebsite.services.TrainingProgramService;
+import bizworks.backend.dtos.TrainingProgramDTO;
+import bizworks.backend.models.TrainingProgram;
+import bizworks.backend.services.TrainingProgramService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

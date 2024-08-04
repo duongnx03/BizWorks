@@ -1,13 +1,16 @@
-package aptech.project.services;
+package bizworks.backend.services;
 
-import aptech.project.models.Employee;
-import aptech.project.repository.EmployeeRepository;
 import bizworks.backend.dtos.EmployeeDTO;
 import bizworks.backend.models.Department;
+import bizworks.backend.models.Employee;
+import bizworks.backend.models.Position;
 import bizworks.backend.repository.DepartmentRepository;
+import bizworks.backend.repository.EmployeeRepository;
 import bizworks.backend.repository.PositionRepository;
 import jakarta.persistence.EntityNotFoundException;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +47,7 @@ public class EmployeeService {
         Employee employee = new Employee();
         employee.setId(employeeDTO.getId());
         employee.setFullname(employeeDTO.getFullname());
-        employee.setDob(employeeDTO.getDob());
+//        employee.setDob(employeeDTO.getDob());
         employee.setAddress(employeeDTO.getAddress());
         employee.setGender(employeeDTO.getGender());
         employee.setEmail(employeeDTO.getEmail());

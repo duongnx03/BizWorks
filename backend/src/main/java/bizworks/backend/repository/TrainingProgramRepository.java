@@ -1,6 +1,7 @@
-package com.example.bizwebsite.repositories;
+package bizworks.backend.repository;
 
-import com.example.bizwebsite.models.TrainingProgram;
+
+import bizworks.backend.models.TrainingProgram;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

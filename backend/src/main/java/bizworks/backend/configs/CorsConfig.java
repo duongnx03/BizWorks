@@ -1,4 +1,4 @@
-package aptech.project.configs;
+package bizworks.backend.configs;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;

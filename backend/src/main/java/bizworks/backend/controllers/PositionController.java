@@ -1,8 +1,8 @@
-package com.example.bizwebsite.controllers;
+package bizworks.backend.controllers;
 
-import com.example.bizwebsite.dtos.PositionDTO;
-import com.example.bizwebsite.models.Position;
-import com.example.bizwebsite.services.PositionService;
+import bizworks.backend.dtos.PositionDTO;
+import bizworks.backend.models.Position;
+import bizworks.backend.services.PositionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

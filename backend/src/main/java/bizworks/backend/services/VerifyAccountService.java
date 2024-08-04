@@ -1,8 +1,8 @@
-package aptech.project.services;
+package bizworks.backend.services;
 
-import aptech.project.models.User;
-import aptech.project.models.VerifyAccount;
-import aptech.project.repository.VerifyAccountRepository;
+import bizworks.backend.models.User;
+import bizworks.backend.models.VerifyAccount;
+import bizworks.backend.repository.VerifyAccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

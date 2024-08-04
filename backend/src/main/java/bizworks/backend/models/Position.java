@@ -1,4 +1,4 @@
-package com.example.bizwebsite.models;
+package bizworks.backend.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;

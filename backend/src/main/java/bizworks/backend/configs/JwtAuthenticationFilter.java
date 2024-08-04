@@ -1,6 +1,6 @@
-package aptech.project.configs;
+package bizworks.backend.configs;
 
-import aptech.project.services.JwtService;
+import bizworks.backend.services.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;

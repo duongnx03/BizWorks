@@ -1,14 +1,14 @@
-package com.example.bizwebsite.services;
+package bizworks.backend.services;
 
-import com.example.bizwebsite.dtos.DepartmentDTO;
-import com.example.bizwebsite.dtos.EmployeeDTO;
-import com.example.bizwebsite.dtos.PositionDTO;
-import com.example.bizwebsite.models.Department;
-import com.example.bizwebsite.models.Employee;
-import com.example.bizwebsite.models.Position;
-import com.example.bizwebsite.repositories.DepartmentRepository;
-import com.example.bizwebsite.repositories.EmployeeRepository;
-import com.example.bizwebsite.repositories.PositionRepository;
+import bizworks.backend.dtos.DepartmentDTO;
+import bizworks.backend.dtos.EmployeeDTO;
+import bizworks.backend.dtos.PositionDTO;
+import bizworks.backend.models.Department;
+import bizworks.backend.models.Employee;
+import bizworks.backend.models.Position;
+import bizworks.backend.repository.DepartmentRepository;
+import bizworks.backend.repository.EmployeeRepository;
+import bizworks.backend.repository.PositionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -115,7 +115,7 @@ public class DepartmentService {
         EmployeeDTO dto = new EmployeeDTO();
         dto.setId(employee.getId());
         dto.setFullname(employee.getFullname());
-        dto.setDob(employee.getDob());
+//        dto.setDob(employee.getDob());
         dto.setAddress(employee.getAddress());
         dto.setGender(employee.getGender());
         dto.setEmail(employee.getEmail());

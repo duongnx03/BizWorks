@@ -1,6 +1,6 @@
-package com.example.bizwebsite.repositories;
+package bizworks.backend.repository;
 
-import com.example.bizwebsite.models.Department;
+import bizworks.backend.models.Department;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

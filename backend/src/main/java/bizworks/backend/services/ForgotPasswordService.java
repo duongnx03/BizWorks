@@ -1,8 +1,8 @@
-package aptech.project.services;
+package bizworks.backend.services;
 
-import aptech.project.models.ForgotPassword;
-import aptech.project.models.User;
-import aptech.project.repository.ForgotPasswordRepository;
+import bizworks.backend.models.ForgotPassword;
+import bizworks.backend.models.User;
+import bizworks.backend.repository.ForgotPasswordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package aptech.project.configs;
+package bizworks.backend.configs;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

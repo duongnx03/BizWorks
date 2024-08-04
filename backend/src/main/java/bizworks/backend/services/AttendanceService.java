@@ -1,7 +1,7 @@
-package aptech.project.services;
+package bizworks.backend.services;
 
-import aptech.project.models.Attendance;
-import aptech.project.repository.AttendanceRepository;
+import bizworks.backend.models.Attendance;
+import bizworks.backend.repository.AttendanceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

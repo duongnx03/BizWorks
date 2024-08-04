@@ -1,9 +1,12 @@
-package aptech.project.controllers;
+package bizworks.backend.controllers;
 
-import aptech.project.dtos.*;
-import aptech.project.helpers.ApiResponse;
-import aptech.project.models.*;
-import aptech.project.services.*;
+import bizworks.backend.dtos.AuthenticationRequest;
+import bizworks.backend.dtos.AuthenticationResponse;
+import bizworks.backend.dtos.ForgotPasswordDTO;
+import bizworks.backend.dtos.UserDTO;
+import bizworks.backend.helpers.ApiResponse;
+import bizworks.backend.models.*;
+import bizworks.backend.services.*;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -48,46 +51,46 @@ public class AuthenticationController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserDTO>> register(
-            @Valid @RequestBody UserDTO request,
-            BindingResult bindingResult
-    ) {
-        try {
-            if (bindingResult.hasErrors()) {
-                return ResponseEntity.badRequest().body(ApiResponse.badRequest(bindingResult));
-            }
-            UserDTO registeredUser = authenticationService.register(request);
-            User user = authenticationService.findByEmail(registeredUser.getEmail());
-            Department department = departmentService.getDepartmentById(request.getDepartment_id()).orElseThrow();
-            Position position = positionService.getPositionById(request.getPosition_id()).orElseThrow();
-            Employee employee = new Employee();
-            employee.setFullname(request.getFullname());
-            employee.setDob(null);
-            employee.setAddress(null);
-            employee.setGender(null);
-            employee.setEmail(request.getEmail());
-            employee.setPhone(null);
-            employee.setAvatar(null);
-            employee.setStartDate(LocalDate.now());
-            employee.setEndDate(null);
-            employee.setDepartment(department);
-            employee.setPosition(position);
-            employee.setUser(user);
-            Employee empCreate = employeeService.save(employee);
-            if (empCreate == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.errorServer("Error when creating new employee", "BAD_REQUEST"));
-            }
-            VerifyAccount verifyAccount = verifyAccountService.createVerifyAccount(user);
-            if (verifyAccount == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.errorServer("Error generating account verification code", "BAD_REQUEST"));
-            }
-            sendVerificationEmail(request.getEmail(), request.getFullname(), verifyAccount.getVerificationCode());
-            return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(registeredUser, "User registered successfully"));
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
-        }
-    }
+//    @PostMapping("/register")
+//    public ResponseEntity<ApiResponse<UserDTO>> register(
+//            @Valid @RequestBody UserDTO request,
+//            BindingResult bindingResult
+//    ) {
+//        try {
+//            if (bindingResult.hasErrors()) {
+//                return ResponseEntity.badRequest().body(ApiResponse.badRequest(bindingResult));
+//            }
+//            UserDTO registeredUser = authenticationService.register(request);
+//            User user = authenticationService.findByEmail(registeredUser.getEmail());
+//            Department department = departmentService.getDepartmentById(request.getDepartment_id()).orElseThrow();
+//            Position position = positionService.getPositionById(request.getPosition_id()).orElseThrow();
+//            Employee employee = new Employee();
+//            employee.setFullname(request.getFullname());
+//            employee.setDob(null);
+//            employee.setAddress(null);
+//            employee.setGender(null);
+//            employee.setEmail(request.getEmail());
+//            employee.setPhone(null);
+//            employee.setAvatar(null);
+//            employee.setStartDate(LocalDate.now());
+//            employee.setEndDate(null);
+//            employee.setDepartment(department);
+//            employee.setPosition(position);
+//            employee.setUser(user);
+//            Employee empCreate = employeeService.save(employee);
+//            if (empCreate == null) {
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.errorServer("Error when creating new employee", "BAD_REQUEST"));
+//            }
+//            VerifyAccount verifyAccount = verifyAccountService.createVerifyAccount(user);
+//            if (verifyAccount == null) {
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.errorServer("Error generating account verification code", "BAD_REQUEST"));
+//            }
+//            sendVerificationEmail(request.getEmail(), request.getFullname(), verifyAccount.getVerificationCode());
+//            return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(registeredUser, "User registered successfully"));
+//        } catch (Exception ex) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
+//        }
+//    }
 
     @PostMapping("/authenticate")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> authenticate(
@@ -155,7 +158,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<?>> resetPassword(@RequestBody ResetPasswordDTO resetPasswordDTO) {
+    public ResponseEntity<ApiResponse<?>> resetPassword(@RequestBody aptech.project.dtos.ResetPasswordDTO resetPasswordDTO) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String email = authentication.getName();

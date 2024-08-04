@@ -1,12 +1,13 @@
-package com.example.bizwebsite.services;
+package bizworks.backend.services;
 
-import com.example.bizwebsite.dtos.TrainingProgramDTO;
-import com.example.bizwebsite.models.Department;
-import com.example.bizwebsite.models.Employee;
-import com.example.bizwebsite.models.TrainingProgram;
-import com.example.bizwebsite.repositories.DepartmentRepository;
-import com.example.bizwebsite.repositories.EmployeeRepository;
-import com.example.bizwebsite.repositories.TrainingProgramRepository;
+
+import bizworks.backend.dtos.TrainingProgramDTO;
+import bizworks.backend.models.Department;
+import bizworks.backend.models.Employee;
+import bizworks.backend.models.TrainingProgram;
+import bizworks.backend.repository.DepartmentRepository;
+import bizworks.backend.repository.EmployeeRepository;
+import bizworks.backend.repository.TrainingProgramRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;

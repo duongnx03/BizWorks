@@ -1,4 +1,4 @@
-package com.example.bizwebsite.services;
+package bizworks.backend.services;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
