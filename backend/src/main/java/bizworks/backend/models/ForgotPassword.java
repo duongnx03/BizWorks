@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "forgot_passwords")
 @Data
@@ -15,6 +17,7 @@ public class ForgotPassword {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String verificationCode;
+    private LocalDateTime expirationTime;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
