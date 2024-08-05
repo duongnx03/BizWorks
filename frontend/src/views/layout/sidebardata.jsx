@@ -291,6 +291,30 @@ export const SidebarData = [
     separateRoute: false,
     menu: [
       {
+        menuValue: 'Payroll',
+        hasSubRoute: true,
+        showSubRoute: false,
+        icon: "la la-money",
+        subMenus: [
+          {
+            menuValue: 'Salary',
+            route: "/salary",
+          },
+          {
+            menuValue: 'Payslip',
+            route: "/salary-view",
+          },
+          {
+            menuValue: 'Payroll Items',
+            route: "/payroll-items",
+          },
+          {
+            menuValue: 'Taxes',
+            route: "/taxes",
+          },
+        ],
+      },
+      {
         menuValue: 'Sales',
         hasSubRoute: true,
         showSubRoute: false,
@@ -315,11 +339,7 @@ export const SidebarData = [
           {
             menuValue: 'Provident Fund',
             route: "/provident-fund",
-          },
-          {
-            menuValue: 'Taxes',
-            route: "/taxes",
-          },
+          },         
         ],
       },
       // {
@@ -348,28 +368,7 @@ export const SidebarData = [
       //   ],
       // },
 
-      {
-        menuValue: 'Payroll',
-        hasSubRoute: true,
-        showSubRoute: false,
-        icon: "la la-money",
-        subMenus: [
-          {
-            menuValue: 'Salary',
-            route: "/salary",
-          },
-          {
-            menuValue: 'Payslip',
-            route: "/salary-view",
-          },
-          {
-            menuValue: 'Payroll Items',
-            route: "/payroll-items",
-          },
-
-
-        ],
-      },
+      
       {
         menuValue: 'Policies',
         hasSubRoute: false,

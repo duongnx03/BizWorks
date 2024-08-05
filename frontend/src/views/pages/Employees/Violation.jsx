@@ -11,45 +11,22 @@ import { Avatar_02, Avatar_09 } from "../../../Routes/ImagePath";
 
 const Violation = () => {
   const [violations, setViolations] = useState([]);
-  const [employees, setEmployees] = useState({});
-  const [violationTypes, setViolationTypes] = useState({});
   const [deleteId, setDeleteId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [statsData, setStatsData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchViolations = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(`${base_url}/api/violations`);
       setViolations(response.data);
-      
-      const employeeIds = response.data.map(v => v.employeeId);
-      const violationTypeIds = response.data.map(v => v.violationTypeId);
-      const uniqueEmployeeIds = [...new Set(employeeIds)];
-      const uniqueViolationTypeIds = [...new Set(violationTypeIds)];
-      
-      const employeePromises = uniqueEmployeeIds.map(id => axios.get(`${base_url}/api/employees/${id}`));
-      const violationTypePromises = uniqueViolationTypeIds.map(id => axios.get(`${base_url}/api/violation-types/${id}`));
-
-      const [employeeResponses, violationTypeResponses] = await Promise.all([
-        Promise.all(employeePromises),
-        Promise.all(violationTypePromises),
-      ]);
-
-      const employeesData = employeeResponses.reduce((acc, response) => {
-        acc[response.data.id] = response.data;
-        return acc;
-      }, {});
-
-      const violationTypesData = violationTypeResponses.reduce((acc, response) => {
-        acc[response.data.id] = response.data;
-        return acc;
-      }, {});
-
-      setEmployees(employeesData);
-      setViolationTypes(violationTypesData);
       updateStats(response.data);
     } catch (error) {
       console.error("Error fetching violations:", error);
+    }
+    finally {
+      setLoading(false);
     }
   };
 
@@ -62,7 +39,6 @@ const Violation = () => {
       return [];
     }
   };
-
   const updateStats = async (violationsData) => {
     try {
       const employeesData = await fetchEmployees();
@@ -132,24 +108,23 @@ const Violation = () => {
   const handleClose = () => {
     setShowDeleteModal(false);
   };
-
   const userElements = violations.map((item, index) => ({
     key: index,
     id: item.id,
     index: index + 1,
     employeeId: item.employeeId,
-    employee: employees[item.employeeId]?.fullName || "Loading...",
+    employee: item.employee?.fullname || "Loading...",
     role: item.role,
     reason: item.reason,
     violationTypeId: item.violationTypeId,
-    violationType: violationTypes[item.violationTypeId]?.type || "Loading...",
+    violationType: item.violationType?.type || "Loading...",
     date: item.violationDate,
-    image: employees[item.employeeId]?.image || Avatar_02, 
-    apimage: employees[item.employeeId]?.apimage || Avatar_09,
+    image: item.employee?.image || Avatar_02, 
+    apimage: item.employee?.apimage || Avatar_09,
     status: item.status,
   }));
 
-  
+
   const columns = [
     {
       title: "#",
@@ -168,7 +143,6 @@ const Violation = () => {
           <Link to="/profile">{text}</Link>
         </span>
       ),
-      sorter: (a, b) => a.name.length - b.name.length,
     },
     {
       title: "Date",
@@ -178,12 +152,15 @@ const Violation = () => {
     {
       title: "ViolationType",
       dataIndex: "violationType",
-      sorter: (a, b) => a.violationType.length - b.violationType.length,
     },
     {
       title: "Reason",
       dataIndex: "reason",
-      sorter: (a, b) => a.reason.length - b.reason.length,
+      render: (text) => (
+        <span>
+          {text.length > 10 ? `${text.substring(0, 8)}...` : text}
+        </span>
+      ),
     },
     {
       title: "Status",
@@ -245,7 +222,6 @@ const Violation = () => {
       ),
     },
   ];
-
   return (
     <>
       <div className="page-wrapper">
@@ -275,6 +251,7 @@ const Violation = () => {
           <div className="row">
             <div className="col-md-12">
               <div className="table-responsive">
+              <SearchBox />
                 <Table
                   columns={columns}
                   dataSource={userElements}
@@ -294,6 +271,7 @@ const Violation = () => {
         />
       </div>
     </>
+
   );
 };
 

@@ -5,9 +5,15 @@ import bizworks.backend.models.Salary;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SalaryRepository extends JpaRepository<Salary,Long> {
-    List<Salary> findByEmployee(Employee employee);
+    List<Salary> findBySalaryCode(String salaryCode);
+    List<Salary> findByMonthAndYear(Integer month, Integer year);
+    List<Salary> findByEmployeeFullnameContaining(String fullname);
+    List<Salary> findByDateSalaryBetween(LocalDateTime startDate, LocalDateTime endDate);
+    Optional<Salary> findTopByEmployeeIdOrderByDateSalaryDesc(Long employeeId);
 }

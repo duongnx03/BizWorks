@@ -13,13 +13,18 @@ const ViolationType = () => {
   const [editData, setEditData] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+
 
   const fetchViolationTypes = async () => {
+    setLoading(true);
     try {
       const response = await axios.get(`${base_url}/api/violation-types`);
       setViolationTypes(response.data);
     } catch (error) {
       console.error("Error fetching violation types:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -123,8 +128,6 @@ const ViolationType = () => {
           </div>
         </div>
       ),
-      sorter: (a, b) => a.length - b.length,
-      width: "10%",
     },
   ];
 

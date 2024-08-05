@@ -24,4 +24,14 @@ public class EmployeeDTO {
     private LocalDate endDate;
     private String department;
     private String position;
+
+    public EmployeeDTO(Long id, String fullname, String email) {
+        this.id = id;
+        this.fullname = fullname;
+        this.email = email;
+    }
+
+    public EmployeeDTO(Long id) {
+        this.id = id;
+    }
 }

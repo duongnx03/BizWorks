@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -13,21 +14,40 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Salary {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private double basicSalary;
-    private double allowanceSalary;
-    private double deductionSalary;
-    private double bonusSalary;
-    private double overtimeSalary;
-    private double totalSalaryMonth;
-    private double totalSalaryYear;
-    private Date dateSalary;
+    private Long id; // ID của bản ghi lương
+
+    @Column(name = "salary_code", nullable = false, unique = true)
+    private String salaryCode; // Mã tự động của phiếu lương
+
+    @Column(name = "month", nullable = false)
+    private Integer month; // Tháng trả lương
+
+    @Column(name = "year", nullable = false)
+    private Integer year; // Năm trả lương
+
+    private double basicSalary; // Lương cơ bản
+    private double bonusSalary; // Thưởng
+    private double overtimeSalary; // Lương tăng ca
+    private double allowances; // Các khoản phụ cấp
+    private double deductions; // Các khoản khấu trừ
+    private double totalSalary; // Tổng lương
+
+    @Column(name = "date_salary", nullable = false)
+    private LocalDateTime dateSalary; // Ngày nhận lương
+
     @ManyToOne
-    @JoinColumn(name = "empId")
-    private Employee employee;
+    @JoinColumn(name = "empId", nullable = false)
+    private Employee employee; // Nhân viên có lương này
 
     @OneToOne(mappedBy = "salary", cascade = CascadeType.MERGE)
-    private Transaction transaction;
+    private Transaction transaction; // Giao dịch liên quan đến việc trả lương
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt; // Ngày giờ tạo bản ghi
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt; // Ngày giờ cập nhật bản ghi
 }
