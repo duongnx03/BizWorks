@@ -2,9 +2,9 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable react/no-unescaped-entities */
 
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import notifications from "../../assets/json/notifications";
 import message from "../../assets/json/message";
 import {
@@ -21,6 +21,8 @@ import { FaRegBell, FaRegComment } from "react-icons/fa";
 import { useLocation } from "react-router-dom/dist";
 import { useTranslation } from "react-i18next";
 import i18n from "../../i18n";
+import { AuthContext } from "../../Routes/AuthContext";
+import axios from "axios";
 
 const Header = (props) => {
   const data = notifications.notifications;
@@ -30,6 +32,7 @@ const Header = (props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [profile, setProfile] = useState(false);
   const [flagImage, setFlagImage] = useState(lnEnglish);
+  const navigate = useNavigate();
 
   const handlesidebar = () => {
     document.body.classList.toggle("mini-sidebar");
@@ -88,6 +91,23 @@ const Header = (props) => {
             ? lnSpanish
             : lnGerman
     );
+  };
+
+  const { logout } = useContext(AuthContext);
+
+  const handleLogout = async () => {
+    try {
+      await axios.post('http://localhost:8080/api/auth/logout', {}, {
+        withCredentials: true // Include cookies in the request if needed
+      });
+      logout();
+      // Xóa các thông tin liên quan ở frontend nếu cần
+      console.log('Logged out successfully');
+      // Thực hiện điều hướng hoặc cập nhật state để phản ánh việc đăng xuất
+      navigate("/"); // Điều hướng đến trang đăng nhập hoặc trang khác
+    } catch (error) {
+      console.error('Error logging out', error);
+    } 
   };
 
   return (
@@ -363,9 +383,7 @@ const Header = (props) => {
             <Link className="dropdown-item" to="/settings/companysetting">
               Settings
             </Link>
-            <Link className="dropdown-item" to="/">
-              Logout
-            </Link>
+            <button className="dropdown-item" onClick={handleLogout}>Logout</button>
           </div>
         </li>
       </ul>

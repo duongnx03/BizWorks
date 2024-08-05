@@ -1,22 +1,72 @@
-import React, { useState } from "react";
-
+import React, { useEffect, useState } from "react";
 import Breadcrumbs from "../../../../../components/Breadcrumbs";
-import { Link } from "react-router-dom";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Select from "react-select";
-
 import DailyReportTable from "./DailyReportTable";
+import { FaTimes } from "react-icons/fa";
+import axios from "axios";
 
 const DailyReports = () => {
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedDateTwo, setSelectedDateTwo] = useState(null);
-
-  const [isFocused, setIsFocused] = useState(false);
-  const [dateTwo, setdateTwo] = useState(false);
-  const [setSelectedOption] = useState(null);
   const [focused, setFocused] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [summary, setSummary] = useState({});
+  const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [selectedDepartment, setSelectedDepartmentState] = useState(null);
+  const [selectedPosition, setSelectedPositionState] = useState(null);
+  const [noData, setNoData] = useState(false);
+
+  useEffect(() => {
+    axios.get('http://localhost:8080/api/attendance/summary', {
+      withCredentials: true,
+    })
+      .then(response => {
+        if (response.data.data) {
+          setSummary(response.data.data);
+        }
+      })
+      .catch(error => {
+        console.error("Error fetch summary api: ", error);
+      });
+  }, []);
+
+  useEffect(() => {
+    axios.get('http://localhost:8080/api/attendance/getByDate', { withCredentials: true })
+      .then(response => {
+        if (response.data.data) {
+          setData(response.data.data);
+          setFilteredData(response.data.data); // Initialize filteredData
+        }
+      })
+      .catch(error => {
+        console.error("Error fetch attendance by date: ", error);
+      });
+  }, []);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await axios.get("http://localhost:8080/api/departments", {
+          withCredentials: true,
+        });
+
+        const departmentOptions = response.data.map((dept) => ({
+          value: dept.id,
+          label: dept.departmentName,
+          positions: dept.positions.map((pos) => ({
+            value: pos.id,
+            label: pos.positionName,
+          })),
+        }));
+        setDepartments(departmentOptions);
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
 
   const handleLabelClick = () => {
     setFocused(true);
@@ -31,31 +81,39 @@ const DailyReports = () => {
   const handleInputChange = (e) => {
     const value = e.target.value;
     setInputValue(value);
+    filterData(value, selectedDepartment, selectedPosition);
     if (value !== "" && !focused) {
       setFocused(true);
     }
   };
 
-  const handleFocus = () => {
-    setIsFocused(true);
+  const handleDepartmentChange = (selected) => {
+    setSelectedDepartmentState(selected);
+    filterData(inputValue, selected, selectedPosition);
   };
 
-  const handleBlur = () => {
-    setIsFocused(false);
+  const handlePositionChange = (selected) => {
+    setSelectedPositionState(selected);
+    filterData(inputValue, selectedDepartment, selected);
   };
 
-  const handleFocustwo = () => {
-    setdateTwo(true);
-  };
-  const handleBlurtwo = () => {
-    setdateTwo(false);
+  const filterData = (name, department, position) => {
+    const filtered = data.filter(item => {
+      const matchesName = item.employee.fullname.toLowerCase().includes(name.toLowerCase());
+      const matchesDepartment = department ? item.employee.department === department.label : true;
+      const matchesPosition = position ? item.employee.position === position.label : true;
+      return matchesName && matchesDepartment && matchesPosition;
+    });
+    setFilteredData(filtered);
+    setNoData(filtered.length === 0);
   };
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-  };
-  const handleDateChangeTwo = (date) => {
-    setSelectedDateTwo(date);
+  const handleClearFilters = () => {
+    setInputValue("");
+    setSelectedDepartmentState(null);
+    setSelectedPositionState(null);
+    setFilteredData(data);
+    setNoData(false);
   };
 
   const customStyles = {
@@ -68,40 +126,6 @@ const DailyReports = () => {
       },
     }),
   };
-  const options = [
-    { value: 1, label: "Select Department" },
-    { value: 2, label: "Designing" },
-    { value: 3, label: "Development" },
-    { value: 4, label: "Finance" },
-    { value: 5, label: "Hr & Finance" },
-  ];
-
-  const Values = [
-    {
-      id: 1,
-      title: "Total Employees",
-      value: 101,
-      class: "none",
-    },
-    {
-      id: 2,
-      title: "Today Present",
-      value: 84,
-      class: "text-success",
-    },
-    {
-      id: 3,
-      title: "Today Absent",
-      value: 12,
-      class: "text-danger",
-    },
-    {
-      id: 4,
-      title: "Today Left",
-      value: 5,
-      class: "none",
-    },
-  ];
 
   return (
     <div className="page-wrapper">
@@ -113,18 +137,34 @@ const DailyReports = () => {
         />
 
         <div className="row justify-content-center">
-          {Values.map((item) => (
-            <div className="col-md-3 col-sm-6" key={item.id}>
-              <div className="card">
-                <div className="card-body text-center">
-                  <h3 className={item.class}>
-                    <b>{item.value}</b>
-                  </h3>
-                  <p>{item.title}</p>
-                </div>
+          <div className="col-md-4 col-sm-6">
+            <div className="card">
+              <div className="card-body text-center">
+                <h3>{summary.totalEmployees}</h3>
+                <p>Total Employees</p>
               </div>
             </div>
-          ))}
+          </div>
+          <div className="col-md-4 col-sm-6">
+            <div className="card">
+              <div className="card-body text-center">
+                <h3 className="text-success">
+                  <b>{summary.checkedInEmployees}</b>
+                </h3>
+                <p>Today Present</p>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-4 col-sm-6">
+            <div className="card">
+              <div className="card-body text-center">
+                <h3 className="text-danger">
+                  <b>{summary.absentEmployees}</b>
+                </h3>
+                <p>Today Absent</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="row filter-row space">
@@ -153,62 +193,50 @@ const DailyReports = () => {
           <div className="col-sm-6 col-md-3">
             <div className="input-block form-focus select-focus">
               <Select
-                placeholder="Select Department"
-                onChange={setSelectedOption}
-                options={options}
-                className="select floating"
+                options={departments}
+                value={selectedDepartment}
+                onChange={handleDepartmentChange}
+                placeholder="Select"
                 styles={customStyles}
               />
               <label className="focus-label">Department</label>
             </div>
           </div>
           <div className="col-sm-6 col-md-3">
-            <div
-              className={`input-block mb-3 form-focus ${
-                isFocused ? "focused" : ""
-              }`}
-            >
-              <div className="cal-icon focused ">
-                <DatePicker
-                  className="form-control floating datetimepicker"
-                  selected={selectedDate}
-                  onChange={handleDateChange}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                  dateFormat="dd-MM-yyyy"
-                />
-              </div>
-              <label className="focus-label">From</label>
+            <div className="input-block form-focus select-focus">
+              <Select
+                options={selectedDepartment ? departments.find(dept => dept.value === selectedDepartment.value)?.positions : []}
+                value={selectedPosition}
+                onChange={handlePositionChange}
+                placeholder="Select"
+                styles={customStyles}
+              />
+              <label className="focus-label">Position</label>
             </div>
           </div>
-          <div className="col-sm-6 col-md-3">
-            <div
-              className={`input-block mb-3 form-focus ${
-                dateTwo ? "focused" : ""
-              }`}
+          <div className="col-sm-6 col-md-3" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+            <button
+              type="button"
+              className="btn btn-clear"
+              title="Clear Filters"
+              onClick={handleClearFilters}
+              style={{
+                border: 'none',
+                background: 'none',
+                color: '#FF902F',
+                fontSize: '18px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                marginLeft: 'auto', // Align to the right
+              }}
             >
-              <div className="cal-icon">
-                <DatePicker
-                  className="form-control floating datetimepicker"
-                  selected={selectedDateTwo}
-                  onChange={handleDateChangeTwo}
-                  onFocus={handleFocustwo}
-                  onBlur={handleBlurtwo}
-                  dateFormat="dd-MM-yyyy"
-                />
-              </div>
-              <label className="focus-label">To</label>
-            </div>
-          </div>
-          <div className="col-sm-6 col-md-3">
-            <Link to="#" className="btn btn-success btn-block w-100">
-              {" "}
-              Search{" "}
-            </Link>
+              <FaTimes />
+            </button>
           </div>
         </div>
 
-        <DailyReportTable />
+        {noData ? (<div className="alert alert-warning">No data found</div>) : (<DailyReportTable data={filteredData} />)}
       </div>
     </div>
   );

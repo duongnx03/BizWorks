@@ -37,7 +37,7 @@
 }
 .punch-btn-section {
     text-align: center;
-    @include margin-padding(0 0 20px, null);
+    @include margin-padding(0 0 5px, null);
     .punch-btn {
         font-size: $font-size-18;
         font-weight: $font-weight-semibold;
@@ -60,7 +60,7 @@
 }
 .recent-activity {
     .res-activity-list {
-        height: 328px;
+        height: 190px;
         list-style-type: none;
         overflow-y: auto;
         position: relative;

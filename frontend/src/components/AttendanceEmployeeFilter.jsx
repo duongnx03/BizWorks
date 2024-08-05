@@ -1,85 +1,77 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import Select from "react-select";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { FaTimes } from "react-icons/fa";
 
-const AttendanceEmployeeFilter = () => {
-  const [selectedDate, setSelectedDate] = useState(null);
+const AttendanceEmployeeFilter = ({ onDateRangeChange }) => {
+  const [selectedFromDate, setSelectedFromDate] = useState(null);
+  const [selectedToDate, setSelectedToDate] = useState(null);
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
+  const handleFromDateChange = (date) => {
+    setSelectedFromDate(date);
+    onDateRangeChange(date, selectedToDate);
   };
-  const month = [
-    { value: 1, label: "Jan" },
-    { value: 2, label: "Feb" },
-    { value: 3, label: "Mar" },
-    { value: 4, label: "Apr" },
-    { value: 5, label: "May" },
-    { value: 6, label: "June" },
-  ];
-  const year = [
-    { value: 1, label: "2023" },
-    { value: 2, label: "2022" },
-    { value: 3, label: "2021" },
-    { value: 4, label: "2020" },
-    { value: 5, label: "2023" },
-    { value: 6, label: "2018" },
-  ];
 
-  const customStyles = {
-    option: (provided, state) => ({
-      ...provided,
-      backgroundColor: state.isFocused ? "#ff9b44" : "#fff",
-      color: state.isFocused ? "#fff" : "#000",
-      "&:hover": {
-        backgroundColor: "#ff9b44",
-      },
-    }),
+  const handleToDateChange = (date) => {
+    setSelectedToDate(date);
+    onDateRangeChange(selectedFromDate, date);
   };
+
   return (
-    <>
-      {/* Search Filter */}
-      <div className="row filter-row">
-        <div className="col-sm-3">
-          <div className="input-block form-focus select-focus">
-            <div className="cal-icon">
-              <DatePicker
-                selected={selectedDate}
-                onChange={handleDateChange}
-                type="date"
-                className="form-control floating datetimepicker"
-                dateFormat="dd-MM-yyyy"
-              />
-            </div>
-            <label className="focus-label">Date</label>
-          </div>
-        </div>
-        <div className="col-sm-3">
-          <div className="input-block form-focus select-focus">
-            <Select
-              options={month}
-              placeholder="Select"
-              styles={customStyles}
+    <div className="row filter-row">
+      <div className="col-sm-3">
+        <div className="input-block form-focus select-focus">
+          <div className="cal-icon">
+            <DatePicker
+              selected={selectedFromDate}
+              onChange={handleFromDateChange}
+              type="date"
+              className="form-control floating datetimepicker"
+              dateFormat="dd-MM-yyyy"
             />
-
-            <label className="focus-label">Select Month</label>
           </div>
-        </div>
-        <div className="col-sm-3">
-          <div className="input-block form-focus select-focus">
-            <Select options={year} placeholder="Select" styles={customStyles} />
-            <label className="focus-label">Select Year</label>
-          </div>
-        </div>
-        <div className="col-sm-3">
-          <Link to="#" className="btn btn-success btn-block w-100">
-            Search
-          </Link>
+          <label className="focus-label">From</label>
         </div>
       </div>
-      {/* /Search Filter */}
-    </>
+      <div className="col-sm-3">
+        <div className="input-block form-focus select-focus">
+          <div className="cal-icon">
+            <DatePicker
+              selected={selectedToDate}
+              onChange={handleToDateChange}
+              type="date"
+              className="form-control floating datetimepicker"
+              dateFormat="dd-MM-yyyy"
+            />
+          </div>
+          <label className="focus-label">To</label>
+        </div>
+      </div>
+      <div className="col-sm-6" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+        <button
+          type="button"
+          className="btn btn-clear"
+          title="Clear Filters"
+          style={{
+            border: 'none',
+            background: 'none',
+            color: '#FF902F',
+            fontSize: '18px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            marginLeft: 'auto',
+          }}
+          onClick={() => {
+            setSelectedFromDate(null);
+            setSelectedToDate(null);
+            onDateRangeChange(null, null);
+          }}
+        >
+          <FaTimes />
+        </button>
+      </div>
+    </div>
   );
 };
 

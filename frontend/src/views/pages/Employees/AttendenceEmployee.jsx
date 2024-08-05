@@ -1,212 +1,394 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { Table } from "antd";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import AttendanceEmployeeFilter from "../../../components/AttendanceEmployeeFilter";
-import { base_url } from "../../../base_urls";
+import axios from "axios";
+
+const formatTime = (timeString) => {
+  if (!timeString) return '00:00';
+  const [hours, minutes] = timeString.split(':');
+  return `${hours}:${minutes}`;
+};
+
+const getHours = (timeString) => {
+  const [hours, minutes] = timeString.split(':').map(Number);
+  return hours + (minutes / 60);
+};
+
+const calculateWorkTime = (checkInTime, checkOutTime) => {
+  if (!checkInTime || !checkOutTime) return "00:00";
+
+  const checkInDate = new Date(checkInTime);
+  const checkOutDate = new Date(checkOutTime);
+  const diffInMilliseconds = checkOutDate - checkInDate;
+  const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
+  const hours = Math.floor(diffInMinutes / 60);
+  const minutes = diffInMinutes % 60;
+
+  return `${hours}.${minutes < 10 ? '0' : ''}${minutes} hrs`;
+};
+
+const getStatusClass = (status) => {
+  switch (status) {
+    case 'In Progress':
+      return 'bg-warning text-dark';
+    case 'Present':
+      return 'bg-success text-white';
+    case 'Absent':
+      return 'bg-danger text-white';
+    default:
+      return 'bg-secondary text-white';
+  }
+};
+
+const getCurrentWorkTime = (checkInTime) => {
+  if (!checkInTime) return "00:00";
+  
+  const checkInDate = new Date(checkInTime);
+  const now = new Date();
+  const diffInMilliseconds = now - checkInDate;
+  const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
+  const hours = Math.floor(diffInMinutes / 60);
+  const minutes = diffInMinutes % 60;
+  
+  return `${hours}.${minutes < 10 ? '0' : ''}${minutes} hrs`;
+};
+
+const fetchAttendanceData = async (setAttendances, setTodayActivity, fromDate, toDate) => {
+  try {
+    const response = await axios.get('http://localhost:8080/api/attendance/getByEmail', { withCredentials: true });
+    if (response.data.data) {
+      const data = response.data.data;
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startDate = fromDate ? new Date(fromDate) : null;
+      const endDate = toDate ? new Date(toDate) : null;
+      const endOfDay = endDate ? new Date(endDate.setHours(23, 59, 59, 999)) : null;
+
+      const filteredData = data
+        .filter(attendance => {
+          const attendanceDate = new Date(attendance.attendanceDate);
+          return (!startDate || attendanceDate >= startDate) &&
+            (!endOfDay || attendanceDate <= endOfDay);
+        })
+        .filter(attendance => new Date(attendance.attendanceDate) >= startOfMonth)
+        .sort((a, b) => new Date(b.attendanceDate) - new Date(a.attendanceDate));
+
+      setAttendances(filteredData);
+
+      const today = now.toISOString().split('T')[0];
+      const todayAttendance = data.find(attendance => attendance.attendanceDate.startsWith(today));
+
+      setTodayActivity({
+        checkInTime: todayAttendance?.checkInTime ? new Date(todayAttendance.checkInTime).toLocaleString() : "",
+        checkOutTime: todayAttendance?.checkOutTime ? new Date(todayAttendance.checkOutTime).toLocaleString() : "",
+        workTime: todayAttendance?.checkInTime && todayAttendance?.checkOutTime
+          ? calculateWorkTime(todayAttendance.checkInTime, todayAttendance.checkOutTime)
+          : "00:00"
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching attendance data: ", error);
+  }
+};
 
 const AttendanceEmployee = () => {
-  const [users, setUsers] = useState([]);
-  const [activity, setActivity] = useState([]);
-  const [data, setData] = useState([]);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [attendances, setAttendances] = useState([]);
+  const [totalWorkTime, setTotalWorkTime] = useState({
+    totalWorkTimeInWeek: 0,
+    totalWorkTimeInMonth: 0,
+    totalOvertimeInMonth: 0
+  });
+  const [todayActivity, setTodayActivity] = useState({
+    checkInTime: "",
+    checkOutTime: "",
+    workTime: "00:00"
+  });
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [recordsPerPage] = useState(9);
 
-  const userElements = data?.map((user, index) => ({
-    key: index,
-    id: user.id,
-    Date: user.Date,
-    PunchIn: user.PunchIn,
-    PunchOut: user.PunchOut,
-    Production: user.Production,
-    Break: user.Break,
-    Overtime: user.Overtime,
-  }));
+  const totalPages = Math.ceil(attendances.length / recordsPerPage);
 
-  const columns = [
-    {
-      title: "#",
-      dataIndex: "id",
-      sorter: (a, b) => a.id.length - b.id.length,
-    },
-    {
-      title: "Date",
-      dataIndex: "Date",
-      sorter: (a, b) => a.Date.length - b.Date.length,
-    },
-    {
-      title: "PunchIn",
-      dataIndex: "PunchIn",
-      sorter: (a, b) => a.PunchIn.length - b.PunchIn.length,
-    },
-    {
-      title: "PunchOut",
-      dataIndex: "PunchOut",
-      sorter: (a, b) => a.PunchOut.length - b.PunchOut.length,
-    },
-    {
-      title: "Break",
-      dataIndex: "Break",
-      sorter: (a, b) => a.Break.length - b.Break.length,
-    },
-    {
-      title: "Overtime",
-      dataIndex: "Overtime",
-      sorter: (a, b) => a.Overtime.length - b.Overtime.length,
-    },
-  ];
   useEffect(() => {
-    axios
-      .get(base_url + "/api/attendenceemployeedatatable.json")
-      .then((res) => setData(res.data));
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
-    axios.get(base_url + "/api/attendenceemployee.json").then((res) => {
-      // Assuming the API response is an array of objects
-      const apiData = res.data;
-      // Map the API data to the statisticsData format
-      const mappedData = apiData?.map((data) => ({
-        title: data.title,
-        value: data.value,
-        valuespan: data.valuespan,
-        progressWidth: data.progressWidth,
-        progressBarColor: data.progressBarColor,
-      }));
-      setUsers(mappedData);
-    });
-  }, []);
+    fetchAttendanceData(setAttendances, setTodayActivity, fromDate, toDate);
+  }, [fromDate, toDate]);
 
   useEffect(() => {
-    axios
-      .get(base_url + "/api/attendenceemployeeactivity.json")
-      .then((res) => setActivity(res.data));
+    const fetchTotalWorkTime = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/attendance/totalWorkAndOvertime', { withCredentials: true });
+        if (response.data.data) {
+          setTotalWorkTime(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching total work time: ", error);
+      }
+    };
+    fetchTotalWorkTime();
   }, []);
+
+  const handleCheckIn = async () => {
+    try {
+      await axios.post('http://localhost:8080/api/attendance/checkIn', {}, { withCredentials: true });
+      await fetchAttendanceData(setAttendances, setTodayActivity, fromDate, toDate);
+    } catch (error) {
+      console.error("Error during check-in: ", error);
+    }
+  };
+
+  const handleCheckOut = async () => {
+    try {
+      await axios.post('http://localhost:8080/api/attendance/checkOut', {}, { withCredentials: true });
+      await fetchAttendanceData(setAttendances, setTodayActivity, fromDate, toDate);
+    } catch (error) {
+      console.error("Error during check-out: ", error);
+    }
+  };
+
+  const isCheckOutAvailable = () => {
+    const today = currentTime.toISOString().split('T')[0];
+    const todayAttendance = attendances.find(attendance => attendance.attendanceDate.startsWith(today));
+
+    const checkOutStartTime = new Date(currentTime);
+    checkOutStartTime.setHours(16, 25, 0);
+
+    return todayAttendance && todayAttendance.checkInTime && currentTime >= checkOutStartTime;
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const paginatedAttendances = attendances.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  const calculateWorkTimeDisplay = () => {
+    if (todayActivity.checkInTime) {
+      return todayActivity.checkOutTime
+        ? calculateWorkTime(todayActivity.checkInTime, todayActivity.checkOutTime)
+        : getCurrentWorkTime(todayActivity.checkInTime);
+    }
+    return "00:00";
+  };
 
   return (
-    <>
-      <div className="page-wrapper">
-        {/* /Page Header */}
-        <div className="content container-fluid">
-          <Breadcrumbs
-            maintitle="Attendance"
-            title="Dashboard"
-            subtitle="Attendance"
-          />
+    <div className="page-wrapper">
+      <div className="content container-fluid">
+        <Breadcrumbs maintitle="Attendance" title="Dashboard" subtitle="Attendance" />
 
-          {/* /Page Header */}
-          <div className="row">
-            <div className="col-md-4">
-              <div className="card punch-status">
-                <div className="card-body">
-                  <h5 className="card-title">
-                    Timesheet <small className="text-muted">11 Mar 2023</small>
-                  </h5>
-                  <div className="punch-det">
-                    <h6>Punch In at</h6>
-                    <p>Wed, 11th Mar 2023 10.00 AM</p>
+        <div className="row">
+          <div className="col-md-4">
+            <div className="card punch-status">
+              <div className="card-body">
+                <h5 className="card-title">
+                  Timesheet <small className="text-muted"> {currentTime.toLocaleString()}</small>
+                </h5>
+                <div className="punch-info">
+                  <div className="punch-hours">
+                    <span>{calculateWorkTimeDisplay()}</span>
                   </div>
-                  <div className="punch-info">
-                    <div className="punch-hours">
-                      <span>3.45 hrs</span>
-                    </div>
-                  </div>
-                  <div className="punch-btn-section">
-                    <button type="button" className="btn btn-primary punch-btn">
-                      Punch Out
+                </div>
+                <div className="punch-btn-section">
+                  {todayActivity.checkInTime && !todayActivity.checkOutTime ? (
+                    <button
+                      type="button"
+                      className={`btn ${isCheckOutAvailable() ? 'btn-primary' : 'btn-secondary'} punch-btn`}
+                      onClick={handleCheckOut}
+                      disabled={!isCheckOutAvailable()}
+                    >
+                      Check Out
                     </button>
+                  ) : todayActivity.checkOutTime ? (
+                    <button
+                      type="button"
+                      className="btn btn-success punch-btn"
+                      disabled
+                    >
+                      Has Checked Out
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-primary punch-btn"
+                      onClick={handleCheckIn}
+                    >
+                      Check In
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-md-4">
+            <div className="card att-statistics">
+              <div className="card-body">
+                <h5 className="card-title">Statistics</h5>
+                <div className="stats-list">
+                  <div className="stats-info">
+                    <p>
+                      This Week
+                      <strong>
+                        {totalWorkTime?.totalWorkTimeInWeek || 0} <small>/ 40 hrs</small>
+                      </strong>
+                    </p>
+                    <div className="progress">
+                      <div
+                        className="progress-bar bg-warning"
+                        role="progressbar"
+                        style={{ width: `${(getHours(totalWorkTime?.totalWorkTimeInWeek || '0:00') / 40) * 100}%` }}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      />
+                    </div>
                   </div>
-                  <div className="statistics">
-                    <div className="row">
-                      <div className="col-md-6 col-6 text-center">
-                        <div className="stats-box">
-                          <p>Break</p>
-                          <h6>1.21 hrs</h6>
-                        </div>
-                      </div>
-                      <div className="col-md-6 col-6 text-center">
-                        <div className="stats-box">
-                          <p>Overtime</p>
-                          <h6>3 hrs</h6>
-                        </div>
-                      </div>
+                  <div className="stats-info">
+                    <p>
+                      This Month
+                      <strong>
+                        {totalWorkTime?.totalWorkTimeInMonth || 0} <small>/ 160 hrs</small>
+                      </strong>
+                    </p>
+                    <div className="progress">
+                      <div
+                        className="progress-bar bg-success"
+                        role="progressbar"
+                        style={{ width: `${(getHours(totalWorkTime?.totalWorkTimeInMonth || '0:00') / 160) * 100}%` }}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      />
+                    </div>
+                  </div>
+                  <div className="stats-info">
+                    <p>
+                      Overtime in Month
+                      <strong>
+                        {totalWorkTime?.totalOvertimeInMonth || 0} <small>/ 8 hrs</small>
+                      </strong>
+                    </p>
+                    <div className="progress">
+                      <div
+                        className="progress-bar bg-info"
+                        role="progressbar"
+                        style={{ width: `${(getHours(totalWorkTime?.totalOvertimeInMonth || '0:00') / 8) * 100}%` }}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      />
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="col-md-4">
-              <div className="card att-statistics">
-                <div className="card-body">
-                  <h5 className="card-title">Statistics</h5>
-                  <div className="stats-list">
-                    {Array.isArray(users) && users.length > 0 ? (
-                      users.map((data, index) => (
-                        <div className="stats-info" key={index}>
-                          <p>
-                            {data.title}{" "}
-                            <strong>
-                              {data.value} <small>{data.valuespan}</small>
-                            </strong>
-                          </p>
-                          <div className="progress">
-                            <div
-                              className={`progress-bar ${data.progressBarColor}`}
-                              role="progressbar"
-                              style={{ width: data.progressWidth }}
-                              aria-valuenow={data.progressWidth}
-                              aria-valuemin={0}
-                              aria-valuemax={100}
-                            />
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p>No data availble</p>
-                    )}
-                  </div>
-                </div>
+          </div>
+
+          <div className="col-md-4">
+            <div className="card recent-activity">
+              <div className="card-body">
+                <h5 className="card-title">Today Activity</h5>
+                <ul className="res-activity-list">
+                  {todayActivity.checkInTime &&
+                    <li>
+                      <p className="mb-0">Check In at</p>
+                      <p className="res-activity-time">
+                        <i className="fa-regular fa-clock"></i> {todayActivity.checkInTime}
+                      </p>
+                    </li>
+                  }
+                  {todayActivity.checkOutTime &&
+                    <li>
+                      <p className="mb-0">Check Out at</p>
+                      <p className="res-activity-time">
+                        <i className="fa-regular fa-clock"></i> {todayActivity.checkOutTime}
+                      </p>
+                    </li>
+                  }
+                </ul>
               </div>
             </div>
+          </div>
 
-            <div className="col-md-4">
-              <div className="card recent-activity">
-                <div className="card-body">
-                  <h5 className="card-title">Today Activity</h5>
-                  <ul className="res-activity-list">
-                    {Array.isArray(activity) && activity.length > 0 ? (
-                      activity.map((activity, index) => (
-                        <li key={index}>
-                          <p className="mb-0">{activity.title}</p>
-                          <p className="res-activity-time">
-                            <i className="fa-regular fa-clock"></i>{" "}
-                            {activity.time}
-                          </p>
-                        </li>
-                      ))
-                    ) : (
-                      <p>No activities available.</p>
-                    )}
+          <AttendanceEmployeeFilter onDateRangeChange={(from, to) => {
+            setFromDate(from);
+            setToDate(to);
+          }} />
+
+          <div className="row">
+            <div className="col-lg-12">
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Check In Time</th>
+                    <th>Check Out Time</th>
+                    <th>Total Work Time</th>
+                    <th>Overtime</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedAttendances.map(attendance => (
+                    <tr key={attendance.id}>
+                      <td>{new Date(attendance.attendanceDate).toDateString()}</td>
+                      <td>{attendance.checkInTime ? new Date(attendance.checkInTime).toLocaleString() : ""}</td>
+                      <td>{attendance.checkOutTime ? new Date(attendance.checkOutTime).toLocaleString() : ""}</td>
+                      <td>{formatTime(attendance.totalWorkTime)}</td>
+                      <td>{formatTime(attendance.overtime)}</td>
+                      <td className={`text-center ${getStatusClass(attendance.status)}`}>
+                        {attendance.status}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 0' }}>
+                <nav>
+                  <ul className="pagination" style={{ margin: 0 }}>
+                    {Array.from({ length: totalPages }, (_, index) => (
+                      <li
+                        key={index + 1}
+                        className={`page-item ${index + 1 === currentPage ? 'active' : ''}`}
+                        style={{ margin: '0 2px' }}
+                      >
+                        <button
+                          onClick={() => handlePageChange(index + 1)}
+                          className="page-link"
+                          style={{
+                            backgroundColor: index + 1 === currentPage ? '#FF902F' : '#fff',
+                            borderColor: index + 1 === currentPage ? '#FF902F' : '#dee2e6',
+                            color: index + 1 === currentPage ? '#fff' : '#373B3E',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '0.25rem',
+                            border: '1px solid',
+                            cursor: 'pointer',
+                            fontSize: '1rem',
+                          }}
+                        >
+                          {index + 1}
+                        </button>
+                      </li>
+                    ))}
                   </ul>
-                </div>
-              </div>
-            </div>
-
-            <AttendanceEmployeeFilter />
-            <div className="row">
-              <div className="col-lg-12">
-                <div className="table-responsive">
-                  <Table
-                    columns={columns}
-                    dataSource={userElements?.length > 0 ? userElements : []}
-                    className="table-striped"
-                    rowKey={(record) => record.id}
-                  />
-                </div>
+                </nav>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

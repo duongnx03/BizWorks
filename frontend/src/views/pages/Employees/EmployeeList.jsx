@@ -1,233 +1,218 @@
-import React from "react";
-import {
-  Avatar_02,
-  Avatar_05,
-  Avatar_09,
-  Avatar_10,
-  Avatar_11,
-  Avatar_12,
-  Avatar_13,
-} from "../../../Routes/ImagePath";
+import React, { useState, useEffect } from "react";
+import axios from 'axios';
 import { Link } from "react-router-dom";
-import { Table } from "antd";
-import EmployeeListFilter from "../../../components/EmployeeListFilter";
 import Breadcrumbs from "../../../components/Breadcrumbs";
+import EmployeeListFilter from "../../../components/EmployeeListFilter";
 import AllEmployeeAddPopup from "../../../components/modelpopup/AllEmployeeAddPopup";
-import DeleteModal from "../../../components/modelpopup/DeleteModal";
-import SearchBox from "../../../components/SearchBox";
 
 const EmployeeList = () => {
-  const data = [
-    {
-      id: 1,
-      image: Avatar_02,
-      name: "John Doe",
-      role: "Web Designer",
-      employee_id: "FT-0001",
-      email: "johndoe@example.com",
-      mobile: "9876543210",
-      joindate: "1 Jan 2023",
-    },
-    {
-      id: 2,
-      image: Avatar_05,
-      name: "Richard Miles",
-      role: "Web Developer",
-      employee_id: "FT-0002",
-      email: "richardmiles@example.com",
-      mobile: "9876543210",
-      joindate: "18 Mar 2014",
-    },
-    {
-      id: 3,
-      image: Avatar_11,
-      name: "John Smith",
-      role: "Android Developer",
-      employee_id: "FT-0003",
-      email: "johnsmith@example.com	",
-      mobile: "9876543210",
-      joindate: "1 Apr 2014",
-    },
-    {
-      id: 4,
-      image: Avatar_12,
-      name: "Mike Litorus",
-      role: "IOS Developer",
-      employee_id: "FT-0004",
-      email: "mikelitorus@example.com",
-      mobile: "9876543210",
-      joindate: "1 Apr 2014",
-    },
-    {
-      id: 5,
-      image: Avatar_09,
-      name: "Wilmer Deluna",
-      role: "Team Leader",
-      employee_id: "FT-0005",
-      email: "wilmerdeluna@example.com",
-      mobile: "9876543210",
-      joindate: "22 May 2014",
-    },
-    {
-      id: 6,
-      image: Avatar_10,
-      name: "Jeffrey Warden",
-      role: "Web Developer",
-      employee_id: "FT-0006",
-      email: "jeffreywarden@example.com",
-      mobile: "9876543210",
-      joindate: "16 Jun 2023",
-    },
-    {
-      id: 7,
-      image: Avatar_13,
-      name: "Bernardo Galaviz",
-      role: "Web Developer",
-      employee_id: "FT-0007",
-      email: "bernardogalaviz@example.com",
-      mobile: "9876543210",
-      joindate: "1 Jan 2023",
-    },
-  ];
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [selectedPosition, setSelectedPosition] = useState(null);
+  const [startDate, setStartDate] = useState(null);
+  const [noData, setNoData] = useState(false);
+  const recordsPerPage = 9;
 
-  const columns = [
-    {
-      title: "Name",
-      dataIndex: "name",
-      render: (text, record) => (
-        <span className="table-avatar">
-          <Link to="/profile" className="avatar">
-            <img alt="" src={record.image} />
-          </Link>
-          <Link to="/profile">
-            {text} <span>{record.role}</span>
-          </Link>
-        </span>
-      ),
-      sorter: (a, b) => a.name.length - b.name.length,
-    },
-    {
-      title: "Employee ID",
-      dataIndex: "employee_id",
-      sorter: (a, b) => a.employee_id.length - b.employee_id.length,
-    },
+  useEffect(() => {
+    axios.get('http://localhost:8080/api/employee/getAllEmployees', {
+      withCredentials: true,
+    })
+      .then(response => {
+        if (response.data.data) {
+          setEmployees(response.data.data);
+          setFilteredEmployees(response.data.data);
+        }
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Có lỗi xảy ra khi lấy dữ liệu nhân viên:', error);
+        setLoading(false);
+      });
+  }, []);
 
-    {
-      title: "Email",
-      dataIndex: "email",
-      sorter: (a, b) => a.email.length - b.email.length,
-    },
+  useEffect(() => {
+    const filtered = employees.filter(employee => {
+      const matchesName = employee.fullname.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesDepartment = selectedDepartment
+        ? employee.department === selectedDepartment.label
+        : true;
+      const matchesPosition = selectedPosition
+        ? employee.position === selectedPosition.label
+        : true;
+      const matchesStartDate = startDate
+        ? new Date(employee.startDate).toLocaleDateString() === new Date(startDate).toLocaleDateString()
+        : true;
+      return matchesName && matchesDepartment && matchesPosition && matchesStartDate;
+    });
+    setFilteredEmployees(filtered);
+    setNoData(filtered.length === 0);
+  }, [searchTerm, selectedDepartment, selectedPosition, startDate, employees]);
 
-    {
-      title: "Mobile",
-      dataIndex: "mobile",
-      sorter: (a, b) => a.mobile.length - b.mobile.length,
-    },
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
-    {
-      title: "Join Date",
-      dataIndex: "joindate",
-      sorter: (a, b) => a.joindate.length - b.joindate.length,
-    },
-    {
-      title: "Role",
-      sorter: true,
-      render: () => (
-        <div className="dropdown">
-          <Link
-            to="#"
-            className="btn btn-white btn-sm btn-rounded dropdown-toggle"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
-            Web Developer{" "}
-          </Link>
-          <div className="dropdown-menu">
-            <Link className="dropdown-item" to="#">
-              Software Engineer
-            </Link>
-            <Link className="dropdown-item" to="#">
-              Software Tester
-            </Link>
-            <Link className="dropdown-item" to="#">
-              Frontend Developer
-            </Link>
-            <Link className="dropdown-item" to="#">
-              UI/UX Developer
-            </Link>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: "Action",
-      sorter: true,
-      render: () => (
-        <div className="dropdown dropdown-action text-end">
-          <Link
-            to="#"
-            className="action-icon dropdown-toggle"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
-            <i className="material-icons">more_vert</i>
-          </Link>
-          <div className="dropdown-menu dropdown-menu-right">
-            <Link
-              className="dropdown-item"
-              to="#"
-              data-bs-toggle="modal"
-              data-bs-target="#edit_employee"
-            >
-              <i className="fa fa-pencil m-r-5" /> Edit
-            </Link>
-            <Link
-              className="dropdown-item"
-              to="#"
-              data-bs-toggle="modal"
-              data-bs-target="#delete_employee"
-            >
-              <i className="fa fa-trash m-r-5" /> Delete
-            </Link>
-          </div>
-        </div>
-      ),
-    },
-  ];
+  const sortedEmployees = React.useMemo(() => {
+    if (sortConfig.key) {
+      const sortedData = [...filteredEmployees].sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+      return sortedData;
+    }
+    return filteredEmployees;
+  }, [filteredEmployees, sortConfig]);
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key === key) {
+      return sortConfig.direction === 'asc' ? '↑' : '↓';
+    }
+    return '';
+  };
+
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentEmployees = sortedEmployees.slice(indexOfFirstRecord, indexOfLastRecord);
+
+  const totalPages = Math.ceil(sortedEmployees.length / recordsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleSearchInputChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSelectedDepartment = (department) => {
+    setSelectedDepartment(department);
+  };
+
+  const handleSelectedPosition = (position) => {
+    setSelectedPosition(position);
+  };
+
+  const handleStartDate = (date) => {
+    setStartDate(date);
+  };
+
   return (
     <div>
       <div className="page-wrapper">
-        {/* Page Content */}
         <div className="content container-fluid">
-          {/* Page Header */}
           <Breadcrumbs
             maintitle="Employee"
             title="Dashboard"
             subtitle="Employee"
             modal="#add_employee"
             name="Add Employee"
-            Linkname="/employees"
-            Linkname1="/employees-list"
           />
-          {/* /Page Header */}
-          <EmployeeListFilter />
+          <EmployeeListFilter
+            handleSearchInputChange={handleSearchInputChange}
+            setSelectedDepartment={handleSelectedDepartment}
+            setSelectedPosition={handleSelectedPosition}
+            setStartDate={handleStartDate}
+          />
           <div className="row">
             <div className="col-md-12">
               <div className="table-responsive">
-                <SearchBox />
-                <Table
-                  className="table-striped"
-                  columns={columns}
-                  dataSource={data}
-                  rowKey={(record) => record.id}
-                />
+                {loading ? (
+                  <div className="alert alert-info">Loading...</div>
+                ) : noData ? (
+                  <div className="alert alert-warning">No data found</div>
+                ) : (
+                  <>
+                    <table className="table table-striped">
+                      <thead>
+                        <tr>
+                          <th onClick={() => handleSort('fullname')}>
+                            Fullname {getSortIcon('fullname')}
+                          </th>
+                          <th onClick={() => handleSort('id')}>
+                            Employee ID {getSortIcon('id')}
+                          </th>
+                          <th onClick={() => handleSort('email')}>
+                            Email {getSortIcon('email')}
+                          </th>
+                          <th onClick={() => handleSort('startDate')}>
+                            Start Date {getSortIcon('startDate')}
+                          </th>
+                          <th onClick={() => handleSort('department')}>
+                            Department {getSortIcon('department')}
+                          </th>
+                          <th onClick={() => handleSort('position')}>
+                            Position {getSortIcon('position')}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentEmployees.map(employee => (
+                          <tr key={employee.id}>
+                            <td>
+                              <span className="table-avatar">
+                                <Link to={`/client-profile/${employee.id}`} className="avatar">
+                                  <img alt="" src={employee.avatar || "default-avatar.png"} />
+                                </Link>
+                                <Link to={`/client-profile/${employee.id}`}>
+                                  {employee.fullname}
+                                </Link>
+                              </span>
+                            </td>
+                            <td>{employee.id}</td>
+                            <td>{employee.email}</td>
+                            <td>{new Date(employee.startDate).toLocaleDateString()}</td>
+                            <td>{employee.department}</td>
+                            <td>{employee.position}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 0' }}>
+                      <nav>
+                        <ul className="pagination" style={{ margin: 0 }}>
+                          {Array.from({ length: totalPages }, (_, index) => (
+                            <li
+                              key={index + 1}
+                              className={`page-item ${index + 1 === currentPage ? 'active' : ''}`}
+                              style={{ margin: '0 2px' }}
+                            >
+                              <button
+                                onClick={() => handlePageChange(index + 1)}
+                                className="page-link"
+                                style={{
+                                  backgroundColor: index + 1 === currentPage ? '#FF902F' : '#fff',
+                                  borderColor: index + 1 === currentPage ? '#FF902F' : '#dee2e6',
+                                  color: index + 1 === currentPage ? '#fff' : '#373B3E',
+                                }}
+                              >
+                                {index + 1}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </nav>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
         </div>
-        {/* /Page Content */}
         <AllEmployeeAddPopup />
-        <DeleteModal Name="Delete Employee" />
       </div>
     </div>
   );

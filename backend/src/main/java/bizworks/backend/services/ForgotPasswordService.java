@@ -26,6 +26,16 @@ public class ForgotPasswordService {
         ForgotPassword forgotPassword = new ForgotPassword();
         forgotPassword.setVerificationCode(generateVerificationCode());
         forgotPassword.setUser(user);
+        forgotPassword.setExpirationTime(LocalDateTime.now().plusMinutes(5));
+        return forgotPasswordRepository.save(forgotPassword);
+    }
+
+    public ForgotPassword updateVerificationCode(User user) {
+        ForgotPassword forgotPassword = forgotPasswordRepository.findForgotPasswordByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("Forgot password request not found"));
+
+        forgotPassword.setVerificationCode(generateVerificationCode());
+        forgotPassword.setExpirationTime(LocalDateTime.now().plusMinutes(5));
         return forgotPasswordRepository.save(forgotPassword);
     }
 
@@ -35,3 +45,4 @@ public class ForgotPasswordService {
         return String.valueOf(code);
     }
 }
+

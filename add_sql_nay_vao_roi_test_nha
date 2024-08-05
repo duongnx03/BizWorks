@@ -1,0 +1,6 @@
+INSERT INTO `users` (`id`, `email`, `password`, `role`) VALUES (NULL, 'admin@gmail.com', '$2a$10$21V1Fyi5sbGrkuPM/y5KXeVkkipid1HgLLwflzDRPlW9sLVjyxzHe', 'ADMIN')
+INSERT INTO `verify_account` (`id`, `created_at`, `is_verify`, `verification_code`, `user_id`) VALUES (NULL, '2024-07-14 15:09:55.000000', b'1', '924160', '2')
+nho xem cai id cua user la bao nhieu roi sua lai o verify_account nha
+Login
+email: admin@gmail.com
+password: 123@123

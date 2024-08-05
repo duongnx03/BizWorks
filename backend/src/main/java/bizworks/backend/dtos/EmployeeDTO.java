@@ -22,9 +22,6 @@ public class EmployeeDTO {
     private String avatar;
     private LocalDate startDate;
     private LocalDate endDate;
-    private Long positionId; // ID of the position
-    private String positionName; // Optionally, position name
-    private Long departmentId; // ID of the department
-    private String departmentName; // Optionally, department name
-    private String role; // Optional field for role
+    private String department;
+    private String position;
 }

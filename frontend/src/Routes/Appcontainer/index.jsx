@@ -199,6 +199,7 @@ import DealsDetails from "../../views/pages/Crm/DealsDetails.jsx";
 import ViolationType from "../../views/pages/Employees/ViolationType.jsx";
 import Violation from "../../views/pages/Employees/Violation.jsx";
 import Position from "../../views/pages/Employees/Position.jsx";
+import PrivateRoute from "../PrivateRoute.jsx";
 
 const AppContainer = () => {
   useEffect(() => {
@@ -221,7 +222,7 @@ const AppContainer = () => {
     {
       id: 2,
       path: "admin-dashboard",
-      element: <AdminDashboard />,
+      element: <PrivateRoute element={AdminDashboard}  allowedRoles={['ADMIN']}/>,
     },
     {
       id: 3,
@@ -296,7 +297,7 @@ const AppContainer = () => {
     {
       id: 17,
       path: "employee-dashboard",
-      element: <EmployeeDashboard />,
+      element: <PrivateRoute element={EmployeeDashboard} allowedRoles={['EMPLOYEE', 'LEADER']} />,
     },
     {
       id: 18,
@@ -387,7 +388,7 @@ const AppContainer = () => {
     {
       id: 34,
       path: "employees",
-      element: <AllEmpoyee />,
+      element: <PrivateRoute element={EmployeeList} allowedRoles={['ADMIN']}/>,
     },
     {
       id: 35,
@@ -417,7 +418,7 @@ const AppContainer = () => {
     {
       id: 40,
       path: "attendance-employee",
-      element: <AttendanceEmployee />,
+      element: <PrivateRoute element={AttendanceEmployee} allowedRoles={['EMPLOYEE', 'ADMIN', 'LEADER']}/>,
     },
     {
       id: 41,
@@ -481,13 +482,13 @@ const AppContainer = () => {
     },
     {
       id: 52,
-      path: "client-profile",
-      element: <ClientProfile />,
+      path: "client-profile/:id",
+      element: <PrivateRoute element={ClientProfile} allowedRoles={['ADMIN']} />,
     },
     {
       id: 53,
       path: "profile",
-      element: <Profile />,
+      element: <PrivateRoute element={Profile} allowedRoles={['EMPLOYEE', 'LEADER']} />,
     },
     {
       id: 54,
@@ -669,7 +670,7 @@ const AppContainer = () => {
     {
       id: 88,
       path: "daily-reports",
-      element: <DailyReports />,
+      element: <PrivateRoute element={DailyReports} allowedRoles={['ADMIN']} />,
     },
     {
       id: 89,

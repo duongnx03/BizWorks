@@ -63,7 +63,7 @@ const Breadcrumbs = (props) => {
     location.pathname === "/user-asset-details" ||
     location.pathname === "/leaves-setting" ||
     location.pathname === "/project-reports" ||
-    location.pathname === "/client-profile"
+    location.pathname === "/client-profile/id"
   ) {
     addButton = (
       <div className="row">
@@ -159,17 +159,6 @@ const Breadcrumbs = (props) => {
           >
             <i className="fa fa-plus" /> {props.name}
           </Link>
-          <div className="view-icons">
-            <Link
-              to={props.Linkname}
-              className="grid-view btn btn-link active mx-2"
-            >
-              <i className="fa fa-th" />
-            </Link>
-            <Link to={props.Linkname1} className="list-view btn btn-link">
-              <i className="fa fa-bars" />
-            </Link>
-          </div>
         </div>
       </div>
     );

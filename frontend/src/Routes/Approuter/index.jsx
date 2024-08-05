@@ -50,6 +50,10 @@ import Spinner from "../../views/pages/Ui_Interface/Components/Spinner";
 import Tooltips from "../../views/pages/Ui_Interface/Components/Tooltip";
 import ComingSoon from "../../views/pages/Pages/ComingSoon";
 import UnderManitenance from "../../views/pages/Pages/UnderManitenance";
+import TokenManager from "../TokenManager";
+import { AuthProvider } from "../AuthContext";
+import VerificationPage from "../../views/pages/Authentication/VerificationPage";
+import ResetPassword from "../../views/pages/Authentication/ResetPassword";
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -68,62 +72,68 @@ const AppRouter = () => {
   }, []);
   return (
     <div>
-      <Provider store={store}>
-        <BrowserRouter basename="/react/template">
-          <ScrollToTop />
-          <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/change-password" element={<ChangePassword />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/otp" element={<Otp />} />
-            <Route path="/error-404" element={<Error404 />} />
-            <Route path="/error-500" element={<Error500 />} />
-            <Route path="/coming-soon" element={<ComingSoon />} />
-            <Route path="/under-maintenance" element={<UnderManitenance />} />
+      <TokenManager>
+        <AuthProvider>
+          <Provider store={store}>
+            <BrowserRouter basename="/react/template">
+              <ScrollToTop />
+              <Routes>
+                <Route path="/" element={<Login />} />
+                <Route path="/change-password" element={<ChangePassword />} />
+                <Route path="/verification" element={<VerificationPage />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/otp" element={<Otp />} />
+                <Route path="/error-404" element={<Error404 />} />
+                <Route path="/error-500" element={<Error500 />} />
+                <Route path="/coming-soon" element={<ComingSoon />} />
+                <Route path="/under-maintenance" element={<UnderManitenance />} />
 
-            <Route path="/job-list" element={<JobList />} />
-            <Route path="/job-view" element={<JobView />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/lock-screen" element={<LockScreen />} />
-            <Route path="/accordion" element={<Accordions />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/breadcrumbs" element={<Breadcrumbs />} />
-            <Route path="/avatar" element={<Avatar />} />
-            <Route path="/badges" element={<Badges />} />
-            <Route path="/buttons" element={<ButtonCard />} />
-            <Route path="/buttongroup" element={<ButtonGroup />} />
-            <Route path="/cards" element={<Cards />} />
-            <Route path="/dropdowns" element={<Dropdowns />} />
-            <Route path="/grid" element={<Grid />} />
-            <Route path="/images" element={<Images />} />
-            <Route path="/media" element={<Media />} />
-            <Route path="/modal" element={<Modals />} />
-            <Route path="/offcanvas" element={<Offcanvas />} />
-            <Route path="/pagination" element={<Pagination />} />
-            <Route path="/popover" element={<Popover />} />
-            <Route path="/progress" element={<Progress />} />
-            <Route path="/placeholders" element={<Placeholder />} />
-            <Route path="/rangeslider" element={<RangeSlider />} />
-            <Route path="/spinners" element={<Spinners />} />
-            <Route path="/sweetalert" element={<SweetAlert />} />
-            <Route path="/nav-tabs" element={<Tabs />} />
-            <Route path="/toastr" element={<Toats />} />
-            <Route path="/tooltips" element={<Tooltips />} />
-            <Route path="/typography" element={<Typography />} />
-            <Route path="/video" element={<Videos />} />
-            <Route path="/lightbox" element={<Lightbox />} />
-            <Route path="/carousel" element={<Carousel />} />
-            <Route path="/carousel" element={<Carousel />} />
-            <Route path="/borders" element={<Borders />} />
-            <Route path="/breadcrumb" element={<Breadcrumb />} />
-            <Route path="/colors" element={<Colors />} />
-            <Route path="/modals" element={<UiModals />} />
-            <Route path="/spinner" element={<Spinner />} />
-            <Route path="/*" element={<AppContainer />} />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </BrowserRouter>
-      </Provider>
+                <Route path="/job-list" element={<JobList />} />
+                <Route path="/job-view" element={<JobView />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/lock-screen" element={<LockScreen />} />
+                <Route path="/accordion" element={<Accordions />} />
+                <Route path="/alerts" element={<Alerts />} />
+                <Route path="/breadcrumbs" element={<Breadcrumbs />} />
+                <Route path="/avatar" element={<Avatar />} />
+                <Route path="/badges" element={<Badges />} />
+                <Route path="/buttons" element={<ButtonCard />} />
+                <Route path="/buttongroup" element={<ButtonGroup />} />
+                <Route path="/cards" element={<Cards />} />
+                <Route path="/dropdowns" element={<Dropdowns />} />
+                <Route path="/grid" element={<Grid />} />
+                <Route path="/images" element={<Images />} />
+                <Route path="/media" element={<Media />} />
+                <Route path="/modal" element={<Modals />} />
+                <Route path="/offcanvas" element={<Offcanvas />} />
+                <Route path="/pagination" element={<Pagination />} />
+                <Route path="/popover" element={<Popover />} />
+                <Route path="/progress" element={<Progress />} />
+                <Route path="/placeholders" element={<Placeholder />} />
+                <Route path="/rangeslider" element={<RangeSlider />} />
+                <Route path="/spinners" element={<Spinners />} />
+                <Route path="/sweetalert" element={<SweetAlert />} />
+                <Route path="/nav-tabs" element={<Tabs />} />
+                <Route path="/toastr" element={<Toats />} />
+                <Route path="/tooltips" element={<Tooltips />} />
+                <Route path="/typography" element={<Typography />} />
+                <Route path="/video" element={<Videos />} />
+                <Route path="/lightbox" element={<Lightbox />} />
+                <Route path="/carousel" element={<Carousel />} />
+                <Route path="/carousel" element={<Carousel />} />
+                <Route path="/borders" element={<Borders />} />
+                <Route path="/breadcrumb" element={<Breadcrumb />} />
+                <Route path="/colors" element={<Colors />} />
+                <Route path="/modals" element={<UiModals />} />
+                <Route path="/spinner" element={<Spinner />} />
+                <Route path="/*" element={<AppContainer />} />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </BrowserRouter>
+          </Provider>
+        </AuthProvider>
+      </TokenManager>
     </div>
   );
 };
