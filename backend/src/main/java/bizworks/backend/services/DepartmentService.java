@@ -46,6 +46,10 @@ public class DepartmentService {
         return convertToDTO(department);
     }
 
+    public Department getById(Long id){
+        return departmentRepository.findById(id).orElseThrow();
+    }
+
     public Optional<Department> saveDepartment(DepartmentDTO departmentDTO) {
         // Kiểm tra xem phòng ban với tên đã tồn tại chưa
         Optional<Department> existingDepartment = departmentRepository

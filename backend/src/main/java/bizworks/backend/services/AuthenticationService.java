@@ -75,7 +75,7 @@ public class AuthenticationService {
         user.setRole(request.getRole());
         userRepository.save(user);
 
-        Department department = departmentService.getDepartmentById(request.getDepartment_id());
+        Department department = departmentService.getById(request.getDepartment_id());
         Position position = positionService.getPositionById(request.getPosition_id()).orElseThrow();
         Employee employee = new Employee();
         employee.setFullname(request.getFullname());
