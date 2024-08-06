@@ -16,8 +16,6 @@ public class UserDTO {
     private String email;
     private String password;
     private String role;
-    private Long department_id;
-    private Long position_id;
     private LocalDate startDate;
 }
     

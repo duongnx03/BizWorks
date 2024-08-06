@@ -41,12 +41,6 @@ public class AuthenticationService {
     private MailService mailService;
 
     @Autowired
-    private PositionService positionService;
-
-    @Autowired
-    private DepartmentService departmentService;
-
-    @Autowired
     private ForgotPasswordService forgotPasswordService;
 
     @Autowired
@@ -75,8 +69,6 @@ public class AuthenticationService {
         user.setRole(request.getRole());
         userRepository.save(user);
 
-        Department department = departmentService.getById(request.getDepartment_id());
-        Position position = positionService.getPositionById(request.getPosition_id()).orElseThrow();
         Employee employee = new Employee();
         employee.setFullname(request.getFullname());
         employee.setDob(null);
@@ -87,13 +79,11 @@ public class AuthenticationService {
         employee.setAvatar(null);
         employee.setStartDate(request.getStartDate());
         employee.setEndDate(null);
-        employee.setDepartment(department);
-        employee.setPosition(position);
         employee.setUser(user);
         employeeService.save(employee);
 
         VerifyAccount verifyAccount = verifyAccountService.createVerifyAccount(user);
-        sendVerificationEmail(request.getEmail(), request.getFullname(), verifyAccount.getVerificationCode());
+        sendVerificationEmail(request.getEmail(), request.getFullname(), verifyAccount.getVerificationCode(), request.getPassword());
 
         return request;
     }
@@ -240,7 +230,7 @@ public class AuthenticationService {
         }
     }
 
-    private void sendVerificationEmail(String email, String fullname, String verificationCode) {
+    private void sendVerificationEmail(String email, String fullname, String verificationCode, String password) {
         String subject = "Account Verification";
         String content = "<html>"
                 + "<body style='font-family: Arial, sans-serif; padding: 20px;'>"
@@ -248,7 +238,10 @@ public class AuthenticationService {
                 + "<p>Dear " + fullname + ",</p>"
                 + "<p>Welcome to BizWorks. Please use the following verification code to verify your account:</p>"
                 + "<p style='font-size: 24px; font-weight: bold; color: #FF5722;'>" + verificationCode + "</p>"
-                + "<p>This code will expire in 5 minute.</p>"
+                + "<p>Below are your login details:</p>"
+                + "<p>Email: " + email + "</p>"
+                + "<p>Password: " + password + "</p>"
+                + "<p>This code will expire in 5 minutes.</p>"
                 + "<p>Best regards,<br>BizWorks</p>"
                 + "</body>"
                 + "</html>";
@@ -259,4 +252,5 @@ public class AuthenticationService {
             // Handle the error appropriately in a real application
         }
     }
+
 }

@@ -1,22 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import DatePicker from "react-datepicker";
 import Select from "react-select";
 import axios from "axios";
+import ClipLoader from "react-spinners/ClipLoader";
+import "react-datepicker/dist/react-datepicker.css";
 
-const AllEmployeeAddPopup = () => {
-  const [departments, setDepartments] = useState([]);
-  const [positions, setPositions] = useState([]);
-  const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [selectedPosition, setSelectedPosition] = useState(null);
-  const [selectedDate1, setSelectedDate1] = useState(null);
+const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
+  const [selectedDate, setSelectedDate] = useState(null);
   const [fullname, setFullname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [roles] = useState([
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const closeButtonRef = useRef(null);
+
+  const roles = [
     { value: 'LEADER', label: 'Leader' },
     { value: 'EMPLOYEE', label: 'Employee' }
-  ]);
-  const [selectedRole, setSelectedRole] = useState(null);
+  ];
 
   const customStyles = {
     option: (provided, state) => ({
@@ -29,58 +31,103 @@ const AllEmployeeAddPopup = () => {
     }),
   };
 
-  const handleDateChange1 = (date) => {
-    setSelectedDate1(date);
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    setErrors((prevErrors) => ({ ...prevErrors, startDate: "" }));
   };
 
-  // Fetch departments and positions from API
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        const response = await axios.get("http://localhost:8080/api/departments", {
-          withCredentials: true, // Enable cookies to be sent
-        });
-        console.log(response.data);
-
-        const departmentOptions = response.data.map((dept) => ({
-          value: dept.id,
-          label: dept.departmentName,
-          positions: dept.positions.map((pos) => ({
-            value: pos.id,
-            label: pos.positionName,
-          })),
-        }));
-        setDepartments(departmentOptions);
-      } catch (error) {
-        console.error("Error fetching departments:", error);
-      }
-    };
-
-    fetchDepartments();
-  }, []);
-
-  useEffect(() => {
-    if (selectedDepartment) {
-      const department = departments.find(dept => dept.value === selectedDepartment.value);
-      setPositions(department ? department.positions : []);
-      setSelectedPosition(department ? department.positions[0] : null);
-    } else {
-      setPositions([]);
-      setSelectedPosition(null);
+  const validateField = (field, value) => {
+    const newErrors = { ...errors };
+    switch (field) {
+      case "fullname":
+        if (!value) newErrors.fullname = "Full Name is required.";
+        else delete newErrors.fullname;
+        break;
+      case "email":
+        if (!value) newErrors.email = "Email is required.";
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) newErrors.email = "Email is invalid.";
+        else delete newErrors.email;
+        break;
+      case "password":
+        if (!value) newErrors.password = "Password is required.";
+        else if (value.length < 6) newErrors.password = "Password must be at least 6 characters.";
+        else delete newErrors.password;
+        break;
+      case "role":
+        if (!selectedRole) newErrors.role = "Role is required.";
+        else delete newErrors.role;
+        break;
+      case "startDate":
+        if (!value) newErrors.startDate = "Joining Date is required.";
+        else delete newErrors.startDate;
+        break;
+      default:
+        break;
     }
-  }, [selectedDepartment, departments]);
+    setErrors(newErrors);
+  };
+
+  const handleChange = (field, value) => {
+    switch (field) {
+      case "fullname":
+        setFullname(value);
+        validateField("fullname", value);
+        break;
+      case "email":
+        setEmail(value);
+        validateField("email", value);
+        break;
+      case "password":
+        setPassword(value);
+        validateField("password", value);
+        break;
+      case "role":
+        setSelectedRole(value);
+        validateField("role", value);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const resetForm = () => {
+    setSelectedDate(null);
+    setFullname("");
+    setEmail("");
+    setPassword("");
+    setSelectedRole(null);
+    setErrors({});
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!fullname) newErrors.fullname = "Full Name is required.";
+    if (!email) newErrors.email = "Email is required.";
+    else if (!emailRegex.test(email)) newErrors.email = "Email is invalid.";
+    if (!password) newErrors.password = "Password is required.";
+    else if (password.length < 6) newErrors.password = "Password must be at least 6 characters.";
+    if (!selectedRole) newErrors.role = "Role is required.";
+    if (!selectedDate) newErrors.startDate = "Joining Date is required.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    setLoading(true);
 
     const data = {
       fullname,
       email,
       password,
       role: selectedRole ? selectedRole.value : null,
-      department_id: selectedDepartment ? selectedDepartment.value : null,
-      position_id: selectedPosition ? selectedPosition.value : null,
-      startDate: selectedDate1 ? selectedDate1.toISOString().split('T')[0] : null
+      startDate: selectedDate ? selectedDate.toISOString().split('T')[0] : null
     };
 
     try {
@@ -88,9 +135,15 @@ const AllEmployeeAddPopup = () => {
         withCredentials: true, // Enable cookies to be sent
       });
       console.log("Employee added:", response.data);
-      // Handle success (e.g., close modal, clear form, etc.)
+      await refreshEmployeeList(); // Call fetchEmployees after success
+      setLoading(false);
+      if (closeButtonRef.current) {
+        resetForm();
+        closeButtonRef.current.click();
+      }
     } catch (error) {
       console.error("Error adding employee:", error);
+      setLoading(false);
     }
   };
 
@@ -106,6 +159,7 @@ const AllEmployeeAddPopup = () => {
                 className="btn-close"
                 data-bs-dismiss="modal"
                 aria-label="Close"
+                ref={closeButtonRef}
               >
                 <span aria-hidden="true">×</span>
               </button>
@@ -122,9 +176,11 @@ const AllEmployeeAddPopup = () => {
                         className="form-control"
                         type="text"
                         value={fullname}
-                        onChange={(e) => setFullname(e.target.value)}
+                        onChange={(e) => handleChange("fullname", e.target.value)}
+                        onBlur={() => validateField("fullname", fullname)}
                         required
                       />
+                      {errors.fullname && <small className="text-danger">{errors.fullname}</small>}
                     </div>
                   </div>
                   <div className="col-sm-6">
@@ -136,9 +192,11 @@ const AllEmployeeAddPopup = () => {
                         className="form-control"
                         type="text"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => handleChange("email", e.target.value)}
+                        onBlur={() => validateField("email", email)}
                         required
                       />
+                      {errors.email && <small className="text-danger">{errors.email}</small>}
                     </div>
                   </div>
                   <div className="col-sm-6">
@@ -148,11 +206,13 @@ const AllEmployeeAddPopup = () => {
                       </label>
                       <input
                         className="form-control"
-                        type="text"
+                        type="password"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => handleChange("password", e.target.value)}
+                        onBlur={() => validateField("password", password)}
                         required
                       />
+                      {errors.password && <small className="text-danger">{errors.password}</small>}
                     </div>
                   </div>
                   <div className="col-md-6">
@@ -163,10 +223,12 @@ const AllEmployeeAddPopup = () => {
                       <Select
                         options={roles}
                         value={selectedRole}
-                        onChange={setSelectedRole}
+                        onChange={(role) => handleChange("role", role)}
+                        onBlur={() => validateField("role", selectedRole)}
                         placeholder="Select Role"
                         styles={customStyles}
                       />
+                      {errors.role && <small className="text-danger">{errors.role}</small>}
                     </div>
                   </div>
                   <div className="col-sm-6">
@@ -176,41 +238,15 @@ const AllEmployeeAddPopup = () => {
                       </label>
                       <div className="cal-icon">
                         <DatePicker
-                          selected={selectedDate1}
-                          onChange={handleDateChange1}
+                          selected={selectedDate}
+                          onChange={handleDateChange}
                           className="form-control floating datetimepicker"
                           type="date"
                           dateFormat="dd-MM-yyyy"
+                          onBlur={() => validateField("startDate", selectedDate)}
                         />
                       </div>
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">
-                        Department <span className="text-danger">*</span>
-                      </label>
-                      <Select
-                        options={departments}
-                        onChange={setSelectedDepartment}
-                        placeholder="Select"
-                        styles={customStyles}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">
-                        Position <span className="text-danger">*</span>
-                      </label>
-                      <Select
-                        options={positions}
-                        value={selectedPosition}
-                        onChange={setSelectedPosition}
-                        placeholder="Select"
-                        styles={customStyles}
-                        isDisabled={!selectedDepartment} // Disable if no department is selected
-                      />
+                      {errors.startDate && <small className="text-danger">{errors.startDate}</small>}
                     </div>
                   </div>
                 </div>
@@ -218,8 +254,9 @@ const AllEmployeeAddPopup = () => {
                   <button
                     className="btn btn-primary submit-btn"
                     type="submit"
+                    disabled={loading}
                   >
-                    Submit
+                    {loading ? <ClipLoader size={20} color="#fff" /> : "Submit"}
                   </button>
                 </div>
               </form>

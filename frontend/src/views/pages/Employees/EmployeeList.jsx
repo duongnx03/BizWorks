@@ -18,21 +18,27 @@ const EmployeeList = () => {
   const [noData, setNoData] = useState(false);
   const recordsPerPage = 9;
 
-  useEffect(() => {
-    axios.get('http://localhost:8080/api/employee/getAllEmployees', {
-      withCredentials: true,
-    })
-      .then(response => {
-        if (response.data.data) {
-          setEmployees(response.data.data);
-          setFilteredEmployees(response.data.data);
-        }
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error('Có lỗi xảy ra khi lấy dữ liệu nhân viên:', error);
-        setLoading(false);
+  const fetchEmployees = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('http://localhost:8080/api/employee/getAllEmployees', {
+        withCredentials: true,
       });
+      if (response.data.data) {
+        // Sắp xếp nhân viên theo ID từ mới đến cũ
+        const sortedEmployees = response.data.data.sort((a, b) => b.id - a.id);
+        setEmployees(sortedEmployees);
+        setFilteredEmployees(sortedEmployees);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Có lỗi xảy ra khi lấy dữ liệu nhân viên:', error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
   }, []);
 
   useEffect(() => {
@@ -212,7 +218,7 @@ const EmployeeList = () => {
             </div>
           </div>
         </div>
-        <AllEmployeeAddPopup />
+        <AllEmployeeAddPopup refreshEmployeeList={fetchEmployees} />
       </div>
     </div>
   );
