@@ -139,96 +139,96 @@ export const SidebarData = [
       },
     ],
   },
-  {
-    tittle: 'EMPLOYEES',
-    showAsTab: false,
-    separateRoute: false,
-    menu: [
-      {
-        menuValue: 'Employees',
-        hasSubRoute: true,
-        showSubRoute: false,
-        route: "#",
-        icon: "la la-user",
-        subMenus: [
-          {
-            menuValue: 'Holidays',
-            route: "/holidays",
-          },
-          {
-            menuValue: 'Leaves',
-            route: "/leaves-employee",
-          },
-          {
-            menuValue: 'Departments',
-            route: "/departments",
-          },
+  // {
+  //   tittle: 'EMPLOYEES',
+  //   showAsTab: false,
+  //   separateRoute: false,
+  //   menu: [
+  //     {
+  //       menuValue: 'Employees',
+  //       hasSubRoute: true,
+  //       showSubRoute: false,
+  //       route: "#",
+  //       icon: "la la-user",
+  //       subMenus: [
+  //         {
+  //           menuValue: 'Holidays',
+  //           route: "/holidays",
+  //         },
+  //         {
+  //           menuValue: 'Leaves',
+  //           route: "/leaves-employee",
+  //         },
+  //         {
+  //           menuValue: 'Departments',
+  //           route: "/departments",
+  //         },
 
-          {
-            menuValue: 'Training Programs',
-            route: "/training-programs",
-          },
-          // {
-          //   menuValue: 'Attendance',
-          //   route: "/attendaces",
-          // },
-          {
-            menuValue: 'Timesheet',
-            route: "/timesheet",
-          },
-          {
-            menuValue: 'Overtime',
-            route: "/overtime",
-          },
-        ],
-      },
-      // {
-      //   menuValue: 'Clients',
-      //   hasSubRoute: false,
-      //   showSubRoute: false,
-      //   route: "/clients",
-      //   icon: "la la-users",
-      // },
+  //         {
+  //           menuValue: 'Training Programs',
+  //           route: "/training-programs",
+  //         },
+  //         // {
+  //         //   menuValue: 'Attendance',
+  //         //   route: "/attendaces",
+  //         // },
+  //         {
+  //           menuValue: 'Timesheet',
+  //           route: "/timesheet",
+  //         },
+  //         {
+  //           menuValue: 'Overtime',
+  //           route: "/overtime",
+  //         },
+  //       ],
+  //     },
+  //     // {
+  //     //   menuValue: 'Clients',
+  //     //   hasSubRoute: false,
+  //     //   showSubRoute: false,
+  //     //   route: "/clients",
+  //     //   icon: "la la-users",
+  //     // },
 
-      // {
-      //   menuValue: 'Projects',
-      //   hasSubRoute: true,
-      //   showSubRoute: false,
-      //   icon: "la la-rocket",
-      //   subMenus: [
-      //     {
-      //       menuValue: 'Projects',
-      //       route: "/projects",
-      //     },
-      //     {
-      //       menuValue: 'Tasks',
-      //       route: "/tasks",
-      //     },
-      //     {
-      //       menuValue: 'Tasks Board',
-      //       route: "/task-board",
-      //     },
-      //   ],
-      // },
-      // {
-      //   menuValue: 'Tickets',
-      //   hasSubRoute: true,
-      //   showSubRoute: false,
-      //   icon: "la la-ticket",
-      //   subMenus: [
-      //     {
-      //       menuValue: 'Tickets',
-      //       route: "/tickets",
-      //     },
-      //     {
-      //       menuValue: 'Ticket Details',
-      //       route: "/ticket-details",
-      //     },
+  //     // {
+  //     //   menuValue: 'Projects',
+  //     //   hasSubRoute: true,
+  //     //   showSubRoute: false,
+  //     //   icon: "la la-rocket",
+  //     //   subMenus: [
+  //     //     {
+  //     //       menuValue: 'Projects',
+  //     //       route: "/projects",
+  //     //     },
+  //     //     {
+  //     //       menuValue: 'Tasks',
+  //     //       route: "/tasks",
+  //     //     },
+  //     //     {
+  //     //       menuValue: 'Tasks Board',
+  //     //       route: "/task-board",
+  //     //     },
+  //     //   ],
+  //     // },
+  //     // {
+  //     //   menuValue: 'Tickets',
+  //     //   hasSubRoute: true,
+  //     //   showSubRoute: false,
+  //     //   icon: "la la-ticket",
+  //     //   subMenus: [
+  //     //     {
+  //     //       menuValue: 'Tickets',
+  //     //       route: "/tickets",
+  //     //     },
+  //     //     {
+  //     //       menuValue: 'Ticket Details',
+  //     //       route: "/ticket-details",
+  //     //     },
 
-      //   ],
-      // },
-    ],
-  },
+  //     //   ],
+  //     // },
+  //   ],
+  // },
   // {
   //   tittle: 'CRM',
   //   showAsTab: false,

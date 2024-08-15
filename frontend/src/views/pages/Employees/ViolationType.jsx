@@ -19,7 +19,7 @@ const ViolationType = () => {
   const fetchViolationTypes = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${base_url}/api/violation-types`);
+      const response = await axios.get(`${base_url}/api/violation-types` ,{withCredentials: true});
       setViolationTypes(response.data);
     } catch (error) {
       console.error("Error fetching violation types:", error);
@@ -34,7 +34,7 @@ const ViolationType = () => {
 
   const handleAdd = async (data) => {
     try {
-      await axios.post(`${base_url}/api/violation-types`, data);
+      await axios.post(`${base_url}/api/violation-types`, data, {withCredentials: true});
       fetchViolationTypes();
     } catch (error) {
       console.error("Error adding violation type:", error);
@@ -43,7 +43,7 @@ const ViolationType = () => {
 
   const handleEdit = async (id, data) => {
     try {
-      await axios.put(`${base_url}/api/violation-types/${id}`, data);
+      await axios.put(`${base_url}/api/violation-types/${id}`, data, {withCredentials: true});
       fetchViolationTypes();
     } catch (error) {
       console.error("Error editing violation type:", error);
@@ -52,7 +52,7 @@ const ViolationType = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${base_url}/api/violation-types/${deleteId}`);
+      await axios.delete(`${base_url}/api/violation-types/${deleteId}`, {withCredentials: true});
       fetchViolationTypes();
       setDeleteId(null); // Clear the delete ID after successful deletion
       setShowDeleteModal(false);

@@ -18,8 +18,8 @@ const AddViolation = ({ violationData, onSave, onAdd }) => {
     // Fetch employees and violation types
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get(`${base_url}/api/employees`);
-        const data = response.data.map(emp => ({ value: emp.id, label: emp.fullName }));
+        const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, {withCredentials: true});
+        const data = response.data.map(emp => ({ value: emp.id, label: emp.fullname }));
         setEmployees(data);
       } catch (error) {
         console.error("Error fetching employees:", error);
@@ -28,7 +28,7 @@ const AddViolation = ({ violationData, onSave, onAdd }) => {
 
     const fetchViolationTypes = async () => {
       try {
-        const response = await axios.get(`${base_url}/api/violation-types`);
+        const response = await axios.get(`${base_url}/api/violation-types` , {withCredentials: true});
         const data = response.data.map(vt => ({ value: vt.id, label: vt.type }));
         setViolationTypes(data);
       } catch (error) {

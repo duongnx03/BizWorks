@@ -8,6 +8,8 @@ import ViolationModal from "../../../components/modelpopup/ViolationModal";
 import DeleteModal from "../../../components/modelpopup/DeleteModal";
 import { base_url } from "../../../base_urls";
 import { Avatar_02, Avatar_09 } from "../../../Routes/ImagePath";
+import EmployeeListFilter from "../../../components/EmployeeListFilter";
+
 
 const Violation = () => {
   const [violations, setViolations] = useState([]);
@@ -19,9 +21,9 @@ const Violation = () => {
   const fetchViolations = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${base_url}/api/violations`);
+      const response = await axios.get(`${base_url}/api/violations`, {withCredentials: true});
       setViolations(response.data);
-      updateStats(response.data);
+      await updateStats(response.data);
     } catch (error) {
       console.error("Error fetching violations:", error);
     }
@@ -32,7 +34,7 @@ const Violation = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get(`${base_url}/api/employees`);
+      const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, {withCredentials: true});
       return response.data;
     } catch (error) {
       console.error("Error fetching employees:", error);
@@ -42,7 +44,7 @@ const Violation = () => {
   const updateStats = async (violationsData) => {
     try {
       const employeesData = await fetchEmployees();
-      const totalEmployees = employeesData.length;
+      const totalEmployees = employeesData.length > 0 ? employeesData.length : 0;
       const totalViolations = violationsData.length;
       const pendingViolations = violationsData.filter(v => v.status === "Pending").length;
       const rejectedViolations = violationsData.filter(v => v.status === "Rejected").length;
@@ -78,7 +80,7 @@ const Violation = () => {
 
   const handleAdd = async (data) => {
     try {
-      await axios.post(`${base_url}/api/violations`, data);
+      await axios.post(`${base_url}/api/violations`, data, {withCredentials: true});
       fetchViolations();
     } catch (error) {
       console.error("Error adding violation:", error);
@@ -87,7 +89,7 @@ const Violation = () => {
 
   const handleEdit = async (id, data) => {
     try {
-      await axios.put(`${base_url}/api/violations/${id}`, data);
+      await axios.put(`${base_url}/api/violations/${id}`, data, {withCredentials: true});
       fetchViolations();
     } catch (error) {
       console.error("Error editing violation:", error);
@@ -96,7 +98,7 @@ const Violation = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${base_url}/api/violations/${deleteId}`);
+      await axios.delete(`${base_url}/api/violations/${deleteId}`, {withCredentials: true});
       fetchViolations();
       setDeleteId(null);
       setShowDeleteModal(false);
@@ -149,10 +151,10 @@ const Violation = () => {
       dataIndex: "date",
       sorter: (a, b) => a.date.length - b.date.length,
     },
-    {
-      title: "ViolationType",
-      dataIndex: "violationType",
-    },
+    // {
+    //   title: "ViolationType",
+    //   dataIndex: "violationType",
+    // },
     {
       title: "Reason",
       dataIndex: "reason",
@@ -233,7 +235,7 @@ const Violation = () => {
             subtitle="Violation"
             modal="#add_violation"
             name="Add Violation"
-          />
+          />         
 
           {/* /Page Header */}
           <div className="row">
@@ -251,6 +253,7 @@ const Violation = () => {
           <div className="row">
             <div className="col-md-12">
               <div className="table-responsive">
+              <EmployeeListFilter/>
               <SearchBox />
                 <Table
                   columns={columns}

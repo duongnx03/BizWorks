@@ -60,14 +60,15 @@ const EmployeeSalary = () => {
   };
   const options = [
     { value: "--Select--", label: "--Select--" },
-    { value: "Employee", label: "Employee" },
-    { value: "Manager", label: "Manager" },
+    { value: "A01", label: "A01" },
+    { value: "A02", label: "A02" },
+    
   ];
 
   const optionsTwo = [
     { value: "--Select--", label: "--Select--" },
     { value: "Cash", label: "Cash" },
-    { value: "Cheque", label: "Cheque" },
+    { value: "Paypal", label: "Paypal" },
   ];
   const customStyles = {
     option: (provided, state) => ({
@@ -122,7 +123,7 @@ const EmployeeSalary = () => {
                   className="select floating"
                   styles={customStyles}
                 />
-                <label className="focus-label">Purchased By</label>
+                <label className="focus-label">Department</label>
               </div>
             </div>
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
@@ -178,7 +179,7 @@ const EmployeeSalary = () => {
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
               <Link to="#" className="btn btn-success w-100">
                 {" "}
-                Search{" "}
+                Payment{" "}
               </Link>
             </div>
           </div>

@@ -12,8 +12,20 @@ const TaxTable = () => {
     },
     {
       id: "2",
-      taxName: "GST",
-      taxRate: "30%",
+      taxName: "BHYT",
+      taxRate: "1.5%",
+      status: "Active",
+    },
+    {
+      id: "3",
+      taxName: "BHTN",
+      taxRate: "0.5%",
+      status: "Active",
+    },
+    {
+      id: "4",
+      taxName: "BHXH",
+      taxRate: "8%",
       status: "Active",
     },
   ];

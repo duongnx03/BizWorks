@@ -5,9 +5,13 @@ import Select from "react-select";
 const AddSalaryModal = () => {
   const [setselectOne] = useState(null);
 
-  const options = [
-    { value: 1, label: "John Doe" },
-    { value: 2, label: "Richard Miles" },
+  const department = [
+    { value: 1, label: "A01" },
+    { value: 2, label: "A02" },
+  ];
+  const employee = [
+    { value: 1, label: "Dien" },
+    { value: 2, label: "Duong k" },
   ];
 
   const customStyles = {
@@ -44,10 +48,10 @@ const AddSalaryModal = () => {
                 <div className="row">
                   <div className="col-sm-6">
                     <div className="input-block mb-3">
-                      <label className="col-form-label">Select Staff</label>
+                      <label className="col-form-label">Select Department</label>
                       <Select
-                        placeholder="Select a Category"
-                        options={options}
+                        placeholder="Select"
+                        options={department}
                         onChange={setselectOne}
                         className="select"
                         styles={customStyles}
@@ -55,8 +59,16 @@ const AddSalaryModal = () => {
                     </div>
                   </div>
                   <div className="col-sm-6">
-                    <label className="col-form-label">Net Salary</label>
-                    <input className="form-control" type="text" />
+                  <div className="input-block mb-3">
+                      <label className="col-form-label">Select Staff</label>
+                      <Select
+                        placeholder="Select"
+                        options={employee}
+                        onChange={setselectOne}
+                        className="select"
+                        styles={customStyles}
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="row">
@@ -67,65 +79,34 @@ const AddSalaryModal = () => {
                       <input className="form-control" type="text" />
                     </div>
                     <div className="input-block mb-3">
-                      <label className="col-form-label">DA(40%)</label>
+                      <label className="col-form-label">Bonus</label>
                       <input className="form-control" type="text" />
                     </div>
                     <div className="input-block mb-3">
-                      <label className="col-form-label">HRA(15%)</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Conveyance</label>
+                      <label className="col-form-label">Overtime</label>
                       <input className="form-control" type="text" />
                     </div>
                     <div className="input-block mb-3">
                       <label className="col-form-label">Allowance</label>
                       <input className="form-control" type="text" />
                     </div>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">
-                        Medical Allowance
-                      </label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Others</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="add-more">
-                      <Link to="#">
-                        <i className="fa-solid fa-plus-circle" /> Add More
-                      </Link>
-                    </div>
                   </div>
                   <div className="col-sm-6">
                     <h4 className="text-primary">Deductions</h4>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">TDS</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">ESI</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">PF</label>
-                      <input className="form-control" type="text" />
-                    </div>
                     <div className="input-block mb-3">
                       <label className="col-form-label">Leave</label>
                       <input className="form-control" type="text" />
                     </div>
                     <div className="input-block mb-3">
+                      <label className="col-form-label">Violation</label>
+                      <input className="form-control" type="text" />
+                    </div>              
+                    <div className="input-block mb-3">
+                      <label className="col-form-label">Advance salary</label>
+                      <input className="form-control" type="text" />
+                    </div>
+                    <div className="input-block mb-3">
                       <label className="col-form-label">Prof. Tax</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Labour Welfare</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Others</label>
                       <input className="form-control" type="text" />
                     </div>
                     <div className="add-more">

@@ -26,7 +26,7 @@ const PaySlip = () => {
                   <div className="col-sm-6 m-b-20">
                     <img src={Applogo} className="inv-logo" alt="Logo" />
                     <ul className="list-unstyled mb-0">
-                      <li>BizWork</li>
+                      <li>BizWorks</li>
                       <li>391A Nam Ky Khoi Nghia Street,</li>
                       <li>Ward 14, District 3,</li>
                       <li>HCM City, Vietnam, </li>
@@ -34,7 +34,7 @@ const PaySlip = () => {
                   </div>
                   <div className="col-sm-6 m-b-20">
                     <div className="invoice-details">
-                      <h3 className="text-uppercase">Payslip #49029</h3>
+                      <h3 className="text-uppercase">Payslip #SAL_002</h3>
                       <ul className="list-unstyled">
                         <li>
                           Salary Month: <span>August, 2024</span>
@@ -48,13 +48,13 @@ const PaySlip = () => {
                     <ul className="list-unstyled">
                       <li>
                         <h5 className="mb-0">
-                          <strong>Tony Sama</strong>
+                          <strong>Duongk</strong>
                         </h5>
                       </li>
                       <li>
                         <span>Web Designer</span>
                       </li>
-                      <li>Employee ID: BW-014</li>
+                      {/* <li>Employee ID: BW-014</li> */}
                       <li>Joining Date: 1 Jan 2023</li>
                     </ul>
                   </div>
@@ -118,19 +118,19 @@ const PaySlip = () => {
                           </tr>
                           <tr>
                             <td>
-                              <strong>Provident Fund</strong>{" "}
+                              <strong>VAT</strong>{" "}
                               <span className="float-end">$0</span>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>ESI</strong>{" "}
+                              <strong>Violations</strong>{" "}
                               <span className="float-end">$0</span>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>Loan</strong>{" "}
+                              <strong>Advance salary</strong>{" "}
                               <span className="float-end">$300</span>
                             </td>
                           </tr>

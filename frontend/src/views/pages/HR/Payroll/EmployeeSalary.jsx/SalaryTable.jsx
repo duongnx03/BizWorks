@@ -17,7 +17,7 @@ const SalaryTable = () => {
             <img alt="" src={record.avatar} />
           </Link>
           <Link to="/profile">
-            {text} <span>{record.position}</span>
+            {text} <span>{record.name}</span>
           </Link>
         </div>
       ),

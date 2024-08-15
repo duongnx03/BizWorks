@@ -148,7 +148,7 @@ public class ViolationService {
         return violations.stream()
                 .map(v -> new ViolationDTO(
                         v.getId(),
-                        new EmployeeDTO(v.getEmployee().getId()), // Trả về EmployeeDTO
+                        new EmployeeDTO(v.getEmployee().getId(), v.getEmployee().getFullname(), v.getEmployee().getEmail()), // Trả về EmployeeDTO
                         new ViolationTypeDTO(v.getViolationType().getId(), v.getViolationType().getType(), v.getViolationType().getViolationMoney()), // Trả về ViolationTypeDTO
                         v.getViolationDate(),
                         v.getReason(),
