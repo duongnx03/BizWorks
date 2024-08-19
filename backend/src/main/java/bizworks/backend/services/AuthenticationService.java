@@ -1,12 +1,11 @@
-package bizworks.backend.services;
-import bizworks.backend.dtos.*;
-import bizworks.backend.models.*;
-import bizworks.backend.repository.ForgotPasswordRepository;
-import bizworks.backend.repository.RefreshTokenRepository;
-import bizworks.backend.repository.UserRepository;
-import io.jsonwebtoken.Claims;
+package  bizworks.backend.services;
+import  bizworks.backend.dtos.*;
+import  bizworks.backend.models.*;
+import  bizworks.backend.repository.ForgotPasswordRepository;
+import  bizworks.backend.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,12 +13,13 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Optional;
 
 @Service
@@ -53,7 +53,7 @@ public class AuthenticationService {
     private AuthenticationManager authenticationManager;
 
     @Autowired
-    private RefreshTokenRepository refreshTokenRepository;
+    private RefreshTokenService refreshTokenService;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -98,6 +98,12 @@ public class AuthenticationService {
             var jwtToken = jwtService.generateToken(user);
             var refreshToken = jwtService.createRefreshToken(user);
 
+            RefreshToken refreshTokenSave = new RefreshToken();
+            refreshTokenSave.setToken(refreshToken);
+            refreshTokenSave.setUser(user);
+            refreshTokenSave.setExpiryDate(Instant.now().plusMillis(86400000));
+            refreshTokenService.save(refreshTokenSave);
+
             Cookie accessTokenCookie = new Cookie("access_token", jwtToken);
             accessTokenCookie.setHttpOnly(true);
             accessTokenCookie.setSecure(true);
@@ -120,28 +126,6 @@ public class AuthenticationService {
         } catch (BadCredentialsException e) {
             throw new RuntimeException("Invalid email or password");
         }
-    }
-
-    public String refresh(String refreshToken, HttpServletResponse response) {
-        if (jwtService.isRefreshTokenValid(refreshToken)) {
-            Claims claims = jwtService.extractAllClaims(refreshToken);
-            String username = claims.getSubject();
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-
-            if (userDetails != null) {
-                String newAccessToken = jwtService.generateToken(userDetails);
-
-                Cookie accessTokenCookie = new Cookie("access_token", newAccessToken);
-                accessTokenCookie.setHttpOnly(true);
-                accessTokenCookie.setSecure(true);
-                accessTokenCookie.setPath("/");
-                accessTokenCookie.setMaxAge(3600);
-                response.addCookie(accessTokenCookie);
-
-                return newAccessToken;
-            }
-        }
-        throw new RuntimeException("Invalid refresh token");
     }
 
     public void forgotPassword(String email) {
@@ -176,15 +160,14 @@ public class AuthenticationService {
         }
     }
 
-    public void logout(HttpServletResponse response) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            String email = authentication.getName();
-            var user = userRepository.findByEmail(email).orElse(null);
-            if (user != null) {
-                refreshTokenRepository.deleteByUser(user);
-            }
-        }
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        Cookie[] cookies = request.getCookies();
+        String refreshToken = Arrays.stream(cookies)
+                .filter(cookie -> "refresh_token".equals(cookie.getName()))
+                .map(Cookie::getValue)
+                .findAny()
+                .orElse(null);
+        refreshTokenService.removeToken(refreshToken);
 
         Cookie accessTokenCookie = new Cookie("access_token", null);
         accessTokenCookie.setHttpOnly(true);
@@ -223,7 +206,7 @@ public class AuthenticationService {
                 + "</html>";
 
         try {
-            mailService.sendVerificationEmail(email, subject, content);
+            mailService.sendEmail(email, subject, content);
         } catch (MessagingException e) {
             e.printStackTrace();
             // Handle the error appropriately in a real application
@@ -246,7 +229,7 @@ public class AuthenticationService {
                 + "</body>"
                 + "</html>";
         try {
-            mailService.sendVerificationEmail(email, subject, content);
+            mailService.sendEmail(email, subject, content);
         } catch (MessagingException e) {
             e.printStackTrace();
             // Handle the error appropriately in a real application

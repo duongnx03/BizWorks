@@ -5,6 +5,7 @@ import Select from "react-select";
 import DailyReportTable from "./DailyReportTable";
 import { FaTimes } from "react-icons/fa";
 import axios from "axios";
+import ClipLoader from "react-spinners/ClipLoader";
 
 const DailyReports = () => {
   const [focused, setFocused] = useState(false);
@@ -16,6 +17,12 @@ const DailyReports = () => {
   const [selectedDepartment, setSelectedDepartmentState] = useState(null);
   const [selectedPosition, setSelectedPositionState] = useState(null);
   const [noData, setNoData] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 9; 
 
   useEffect(() => {
     axios.get('http://localhost:8080/api/attendance/summary', {
@@ -27,7 +34,7 @@ const DailyReports = () => {
         }
       })
       .catch(error => {
-        console.error("Error fetch summary api: ", error);
+        console.error("Error fetching summary API: ", error);
       });
   }, []);
 
@@ -35,12 +42,15 @@ const DailyReports = () => {
     axios.get('http://localhost:8080/api/attendance/getByDate', { withCredentials: true })
       .then(response => {
         if (response.data.data) {
-          setData(response.data.data);
-          setFilteredData(response.data.data); // Initialize filteredData
+          // Reverse the order of the data
+          const reversedData = response.data.data.reverse();
+          setData(reversedData);
+          setFilteredData(reversedData); // Initialize filteredData
+          setTotalPages(Math.ceil(reversedData.length / pageSize)); // Calculate total pages
         }
       })
       .catch(error => {
-        console.error("Error fetch attendance by date: ", error);
+        console.error("Error fetching attendance by date: ", error);
       });
   }, []);
 
@@ -104,8 +114,12 @@ const DailyReports = () => {
       const matchesPosition = position ? item.employee.position === position.label : true;
       return matchesName && matchesDepartment && matchesPosition;
     });
-    setFilteredData(filtered);
-    setNoData(filtered.length === 0);
+
+    // Reverse filtered data before pagination
+    const reversedFiltered = filtered.reverse();
+    setFilteredData(reversedFiltered);
+    setNoData(reversedFiltered.length === 0);
+    setTotalPages(Math.ceil(reversedFiltered.length / pageSize)); // Update total pages
   };
 
   const handleClearFilters = () => {
@@ -114,7 +128,15 @@ const DailyReports = () => {
     setSelectedPositionState(null);
     setFilteredData(data);
     setNoData(false);
+    setTotalPages(Math.ceil(data.length / pageSize)); // Reset total pages
   };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  // Paginate data
+  const paginatedData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const customStyles = {
     option: (provided, state) => ({
@@ -125,6 +147,37 @@ const DailyReports = () => {
         backgroundColor: "#ff9b44",
       },
     }),
+  };
+
+  const handleMarkAbsent = async () => {
+    const currentTime = new Date();
+    const deadline = new Date();
+    deadline.setHours(17, 0, 0, 0); // 5:00 PM
+
+    if (currentTime < deadline) {
+      alert("You can only mark employees absent after 5:00 PM.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/api/attendance/markAbsent",
+        {},
+        { withCredentials: true }
+      );
+
+      if (response.status === 200) {
+        alert("Marked absent employees successfully.");
+        // Optionally, refresh the data here
+      }
+    } catch (error) {
+      console.error("Error marking employees absent: ", error);
+      alert("An error occurred while marking employees absent.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -236,7 +289,66 @@ const DailyReports = () => {
           </div>
         </div>
 
-        {noData ? (<div className="alert alert-warning">No data found</div>) : (<DailyReportTable data={filteredData} />)}
+
+        {/* Button to mark employees absent */}
+        <div className="row" style={{ marginTop: '20px', marginBottom: '20px' }}>
+          <div className="col-md-12" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleMarkAbsent}
+              disabled={loading}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: loading ? '#ccc' : '#FF902F',
+                borderColor: loading ? '#ccc' : '#FF902F',
+              }}
+            >
+              {loading ? (
+                <ClipLoader size={20} color="#fff" />
+              ) : (
+                'Mark Absent Employees'
+              )}
+            </button>
+          </div>
+        </div>
+
+        {noData ? (
+          <div className="alert alert-warning">No data found</div>
+        ) : (
+          <>
+            <DailyReportTable data={paginatedData} />
+
+            {/* Pagination controls */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 0' }}>
+              <nav>
+                <ul className="pagination" style={{ margin: 0 }}>
+                  {Array.from({ length: totalPages }, (_, index) => (
+                    <li
+                      key={index + 1}
+                      className={`page-item ${index + 1 === currentPage ? 'active' : ''}`}
+                      style={{ margin: '0 2px' }}
+                    >
+                      <button
+                        onClick={() => handlePageChange(index + 1)}
+                        className="page-link"
+                        style={{
+                          backgroundColor: index + 1 === currentPage ? '#FF902F' : '#fff',
+                          borderColor: index + 1 === currentPage ? '#FF902F' : '#dee2e6',
+                          color: index + 1 === currentPage ? '#fff' : '#373B3E',
+                        }}
+                      >
+                        {index + 1}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

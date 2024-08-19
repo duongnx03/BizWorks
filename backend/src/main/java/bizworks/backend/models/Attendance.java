@@ -19,6 +19,8 @@ public class Attendance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private LocalDateTime checkInTime;
+    private LocalDateTime breakTimeStart;
+    private LocalDateTime breakTimeEnd;
     private LocalDateTime checkOutTime;
     private LocalDate attendanceDate;
     private LocalTime totalWorkTime ;

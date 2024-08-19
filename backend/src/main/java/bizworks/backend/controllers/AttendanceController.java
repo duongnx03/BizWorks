@@ -75,6 +75,19 @@ public class AttendanceController {
         }
     }
 
+    @GetMapping("/getByEmailAndDate")
+    public ResponseEntity<ApiResponse<?>> findByEmailAndDate() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String email = authentication.getName();
+            Attendance attendance = attendanceService.getByEmailAndDate(email);
+            AttendanceDTO attendanceDTO = attendanceService.convertToDTO(attendance);
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(attendanceDTO, "Attendance record retrieved successfully"));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
+        }
+    }
+
     @GetMapping("/getAll")
     public ResponseEntity<ApiResponse<?>> findAll() {
         try {
@@ -82,6 +95,34 @@ public class AttendanceController {
                     .map(attendanceService::convertToDTO)
                     .collect(Collectors.toList());
             return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(attendanceDTOs, "All attendance records retrieved successfully"));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
+        }
+    }
+
+    @GetMapping("/getByMonth")
+    public ResponseEntity<ApiResponse<?>> findByMonth() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String email = authentication.getName();
+            List<AttendanceDTO> attendanceDTOs = attendanceService.getAttendancesFromStartOfMonth(email).stream()
+                    .map(attendanceService::convertToDTO)
+                    .collect(Collectors.toList());
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(attendanceDTOs, "All attendance by month records retrieved successfully"));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
+        }
+    }
+
+    @GetMapping("/getForMonth")
+    public ResponseEntity<ApiResponse<?>> findForMonth(@RequestParam int month, @RequestParam int year) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String email = authentication.getName();
+            List<AttendanceDTO> attendanceDTOs = attendanceService.getAttendancesForMonth(email, month, year).stream()
+                    .map(attendanceService::convertToDTO)
+                    .collect(Collectors.toList());
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(attendanceDTOs, "All attendance by month records retrieved successfully"));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
         }

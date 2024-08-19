@@ -112,10 +112,6 @@ export const SidebarData = [
             route: "/adminleaves",
           },
           {
-            menuValue: 'Attendance',
-            route: "/adminattendance",
-          },
-          {
             menuValue: 'Departments',
             route: "/departments",
           },
@@ -139,96 +135,87 @@ export const SidebarData = [
       },
     ],
   },
-  // {
-  //   tittle: 'EMPLOYEES',
-  //   showAsTab: false,
-  //   separateRoute: false,
-  //   menu: [
-  //     {
-  //       menuValue: 'Employees',
-  //       hasSubRoute: true,
-  //       showSubRoute: false,
-  //       route: "#",
-  //       icon: "la la-user",
-  //       subMenus: [
-  //         {
-  //           menuValue: 'Holidays',
-  //           route: "/holidays",
-  //         },
-  //         {
-  //           menuValue: 'Leaves',
-  //           route: "/leaves-employee",
-  //         },
-  //         {
-  //           menuValue: 'Departments',
-  //           route: "/departments",
-  //         },
+  {
+    tittle: 'EMPLOYEES',
+    showAsTab: false,
+    separateRoute: false,
+    menu: [
+      {
+        menuValue: 'Employees',
+        hasSubRoute: true,
+        showSubRoute: false,
+        route: "#",
+        icon: "la la-user",
+        subMenus: [
+          {
+            menuValue: 'Attendance',
+            route: "/attendance-employee",
+          },
+          {
+            menuValue: 'Attendance Data',
+            route: "/adminattendance",
+          },
+          {
+            menuValue: 'Holidays',
+            route: "/holidays",
+          },
+          {
+            menuValue: 'Leaves',
+            route: "/leaves-employee",
+          },
+          {
+            menuValue: 'Training Programs',
+            route: "/training-programs",
+          },
+        ],
+      },
+      // {
+      //   menuValue: 'Clients',
+      //   hasSubRoute: false,
+      //   showSubRoute: false,
+      //   route: "/clients",
+      //   icon: "la la-users",
+      // },
 
-  //         {
-  //           menuValue: 'Training Programs',
-  //           route: "/training-programs",
-  //         },
-  //         // {
-  //         //   menuValue: 'Attendance',
-  //         //   route: "/attendaces",
-  //         // },
-  //         {
-  //           menuValue: 'Timesheet',
-  //           route: "/timesheet",
-  //         },
-  //         {
-  //           menuValue: 'Overtime',
-  //           route: "/overtime",
-  //         },
-  //       ],
-  //     },
-  //     // {
-  //     //   menuValue: 'Clients',
-  //     //   hasSubRoute: false,
-  //     //   showSubRoute: false,
-  //     //   route: "/clients",
-  //     //   icon: "la la-users",
-  //     // },
+      // {
+      //   menuValue: 'Projects',
+      //   hasSubRoute: true,
+      //   showSubRoute: false,
+      //   icon: "la la-rocket",
+      //   subMenus: [
+      //     {
+      //       menuValue: 'Projects',
+      //       route: "/projects",
+      //     },
+      //     {
+      //       menuValue: 'Tasks',
+      //       route: "/tasks",
+      //     },
+      //     {
+      //       menuValue: 'Tasks Board',
+      //       route: "/task-board",
+      //     },
+      //   ],
+      // },
+      // {
+      //   menuValue: 'Tickets',
+      //   hasSubRoute: true,
+      //   showSubRoute: false,
+      //   icon: "la la-ticket",
+      //   subMenus: [
+      //     {
+      //       menuValue: 'Tickets',
+      //       route: "/tickets",
+      //     },
+      //     {
+      //       menuValue: 'Ticket Details',
+      //       route: "/ticket-details",
+      //     },
 
-  //     // {
-  //     //   menuValue: 'Projects',
-  //     //   hasSubRoute: true,
-  //     //   showSubRoute: false,
-  //     //   icon: "la la-rocket",
-  //     //   subMenus: [
-  //     //     {
-  //     //       menuValue: 'Projects',
-  //     //       route: "/projects",
-  //     //     },
-  //     //     {
-  //     //       menuValue: 'Tasks',
-  //     //       route: "/tasks",
-  //     //     },
-  //     //     {
-  //     //       menuValue: 'Tasks Board',
-  //     //       route: "/task-board",
-  //     //     },
-  //     //   ],
-  //     // },
-  //     // {
-  //     //   menuValue: 'Tickets',
-  //     //   hasSubRoute: true,
-  //     //   showSubRoute: false,
-  //     //   icon: "la la-ticket",
-  //     //   subMenus: [
-  //     //     {
-  //     //       menuValue: 'Tickets',
-  //     //       route: "/tickets",
-  //     //     },
-  //     //     {
-  //     //       menuValue: 'Ticket Details',
-  //     //       route: "/ticket-details",
-  //     //     },
-
-  //     //   ],
-  //     // },
-  //   ],
-  // },
+      //   ],
+      // },
+    ],
+  },
   // {
   //   tittle: 'CRM',
   //   showAsTab: false,
@@ -403,18 +390,6 @@ export const SidebarData = [
             route: "/task-reports"
           },
           {
-            menuValue: "User Report",
-            route: "/user-reports"
-          },
-          {
-            menuValue: "Employee Report",
-            route: "/employee-reports"
-          },
-          {
-            menuValue: "Payslip Report",
-            route: "/payslip-reports"
-          },
-          {
             menuValue: "Attendance Report",
             route: "/attendance-reports"
           },
@@ -423,9 +398,21 @@ export const SidebarData = [
             route: "/leave-reports"
           },
           {
+            menuValue: "Payslip Report",
+            route: "/payslip-reports"
+          },
+          {
             menuValue: "Daily Report",
             route: "/daily-reports"
-          }
+          },
+          {
+            menuValue: "User Report",
+            route: "/user-reports"
+          },
+          {
+            menuValue: "Employee Report",
+            route: "/employee-reports"
+          },
         ]
       }
     ],

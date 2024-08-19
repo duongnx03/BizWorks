@@ -14,14 +14,13 @@ import jakarta.mail.internet.MimeMessage;
 public class MailService {
     private final JavaMailSender mailSender;
 
-    public void sendVerificationEmail(String to, String subject, String content) throws MessagingException {
+    public void sendEmail(String to, String subject, String content) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(content, true); // true indicates HTML
-
         mailSender.send(message);
     }
 }

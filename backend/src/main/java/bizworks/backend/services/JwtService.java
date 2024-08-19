@@ -26,15 +26,26 @@ public class JwtService {
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+        if (claims != null) {
+            return claimsResolver.apply(claims);
+        }
+        return null;
     }
 
     public Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSignInKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            // Trường hợp token đã hết hạn, nhưng chúng ta vẫn có thể lấy được các claims
+            return e.getClaims();
+        } catch (Exception e) {
+            // Xử lý các lỗi khác
+            return null;
+        }
     }
 
     private Key getSignInKey() {
@@ -57,16 +68,21 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        try {
+            final String username = extractUsername(token);
+            Claims claims = extractAllClaims(token);
+            if (claims != null) {
+                return (username.equals(userDetails.getUsername())) && !isTokenExpired(claims);
+            }
+            return false;
+        } catch (Exception e) {
+            // Xử lý lỗi khi kiểm tra token
+            return false;
+        }
     }
 
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+    private boolean isTokenExpired(Claims claims) {
+        return claims.getExpiration().before(new Date());
     }
 
     public String createRefreshToken(UserDetails userDetails) {
@@ -81,8 +97,9 @@ public class JwtService {
     public boolean isRefreshTokenValid(String token) {
         try {
             Claims claims = extractAllClaims(token);
-            return claims.getExpiration().after(new Date());
+            return claims != null && claims.getExpiration().after(new Date());
         } catch (Exception e) {
+            // Xử lý lỗi khi kiểm tra refresh token
             return false;
         }
     }

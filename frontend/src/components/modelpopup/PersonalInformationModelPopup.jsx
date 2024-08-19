@@ -1,331 +1,306 @@
-import React, { useState } from "react";
-import { Avatar_02 } from "../../Routes/ImagePath";
-import { Link } from "react-router-dom";
-import DatePicker from "react-datepicker";
-import Select from "react-select";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-const PersonalInformationModelPopup = () => {
-  const [selectedDate1, setSelectedDate1] = useState(null);
+const PersonalInformationModelPopup = ({ onSave }) => {
+  const [employee, setEmployee] = useState({
+    dob: "",
+    address: "",
+    gender: "",
+    phone: "",
+    avatar: "",
+    fileImage: null,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
-  const handleDateChange1 = (date) => {
-    setSelectedDate1(date);
+  const [validationErrors, setValidationErrors] = useState({
+    dob: "",
+    gender: "",
+    phone: "",
+    address: "",
+  });
+
+  const fetchEmployee = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/api/employee/getEmployee", {
+        withCredentials: true,
+      });
+      setEmployee(response.data.data);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
-  const domain = [
-    { value: 1, label: "Select Department" },
-    { value: 2, label: "Web Development+" },
-    { value: 3, label: "IT Management" },
-    { value: 4, label: "Marketing" },
-  ];
-  const developer = [
-    { value: 1, label: "Select Department" },
-    { value: 2, label: "Web Development+" },
-    { value: 3, label: "IT Management" },
-    { value: 4, label: "Marketing" },
-  ];
-  const reporter = [
-    { value: 2, label: "Wilmer Deluna" },
-    { value: 3, label: "Lesley Grauer" },
-    { value: 4, label: "Jeffery Lalor" },
-  ];
-  const status = [
-    { value: 1, label: "Single" },
-    { value: 2, label: "Married" },
-  ];
-  const gender = [
-    { value: 1, label: "Male" },
-    { value: 2, label: "Female" },
-  ];
-  const customStyles = {
-    option: (provided, state) => ({
-      ...provided,
-      backgroundColor: state.isFocused ? "#ff9b44" : "#fff",
-      color: state.isFocused ? "#fff" : "#000",
-      "&:hover": {
-        backgroundColor: "#ff9b44",
-      },
-    }),
+
+  useEffect(() => {
+    fetchEmployee();
+  }, []);
+
+  const validateField = (name, value) => {
+    const errors = { ...validationErrors };
+
+    switch (name) {
+      case 'dob':
+        const today = new Date();
+        const dob = new Date(value);
+        let age = today.getFullYear() - dob.getFullYear();
+        const monthDifference = today.getMonth() - dob.getMonth();
+        const dayDifference = today.getDate() - dob.getDate();
+
+        if (monthDifference < 0 || (monthDifference === 0 && dayDifference < 0)) {
+          age--;
+        }
+
+        if (!value || age < 18) {
+          errors.dob = "You must be at least 18 years old.";
+        } else {
+          errors.dob = "";
+        }
+        break;
+
+      case 'gender':
+        if (!value) {
+          errors.gender = "Gender is required.";
+        } else {
+          errors.gender = "";
+        }
+        break;
+
+      case 'phone':
+        const phoneRegex = /^\d{10}$/;
+        if (!value || !phoneRegex.test(value)) {
+          errors.phone = "Phone number must be exactly 10 digits.";
+        } else {
+          errors.phone = "";
+        }
+        break;
+
+      case 'address':
+        const addressRegex = /^[\w\s/-]+$/;
+        if (!value || !addressRegex.test(value)) {
+          errors.address = "Address contains invalid characters.";
+        } else {
+          errors.address = "";
+        }
+        break;
+
+      default:
+        break;
+    }
+
+    setValidationErrors(errors);
   };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEmployee({ ...employee, [name]: value });
+    validateField(name, value); // Validate field on change
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setEmployee({ ...employee, fileImage: file });
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
+  const handleGenderChange = (e) => {
+    const selectedGender = e.target.value;
+    setEmployee((prevEmployee) => ({
+      ...prevEmployee,
+      gender: selectedGender || "Male",
+    }));
+    validateField('gender', selectedGender); // Validate gender on change
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate all fields before submission
+    validateField('dob', employee.dob);
+    validateField('gender', employee.gender);
+    validateField('phone', employee.phone);
+    validateField('address', employee.address);
+
+    if (Object.values(validationErrors).some(error => error)) {
+      return; // If there are validation errors, prevent submission
+    }
+
+    // Đảm bảo rằng nếu người dùng không chọn gender thì giá trị được đặt là "Male"
+    const genderToSubmit = employee.gender || "Male";
+
+    const formData = new FormData();
+    formData.append("dob", employee.dob);
+    formData.append("address", employee.address);
+    formData.append("gender", genderToSubmit);
+    formData.append("phone", employee.phone);
+    if (employee.fileImage) {
+      formData.append("fileImage", employee.fileImage);
+    }
+
+    try {
+      const response = await axios.put("http://localhost:8080/api/employee/updateEmployee", formData, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log(response.data);
+      onSave();
+    } catch (error) {
+      console.error(error);
+      alert("Update failed");
+    }
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <>
-      <div id="profile_info" className="modal custom-modal fade" role="dialog">
-        <div
-          className="modal-dialog modal-dialog-centered modal-lg"
-          role="document"
-        >
+      <div
+        id="profile_info"
+        className="modal custom-modal fade"
+        role="dialog"
+        aria-labelledby="profileInfoLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog modal-dialog-centered modal-lg" role="document">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title">Profile Information</h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
+              <h5 className="modal-title" id="profileInfoLabel">Profile Information</h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">×</span>
               </button>
             </div>
             <div className="modal-body">
-              <form>
+              <form onSubmit={handleSubmit}>
                 <div className="row">
                   <div className="col-md-12">
                     <div className="profile-img-wrap edit-img">
-                      <img
-                        className="inline-block"
-                        src={Avatar_02}
-                        alt="user"
-                      />
+                      <img className="inline-block" src={previewImage || employee.avatar} alt="User Avatar" />
                       <div className="fileupload btn">
-                        <span className="btn-text">edit</span>
-                        <input className="upload" type="file" />
+                        <span className="btn-text">Edit</span>
+                        <input
+                          className="upload"
+                          type="file"
+                          name="fileImage"
+                          onChange={handleFileChange}
+                        />
                       </div>
                     </div>
                     <div className="row">
                       <div className="col-md-6">
                         <div className="input-block mb-3">
-                          <label className="col-form-label">First Name</label>
+                          <label className="col-form-label">Full Name</label>
                           <input
                             type="text"
                             className="form-control"
-                            defaultValue="John"
+                            value={employee.fullname}
+                            readOnly
                           />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="input-block mb-3">
-                          <label className="col-form-label">Last Name</label>
+                          <label className="col-form-label">Email</label>
                           <input
                             type="text"
                             className="form-control"
-                            defaultValue="Doe"
+                            value={employee.email}
+                            readOnly
                           />
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="input-block mb-3">
-                          <label className="col-form-label">Birth Date</label>
-                          <div>
-                            <DatePicker
-                              selected={selectedDate1}
-                              onChange={handleDateChange1}
-                              className="form-control floating datetimepicker"
-                              type="date"
-                              placeholderText="04/10/2023"
-                              dateFormat="dd-MM-yyyy"
-                            />
-                          </div>
+                          <label className="col-form-label">Department</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={employee.department}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="input-block mb-3">
+                          <label className="col-form-label">Position</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={employee.position}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="input-block mb-3">
+                          <label className="col-form-label">Start Date</label>
+                          <input
+                            type="date"
+                            className="form-control"
+                            value={employee.startDate}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="input-block mb-3">
+                          <label className="col-form-label">Birth Day</label>
+                          <input
+                            type="date"
+                            className="form-control"
+                            name="dob"
+                            value={employee.dob}
+                            onChange={handleInputChange}
+                          />
+                          {validationErrors.dob && <div className="text-danger">{validationErrors.dob}</div>}
                         </div>
                       </div>
                       <div className="col-md-6">
                         <div className="input-block mb-3">
                           <label className="col-form-label">Gender</label>
-                          <Select
-                            options={gender}
-                            placeholder="-"
-                            styles={customStyles}
+                          <select
+                            className="form-select"
+                            name="gender"
+                            value={employee.gender}
+                            onChange={handleGenderChange}
+                          >
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                          </select>
+                          {validationErrors.gender && <div className="text-danger">{validationErrors.gender}</div>}
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="input-block mb-3">
+                          <label className="col-form-label">Phone Number</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="phone"
+                            value={employee.phone}
+                            onChange={handleInputChange}
                           />
+                          {validationErrors.phone && <div className="text-danger">{validationErrors.phone}</div>}
                         </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="row">
-                  <div className="col-md-12">
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Address</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        defaultValue="4487 Snowbird Lane"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">State</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        defaultValue="New York"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Country</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        defaultValue="United States"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Pin Code</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        defaultValue={10523}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Phone Number</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        defaultValue="631-889-3206"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">
-                        Department <span className="text-danger">*</span>
-                      </label>
-                      <Select
-                        options={domain}
-                        placeholder="Select Department"
-                        styles={customStyles}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">
-                        Designation <span className="text-danger">*</span>
-                      </label>
-                      <Select
-                        options={developer}
-                        placeholder="Select Department"
-                        styles={customStyles}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">
-                        Reports To <span className="text-danger">*</span>
-                      </label>
-
-                      <Select
-                        options={reporter}
-                        placeholder="-"
-                        styles={customStyles}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="submit-section">
-                  <button
-                    className="btn btn-primary submit-btn"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                    type="reset"
-                  >
-                    Submit
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        id="emergency_contact_modal"
-        className="modal custom-modal fade"
-        role="dialog"
-      >
-        <div
-          className="modal-dialog modal-dialog-centered modal-lg"
-          role="document"
-        >
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title">Personal Information</h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <span aria-hidden="true">×</span>
-              </button>
-            </div>
-            <div className="modal-body">
-              <form>
-                <div className="card">
-                  <div className="card-body">
-                    <h3 className="card-title">Primary Contact</h3>
-                    <div className="row">
-                      <div className="col-md-6">
-                        <div className="input-block mb-3 mb-3">
-                          <label className="col-form-label">
-                            Name <span className="text-danger">*</span>
-                          </label>
-                          <input type="text" className="form-control" />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="input-block mb-3 mb-3">
-                          <label className="col-form-label">
-                            Relationship <span className="text-danger">*</span>
-                          </label>
-                          <input className="form-control" type="text" />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="input-block mb-3 mb-3">
-                          <label className="col-form-label">
-                            Phone <span className="text-danger">*</span>
-                          </label>
-                          <input className="form-control" type="text" />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="input-block mb-3 mb-3">
-                          <label className="col-form-label">Phone 2</label>
-                          <input className="form-control" type="text" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="card">
-                  <div className="card-body">
-                    <h3 className="card-title">Primary Contact</h3>
-                    <div className="row">
-                      <div className="col-md-6">
-                        <div className="input-block mb-3 mb-3">
-                          <label className="col-form-label">
-                            Name <span className="text-danger">*</span>
-                          </label>
-                          <input type="text" className="form-control" />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="input-block mb-3 mb-3">
-                          <label className="col-form-label">
-                            Relationship <span className="text-danger">*</span>
-                          </label>
-                          <input className="form-control" type="text" />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="input-block mb-3 mb-3">
-                          <label className="col-form-label">
-                            Phone <span className="text-danger">*</span>
-                          </label>
-                          <input className="form-control" type="text" />
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="input-block mb-3 mb-3">
-                          <label className="col-form-label">Phone 2</label>
-                          <input className="form-control" type="text" />
+                      <div className="col-md-12">
+                        <div className="input-block mb-3">
+                          <label className="col-form-label">Address</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            name="address"
+                            value={employee.address}
+                            onChange={handleInputChange}
+                          />
+                          {validationErrors.address && <div className="text-danger">{validationErrors.address}</div>}
                         </div>
                       </div>
                     </div>
@@ -336,7 +311,7 @@ const PersonalInformationModelPopup = () => {
                     className="btn btn-primary submit-btn"
                     data-bs-dismiss="modal"
                     aria-label="Close"
-                    type="reset"
+                    type="submit"
                   >
                     Submit
                   </button>
@@ -346,670 +321,6 @@ const PersonalInformationModelPopup = () => {
           </div>
         </div>
       </div>
-
-      {/* Personal Info Modal */}
-      <div
-        id="personal_info_modal"
-        className="modal custom-modal fade"
-        role="dialog"
-      >
-        <div
-          className="modal-dialog modal-dialog-centered modal-lg"
-          role="document"
-        >
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title">Personal Information</h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <span aria-hidden="true">×</span>
-              </button>
-            </div>
-            <div className="modal-body">
-              <form>
-                <div className="row">
-                  <div className="col-md-6">
-                    <div className="input-block mb-3 mb-3">
-                      <label className="col-form-label">Passport No</label>
-                      <input type="text" className="form-control" />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3 mb-3">
-                      <label className="col-form-label">
-                        Passport Expiry Date
-                      </label>
-                      <div className="cal-icon">
-                        <DatePicker
-                          selected={selectedDate1}
-                          onChange={handleDateChange1}
-                          className="form-control floating datetimepicker"
-                          type="date"
-                          placeholderText="04/10/2023"
-                          dateFormat="dd-MM-yyyy"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3 mb-3">
-                      <label className="col-form-label">Tel</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3 mb-3">
-                      <label className="col-form-label">
-                        Nationality <span className="text-danger">*</span>
-                      </label>
-                      <input className="form-control" type="text" />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3 mb-3">
-                      <label className="col-form-label">Religion</label>
-                      <div className="cal-icon">
-                        <DatePicker
-                          selected={selectedDate1}
-                          onChange={handleDateChange1}
-                          className="form-control floating datetimepicker"
-                          type="date"
-                          placeholderText="04/10/2023"
-                          dateFormat="dd-MM-yyyy"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3 mb-3">
-                      <label className="col-form-label">
-                        Marital status <span className="text-danger">*</span>
-                      </label>
-                      <Select
-                        options={status}
-                        placeholder="-"
-                        styles={customStyles}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3 mb-3">
-                      <label className="col-form-label">
-                        Employment of spouse
-                      </label>
-                      <input className="form-control" type="text" />
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3 mb-3">
-                      <label className="col-form-label">No. of children </label>
-                      <input className="form-control" type="text" />
-                    </div>
-                  </div>
-                </div>
-                <div className="submit-section">
-                  <button
-                    className="btn btn-primary submit-btn"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                    type="reset"
-                  >
-                    Submit
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* /Personal Info Modal */}
-
-      {/* Education Modal */}
-      <div
-        id="education_info"
-        className="modal custom-modal fade"
-        role="dialog"
-      >
-        <div
-          className="modal-dialog modal-dialog-centered modal-lg"
-          role="document"
-        >
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title"> Education Informations</h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <span aria-hidden="true">×</span>
-              </button>
-            </div>
-            <div className="modal-body">
-              <form>
-                <div className="form-scroll">
-                  <div className="card">
-                    <div className="card-body">
-                      <h3 className="card-title">
-                        Education Informations{" "}
-                        <Link to="#" className="delete-icon">
-                          <i className="fa-regular fa-trash-can" />
-                        </Link>
-                      </h3>
-                      <div className="row">
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <input
-                              type="text"
-                              defaultValue="Oxford University"
-                              className="form-control floating"
-                            />
-                            <label className="focus-label">Institution</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <input
-                              type="text"
-                              defaultValue="Computer Science"
-                              className="form-control floating"
-                            />
-                            <label className="focus-label">Subject</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <div className="cal-icon">
-                              <DatePicker
-                                selected={selectedDate1}
-                                onChange={handleDateChange1}
-                                className="form-control floating datetimepicker"
-                                type="date"
-                                placeholderText="04/10/2023"
-                                dateFormat="dd-MM-yyyy"
-                              />
-                            </div>
-                            <label className="focus-label">Starting Date</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <div className="cal-icon">
-                              <DatePicker
-                                selected={selectedDate1}
-                                onChange={handleDateChange1}
-                                className="form-control floating datetimepicker"
-                                type="date"
-                                placeholderText="04/10/2023"
-                                dateFormat="dd-MM-yyyy"
-                              />
-                            </div>
-                            <label className="focus-label">Complete Date</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <input
-                              type="text"
-                              defaultValue="BE Computer Science"
-                              className="form-control floating"
-                            />
-                            <label className="focus-label">Degree</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <input
-                              type="text"
-                              defaultValue="Grade A"
-                              className="form-control floating"
-                            />
-                            <label className="focus-label">Grade</label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="card">
-                    <div className="card-body">
-                      <h3 className="card-title">
-                        Education Informations
-                        <Link to="#" className="delete-icon">
-                          <i className="fa-regular fa-trash-can" />
-                        </Link>
-                      </h3>
-                      <div className="row">
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <input
-                              type="text"
-                              defaultValue="Oxford University"
-                              className="form-control floating"
-                            />
-                            <label className="focus-label">Institution</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <input
-                              type="text"
-                              defaultValue="Computer Science"
-                              className="form-control floating"
-                            />
-                            <label className="focus-label">Subject</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <div className="cal-icon">
-                              <DatePicker
-                                selected={selectedDate1}
-                                onChange={handleDateChange1}
-                                className="form-control floating datetimepicker"
-                                type="date"
-                                placeholderText="04/10/2023"
-                                dateFormat="dd-MM-yyyy"
-                              />
-                            </div>
-                            <label className="focus-label">Starting Date</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <div className="cal-icon">
-                              <DatePicker
-                                selected={selectedDate1}
-                                onChange={handleDateChange1}
-                                className="form-control floating datetimepicker"
-                                type="date"
-                                dateFormat="dd-MM-yyyy"
-                              />
-                            </div>
-                            <label className="focus-label">Complete Date</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <input
-                              type="text"
-                              defaultValue="BE Computer Science"
-                              className="form-control floating"
-                            />
-                            <label className="focus-label">Degree</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <input
-                              type="text"
-                              defaultValue="Grade A"
-                              className="form-control floating"
-                            />
-                            <label className="focus-label">Grade</label>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="add-more">
-                        <Link to="#">
-                          <i className="fa-solid fa-plus-circle" /> Add More
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="submit-section">
-                  <button
-                    className="btn btn-primary submit-btn"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                    type="reset"
-                  >
-                    Submit
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* /Education Modal */}
-
-      {/* Experience Modal */}
-      <div
-        id="experience_info"
-        className="modal custom-modal fade"
-        role="dialog"
-      >
-        <div
-          className="modal-dialog modal-dialog-centered modal-lg"
-          role="document"
-        >
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title">Experience Informations</h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <span aria-hidden="true">×</span>
-              </button>
-            </div>
-            <div className="modal-body">
-              <form>
-                <div className="form-scroll">
-                  <div className="card">
-                    <div className="card-body">
-                      <h3 className="card-title">
-                        Experience Informations{" "}
-                        <Link to="#" className="delete-icon">
-                          <i className="fa-regular fa-trash-can" />
-                        </Link>
-                      </h3>
-                      <div className="row">
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <input
-                              type="text"
-                              className="form-control floating"
-                              defaultValue="Digital Devlopment Inc"
-                            />
-                            <label className="focus-label">Company Name</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <input
-                              type="text"
-                              className="form-control floating"
-                              defaultValue="United States"
-                            />
-                            <label className="focus-label">Location</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <input
-                              type="text"
-                              className="form-control floating"
-                              defaultValue="Web Developer"
-                            />
-                            <label className="focus-label">Job Position</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <div className="cal-icon">
-                              <DatePicker
-                                selected={selectedDate1}
-                                onChange={handleDateChange1}
-                                className="form-control floating datetimepicker"
-                                type="date"
-                                placeholderText="04/10/2023"
-                                dateFormat="dd-MM-yyyy"
-                              />
-                            </div>
-                            <label className="focus-label">Period From</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <div className="cal-icon">
-                              <DatePicker
-                                selected={selectedDate1}
-                                onChange={handleDateChange1}
-                                className="form-control floating datetimepicker"
-                                type="date"
-                                placeholderText="04/10/2023"
-                                dateFormat="dd-MM-yyyy"
-                              />
-                            </div>
-                            <label className="focus-label">Period To</label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="card">
-                    <div className="card-body">
-                      <h3 className="card-title">
-                        Experience Informations{" "}
-                        <Link to="#" className="delete-icon">
-                          <i className="fa-regular fa-trash-can" />
-                        </Link>
-                      </h3>
-                      <div className="row">
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <input
-                              type="text"
-                              className="form-control floating"
-                              defaultValue="Digital Devlopment Inc"
-                            />
-                            <label className="focus-label">Company Name</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <input
-                              type="text"
-                              className="form-control floating"
-                              defaultValue="United States"
-                            />
-                            <label className="focus-label">Location</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <DatePicker
-                              selected={selectedDate1}
-                              onChange={handleDateChange1}
-                              className="form-control floating datetimepicker"
-                              type="date"
-                              placeholderText="04/10/2023"
-                              dateFormat="dd-MM-yyyy"
-                            />
-                            <label className="focus-label">Job Position</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <div className="cal-icon">
-                              <DatePicker
-                                selected={selectedDate1}
-                                onChange={handleDateChange1}
-                                className="form-control floating datetimepicker"
-                                type="date"
-                                placeholderText="04/10/2023"
-                                dateFormat="dd-MM-yyyy"
-                              />
-                            </div>
-                            <label className="focus-label">Period From</label>
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3 form-focus focused">
-                            <div className="cal-icon">
-                              <input
-                                type="text"
-                                className="form-control floating datetimepicker"
-                                defaultValue="08/06/2018"
-                              />
-                            </div>
-                            <label className="focus-label">Period To</label>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="add-more">
-                        <Link to="#">
-                          <i className="fa-solid fa-plus-circle" /> Add More
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="submit-section">
-                  <button
-                    className="btn btn-primary submit-btn"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                    type="reset"
-                  >
-                    Submit
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* /Experience Modal */}
-
-      {/* Family Info Modal */}
-      <div
-        id="family_info_modal"
-        className="modal custom-modal fade"
-        role="dialog"
-      >
-        <div
-          className="modal-dialog modal-dialog-centered modal-lg"
-          role="document"
-        >
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title"> Family Informations</h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <span aria-hidden="true">×</span>
-              </button>
-            </div>
-            <div className="modal-body">
-              <form>
-                <div className="form-scroll">
-                  <div className="card">
-                    <div className="card-body">
-                      <h3 className="card-title">
-                        Family Member{" "}
-                        <Link to="#" className="delete-icon">
-                          <i className="fa-regular fa-trash-can" />
-                        </Link>
-                      </h3>
-                      <div className="row">
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3">
-                            <label className="col-form-label">
-                              Name <span className="text-danger">*</span>
-                            </label>
-                            <input className="form-control" type="text" />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3">
-                            <label className="col-form-label">
-                              Relationship{" "}
-                              <span className="text-danger">*</span>
-                            </label>
-                            <input className="form-control" type="text" />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3">
-                            <label className="col-form-label">
-                              Date of birth{" "}
-                              <span className="text-danger">*</span>
-                            </label>
-                            <input className="form-control" type="text" />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3">
-                            <label className="col-form-label">
-                              Phone <span className="text-danger">*</span>
-                            </label>
-                            <input className="form-control" type="text" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="card">
-                    <div className="card-body">
-                      <h3 className="card-title">
-                        Education Informations{" "}
-                        <Link to="#" className="delete-icon">
-                          <i className="fa-regular fa-trash-can" />
-                        </Link>
-                      </h3>
-                      <div className="row">
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3">
-                            <label className="col-form-label">
-                              Name <span className="text-danger">*</span>
-                            </label>
-                            <input className="form-control" type="text" />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3">
-                            <label className="col-form-label">
-                              Relationship{" "}
-                              <span className="text-danger">*</span>
-                            </label>
-                            <input className="form-control" type="text" />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3">
-                            <label className="col-form-label">
-                              Date of birth{" "}
-                              <span className="text-danger">*</span>
-                            </label>
-                            <input className="form-control" type="text" />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <div className="input-block mb-3 mb-3">
-                            <label className="col-form-label">
-                              Phone <span className="text-danger">*</span>
-                            </label>
-                            <input className="form-control" type="text" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="add-more">
-                        <Link to="#">
-                          <i className="fa-solid fa-plus-circle" /> Add More
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="submit-section">
-                  <button
-                    className="btn btn-primary submit-btn"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                    type="reset"
-                  >
-                    Submit
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* /Family Info Modal */}
     </>
   );
 };

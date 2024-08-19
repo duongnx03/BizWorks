@@ -1,97 +1,71 @@
-import { Table } from "antd";
 import React from "react";
-import { Link } from "react-router-dom";
 
-const AttendanceReportTable = () => {
-  const data = [
-    {
-      id: 1,
-      date: "1 Jan 2023",
-      column2: "-",
-      column3: "-",
-      column4: "-",
-    },
-    {
-      id: 2,
-      date: "2 Jan 2023",
-      column2: "-",
-      column3: "-",
-      column4: "-",
-    },
-    {
-      id: 3,
-      date: "3 Jan 2023",
-      column2: "-",
-      column3: "-",
-      column4: "-",
-    },
-    {
-      id: 4,
-      date: "4 Jan 2023",
-      column2: "-",
-      column3: "Week Off",
-      column4: "-",
-    },
-    {
-      id: 5,
-      date: "5 Jan 2023",
-      column2: "-",
-      column3: "Week Off",
-      column4: "-",
-    },
-    {
-      id: 6,
-      date: "6 Jan 2023",
-      column2: "-",
-      column3: "-",
-      column4: "-",
-    },
-  ];
+const AttendanceReportTable = ({ data }) => {
+  const formatTimeAMPM = (timeString) => {
+    if (!timeString) return '00:00 AM';
+    return new Date(timeString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+  };
 
-  const columns = [
-    {
-      title: "#",
-      dataIndex: "id",
-      sorter: (a, b) => a.id.length - b.id.length,
-    },
-    {
-      title: "Date",
-      dataIndex: "date",
-      sorter: (a, b) => a.date.length - b.date.length,
-    },
-    {
-      title: "Clock In",
-      dataIndex: "column2",
-      sorter: (a, b) => a.column2.length - b.column2.length,
-    },
+  const formatTime = (timeString) => {
+    if (!timeString) return '00:00';
+    const [hours, minutes] = timeString.split(':');
+    return `${hours}:${minutes}`;
+  };
 
-    {
-      title: "Clock Out",
-      dataIndex: "column3",
-      render: (text) => (
-        <Link className={text === "Week Off" ? "text-danger" : ""}>{text}</Link>
-      ),
-      sorter: (a, b) => a.column3.length - b.column3.length,
-    },
-    {
-      title: "Work Status",
-      dataIndex: "column4",
-      sorter: (a, b) => a.column4.length - b.column4.length,
-    },
-  ];
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'In Progress':
+        return 'bg-warning text-dark';
+      case 'Present':
+        return 'bg-success text-white';
+      case 'Absent':
+        return 'bg-danger text-white';
+      default:
+        return 'bg-secondary text-white';
+    }
+  };
 
   return (
     <div className="row">
       <div className="col-md-12">
         <div className="table-responsive">
-          <Table
-            className="table-striped"
-            style={{ overflowX: "auto" }}
-            columns={columns}
-            dataSource={data}
-            rowKey={(record) => record.id}
-            pagination={false}
-          />
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Fullname</th>
+                <th>Department</th>
+                <th>Attendance Date</th>
+                <th>Check In Time</th>
+                <th>Break Time Start</th>
+                <th>Break Time End</th>
+                <th>Check Out Time</th>
+                <th>Total Work Time</th>
+                <th>Overtime</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((record) => (
+                <tr key={record.id}>
+                  <td>{record.employee.fullname}</td>
+                  <td>
+                    <div className="d-flex flex-column">
+                      <span>{record.employee.department}</span>
+                      <span className="text-muted">{record.employee.position}</span>
+                    </div>
+                  </td>
+                  <td>{new Date(record.attendanceDate).toDateString()}</td>
+                  <td>{formatTimeAMPM(record.checkInTime)}</td>
+                  <td>{formatTimeAMPM(record.breakTimeStart)}</td>
+                  <td>{formatTimeAMPM(record.breakTimeEnd)}</td>
+                  <td>{formatTimeAMPM(record.checkOutTime)}</td>
+                  <td>{formatTime(record.totalWorkTime)}</td>
+                  <td>{formatTime(record.overtime)}</td>
+                  <td className={`text-center ${getStatusClass(record.status)}`}>{record.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

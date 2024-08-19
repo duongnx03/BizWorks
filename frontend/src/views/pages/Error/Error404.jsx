@@ -14,7 +14,7 @@ const Error404 = () => {
               found!
             </h3>
             <p>The page you requested was not found.</p>
-            <Link to="/admin-dashboard" className="btn btn-custom">
+            <Link to="/employee-dashboard" className="btn btn-custom">
               Back to Home
             </Link>
           </div>

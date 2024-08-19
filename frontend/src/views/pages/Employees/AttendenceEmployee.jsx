@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Breadcrumbs from "../../../components/Breadcrumbs";
-import AttendanceEmployeeFilter from "../../../components/AttendanceEmployeeFilter";
 import axios from "axios";
-
-const formatTime = (timeString) => {
-  if (!timeString) return '00:00';
-  const [hours, minutes] = timeString.split(':');
-  return `${hours}:${minutes}`;
-};
+import ClipLoader from "react-spinners/ClipLoader";
 
 const getHours = (timeString) => {
   const [hours, minutes] = timeString.split(':').map(Number);
@@ -27,62 +21,30 @@ const calculateWorkTime = (checkInTime, checkOutTime) => {
   return `${hours}.${minutes < 10 ? '0' : ''}${minutes} hrs`;
 };
 
-const getStatusClass = (status) => {
-  switch (status) {
-    case 'In Progress':
-      return 'bg-warning text-dark';
-    case 'Present':
-      return 'bg-success text-white';
-    case 'Absent':
-      return 'bg-danger text-white';
-    default:
-      return 'bg-secondary text-white';
-  }
-};
-
 const getCurrentWorkTime = (checkInTime) => {
   if (!checkInTime) return "00:00";
-  
+
   const checkInDate = new Date(checkInTime);
   const now = new Date();
   const diffInMilliseconds = now - checkInDate;
   const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
   const hours = Math.floor(diffInMinutes / 60);
   const minutes = diffInMinutes % 60;
-  
+
   return `${hours}.${minutes < 10 ? '0' : ''}${minutes} hrs`;
 };
 
-const fetchAttendanceData = async (setAttendances, setTodayActivity, fromDate, toDate) => {
+const updateTodayActivity = async (setAttendance, setTodayActivity) => {
   try {
-    const response = await axios.get('http://localhost:8080/api/attendance/getByEmail', { withCredentials: true });
+    const response = await axios.get('http://localhost:8080/api/attendance/getByEmailAndDate', { withCredentials: true });
     if (response.data.data) {
       const data = response.data.data;
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const startDate = fromDate ? new Date(fromDate) : null;
-      const endDate = toDate ? new Date(toDate) : null;
-      const endOfDay = endDate ? new Date(endDate.setHours(23, 59, 59, 999)) : null;
-
-      const filteredData = data
-        .filter(attendance => {
-          const attendanceDate = new Date(attendance.attendanceDate);
-          return (!startDate || attendanceDate >= startDate) &&
-            (!endOfDay || attendanceDate <= endOfDay);
-        })
-        .filter(attendance => new Date(attendance.attendanceDate) >= startOfMonth)
-        .sort((a, b) => new Date(b.attendanceDate) - new Date(a.attendanceDate));
-
-      setAttendances(filteredData);
-
-      const today = now.toISOString().split('T')[0];
-      const todayAttendance = data.find(attendance => attendance.attendanceDate.startsWith(today));
-
+      setAttendance(data);
       setTodayActivity({
-        checkInTime: todayAttendance?.checkInTime ? new Date(todayAttendance.checkInTime).toLocaleString() : "",
-        checkOutTime: todayAttendance?.checkOutTime ? new Date(todayAttendance.checkOutTime).toLocaleString() : "",
-        workTime: todayAttendance?.checkInTime && todayAttendance?.checkOutTime
-          ? calculateWorkTime(todayAttendance.checkInTime, todayAttendance.checkOutTime)
+        checkInTime: data?.checkInTime ? new Date(data.checkInTime).toLocaleString() : "",
+        checkOutTime: data?.checkOutTime ? new Date(data.checkOutTime).toLocaleString() : "",
+        workTime: data?.checkInTime && data?.checkOutTime
+          ? calculateWorkTime(data.checkInTime, data.checkOutTime)
           : "00:00"
       });
     }
@@ -92,8 +54,8 @@ const fetchAttendanceData = async (setAttendances, setTodayActivity, fromDate, t
 };
 
 const AttendanceEmployee = () => {
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [attendances, setAttendances] = useState([]);
+  const [attendance, setAttendance] = useState([]);
+  const [systemTime, setSystemTime] = useState(new Date());
   const [totalWorkTime, setTotalWorkTime] = useState({
     totalWorkTimeInWeek: 0,
     totalWorkTimeInMonth: 0,
@@ -102,25 +64,21 @@ const AttendanceEmployee = () => {
   const [todayActivity, setTodayActivity] = useState({
     checkInTime: "",
     checkOutTime: "",
-    workTime: "00:00"
+    workTime: "00:00",
   });
-  const [fromDate, setFromDate] = useState(null);
-  const [toDate, setToDate] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [recordsPerPage] = useState(9);
-
-  const totalPages = Math.ceil(attendances.length / recordsPerPage);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
+    const intervalId = setInterval(() => {
+      setSystemTime(new Date()); // Directly update the state with the current time
+    }, 1000); // Update every second
+
+    return () => clearInterval(intervalId); // Cleanup interval when component unmounts
   }, []);
 
   useEffect(() => {
-    fetchAttendanceData(setAttendances, setTodayActivity, fromDate, toDate);
-  }, [fromDate, toDate]);
+    updateTodayActivity(setAttendance, setTodayActivity);
+  }, []);
 
   useEffect(() => {
     const fetchTotalWorkTime = async () => {
@@ -137,43 +95,57 @@ const AttendanceEmployee = () => {
   }, []);
 
   const handleCheckIn = async () => {
+    const now = new Date();
+    const checkInTime = new Date();
+    checkInTime.setHours(7, 58, 0); // 7h58 sáng
+
+    setLoading(true);
+
+    if (now < checkInTime) {
+      alert("You cannot check in before 7:58 AM.");
+      return;
+    }
+
     try {
       await axios.post('http://localhost:8080/api/attendance/checkIn', {}, { withCredentials: true });
-      await fetchAttendanceData(setAttendances, setTodayActivity, fromDate, toDate);
+      await updateTodayActivity(setTodayActivity);
     } catch (error) {
       console.error("Error during check-in: ", error);
+    } finally {
+      setLoading(false);
     }
   };
+
 
   const handleCheckOut = async () => {
+    const now = new Date();
+    const checkOutTime = new Date();
+    checkOutTime.setHours(16, 58, 0); // 4h58 chiều
+
+    setLoading(true);
+
+    if (now < checkOutTime) {
+      alert("You cannot check out before 4:58 PM.");
+      return;
+    }
+
     try {
       await axios.post('http://localhost:8080/api/attendance/checkOut', {}, { withCredentials: true });
-      await fetchAttendanceData(setAttendances, setTodayActivity, fromDate, toDate);
+      await updateTodayActivity(setTodayActivity);
     } catch (error) {
       console.error("Error during check-out: ", error);
+    } finally {
+      setLoading(false);
     }
   };
+
 
   const isCheckOutAvailable = () => {
-    const today = currentTime.toISOString().split('T')[0];
-    const todayAttendance = attendances.find(attendance => attendance.attendanceDate.startsWith(today));
+    const checkOutStartTime = new Date(systemTime);
+    checkOutStartTime.setHours(16, 58, 0); // 4h58 chiều
 
-    const checkOutStartTime = new Date(currentTime);
-    checkOutStartTime.setHours(16, 25, 0);
-
-    return todayAttendance && todayAttendance.checkInTime && currentTime >= checkOutStartTime;
+    return attendance && attendance.checkInTime && systemTime >= checkOutStartTime;
   };
-
-  const handlePageChange = (newPage) => {
-    if (newPage > 0 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
-  };
-
-  const paginatedAttendances = attendances.slice(
-    (currentPage - 1) * recordsPerPage,
-    currentPage * recordsPerPage
-  );
 
   const calculateWorkTimeDisplay = () => {
     if (todayActivity.checkInTime) {
@@ -184,7 +156,7 @@ const AttendanceEmployee = () => {
     return "00:00";
   };
 
-  return (
+  return (  
     <div className="page-wrapper">
       <div className="content container-fluid">
         <Breadcrumbs maintitle="Attendance" title="Dashboard" subtitle="Attendance" />
@@ -194,7 +166,7 @@ const AttendanceEmployee = () => {
             <div className="card punch-status">
               <div className="card-body">
                 <h5 className="card-title">
-                  Timesheet <small className="text-muted"> {currentTime.toLocaleString()}</small>
+                  Timesheet <small className="text-muted"> {systemTime.toLocaleString()}</small>
                 </h5>
                 <div className="punch-info">
                   <div className="punch-hours">
@@ -209,7 +181,7 @@ const AttendanceEmployee = () => {
                       onClick={handleCheckOut}
                       disabled={!isCheckOutAvailable()}
                     >
-                      Check Out
+                      {loading ? <ClipLoader size={24} color={"#fff"} /> : "Check Out"}
                     </button>
                   ) : todayActivity.checkOutTime ? (
                     <button
@@ -217,7 +189,7 @@ const AttendanceEmployee = () => {
                       className="btn btn-success punch-btn"
                       disabled
                     >
-                      Has Checked Out
+                      Has Checked
                     </button>
                   ) : (
                     <button
@@ -225,10 +197,11 @@ const AttendanceEmployee = () => {
                       className="btn btn-primary punch-btn"
                       onClick={handleCheckIn}
                     >
-                      Check In
+                      {loading ? <ClipLoader size={24} color={"#fff"} /> : "Check In"}
                     </button>
                   )}
                 </div>
+
               </div>
             </div>
           </div>
@@ -316,73 +289,6 @@ const AttendanceEmployee = () => {
                     </li>
                   }
                 </ul>
-              </div>
-            </div>
-          </div>
-
-          <AttendanceEmployeeFilter onDateRangeChange={(from, to) => {
-            setFromDate(from);
-            setToDate(to);
-          }} />
-
-          <div className="row">
-            <div className="col-lg-12">
-              <table className="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Check In Time</th>
-                    <th>Check Out Time</th>
-                    <th>Total Work Time</th>
-                    <th>Overtime</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedAttendances.map(attendance => (
-                    <tr key={attendance.id}>
-                      <td>{new Date(attendance.attendanceDate).toDateString()}</td>
-                      <td>{attendance.checkInTime ? new Date(attendance.checkInTime).toLocaleString() : ""}</td>
-                      <td>{attendance.checkOutTime ? new Date(attendance.checkOutTime).toLocaleString() : ""}</td>
-                      <td>{formatTime(attendance.totalWorkTime)}</td>
-                      <td>{formatTime(attendance.overtime)}</td>
-                      <td className={`text-center ${getStatusClass(attendance.status)}`}>
-                        {attendance.status}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 0' }}>
-                <nav>
-                  <ul className="pagination" style={{ margin: 0 }}>
-                    {Array.from({ length: totalPages }, (_, index) => (
-                      <li
-                        key={index + 1}
-                        className={`page-item ${index + 1 === currentPage ? 'active' : ''}`}
-                        style={{ margin: '0 2px' }}
-                      >
-                        <button
-                          onClick={() => handlePageChange(index + 1)}
-                          className="page-link"
-                          style={{
-                            backgroundColor: index + 1 === currentPage ? '#FF902F' : '#fff',
-                            borderColor: index + 1 === currentPage ? '#FF902F' : '#dee2e6',
-                            color: index + 1 === currentPage ? '#fff' : '#373B3E',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '0.25rem',
-                            border: '1px solid',
-                            cursor: 'pointer',
-                            fontSize: '1rem',
-                          }}
-                        >
-                          {index + 1}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </nav>
               </div>
             </div>
           </div>

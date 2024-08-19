@@ -82,6 +82,6 @@ public class VerifyAccountService {
                 + "</body>"
                 + "</html>";
 
-        mailService.sendVerificationEmail(email, subject, content);
+        mailService.sendEmail(email, subject, content);
     }
 }

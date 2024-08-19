@@ -3,7 +3,6 @@ package bizworks.backend.controllers;
 import bizworks.backend.dtos.*;
 import bizworks.backend.helpers.ApiResponse;
 import bizworks.backend.services.AuthenticationService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -57,30 +56,6 @@ public class AuthenticationController {
         }
     }
 
-    @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<String>> refreshToken(HttpServletRequest request, HttpServletResponse response) {
-        try {
-            String refreshToken = null;
-            Cookie[] cookies = request.getCookies();
-            if (cookies != null) {
-                for (Cookie cookie : cookies) {
-                    if (cookie.getName().equals("refresh_token")) {
-                        refreshToken = cookie.getValue();
-                        break;
-                    }
-                }
-            }
-            if (refreshToken != null) {
-                String newAccessToken = authenticationService.refresh(refreshToken, response);
-                return ResponseEntity.ok(ApiResponse.success(newAccessToken, "Token refreshed successfully"));
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.errorServer("Refresh token not found", "ERROR_REFRESH_TOKEN"));
-            }
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
-        }
-    }
-
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<?>> forgotPassword(@RequestParam String email) {
         try {
@@ -92,9 +67,9 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<?>> logout(HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<?>> logout(HttpServletRequest request, HttpServletResponse response) {
         try {
-            authenticationService.logout(response);
+            authenticationService.logout(request, response);
             return ResponseEntity.ok(ApiResponse.success(null, "User logged out successfully"));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
