@@ -2,6 +2,7 @@ package bizworks.backend.services;
 
 import bizworks.backend.dtos.EmployeeDTO;
 import bizworks.backend.dtos.SalaryDTO;
+import bizworks.backend.helpers.ApiResponse;
 import bizworks.backend.models.Employee;
 import bizworks.backend.models.Salary;
 import bizworks.backend.models.Violation;
@@ -9,7 +10,10 @@ import bizworks.backend.repository.EmployeeRepository;
 import bizworks.backend.repository.SalaryRepository;
 import bizworks.backend.repository.ViolationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -25,28 +29,45 @@ public class SalaryService {
     private final ViolationRepository violationRepository;
 
     @Autowired
-    public SalaryService(SalaryRepository salaryRepository , EmployeeRepository employeeRepository, ViolationRepository violationRepository) {
+    public SalaryService(SalaryRepository salaryRepository, EmployeeRepository employeeRepository, ViolationRepository violationRepository) {
         this.salaryRepository = salaryRepository;
         this.employeeRepository = employeeRepository;
         this.violationRepository = violationRepository;
     }
 
-    public SalaryDTO createSalary(SalaryDTO dto) {
+    public ResponseEntity<ApiResponse<SalaryDTO>> createSalary(@RequestBody SalaryDTO dto) {
+        // Lấy thông tin hiện tại
+        LocalDateTime now = LocalDateTime.now();
+        int currentMonth = now.getMonthValue();
+        int currentYear = now.getYear();
+
+        // Truy vấn Employee để lấy Position và từ đó lấy basicSalary
+        Employee employee = employeeRepository.findById(dto.getEmployee().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+
+        // Kiểm tra xem bảng lương cho nhân viên này đã tồn tại trong tháng và năm hiện tại chưa
+        boolean exists = salaryRepository.existsByEmployeeIdAndMonthAndYear(employee.getId(), currentMonth, currentYear);
+        if (exists) {
+            ApiResponse<SalaryDTO> badRequestResponse = ApiResponse.badRequest("Employee already has a salary record for this month");
+            return new ResponseEntity<>(badRequestResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        // Tạo mới Salary nếu không tồn tại bản ghi
         Salary salary = new Salary();
         salary.setSalaryCode(generateSalaryCode()); // Tạo mã tự động cho phiếu lương
-        salary.setMonth(dto.getMonth());
-        salary.setYear(dto.getYear());
-        salary.setBasicSalary(dto.getBasicSalary());
-        salary.setBonusSalary(dto.getBonusSalary());
-        salary.setOvertimeSalary(dto.getOvertimeSalary());
-        salary.setAllowances(dto.getAllowances());
+        salary.setMonth(currentMonth);
+        salary.setYear(currentYear);
+        salary.setBasicSalary(employee.getPosition().getBasicSalary());
+        salary.setBonusSalary(dto.getBonusSalary() != null ? dto.getBonusSalary() : 0.0);
+        salary.setOvertimeSalary(dto.getOvertimeSalary() != null ? dto.getOvertimeSalary() : 0.0);
+        salary.setAllowances(dto.getAllowances() != null ? dto.getAllowances() : 0.0);
 
+
+        // Tính tiền phạt từ Violation
         List<Violation> violations = violationRepository.findByEmployeeId(dto.getEmployee().getId());
         double totalViolationMoney = violations.stream()
                 .mapToDouble(v -> v.getViolationType().getViolationMoney())
                 .sum();
-
-        // Gán tổng tiền vi phạm vào trường deductions
         salary.setDeductions(totalViolationMoney);
 
         // Tính tổng lương
@@ -54,79 +75,107 @@ public class SalaryService {
         salary.setDateSalary(LocalDateTime.now()); // Ngày nhận lương
         salary.setCreatedAt(LocalDateTime.now()); // Ngày tạo bản ghi
         salary.setUpdatedAt(LocalDateTime.now()); // Ngày cập nhật bản ghi
-
-        Employee employee = employeeRepository.findById(dto.getEmployee().getId()).orElse(null);
         salary.setEmployee(employee);
 
         Salary saved = salaryRepository.save(salary);
-        return convertToDTO(saved);
+        ApiResponse<SalaryDTO> successResponse = ApiResponse.success(convertToDTO(saved), "Salary created successfully");
+        return new ResponseEntity<>(successResponse, HttpStatus.OK);
     }
 
-
-    public List<SalaryDTO> getAllSalaries() {
-        List<Salary> salaries = salaryRepository.findAll();
-        return salaries.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    public SalaryDTO getSalaryById(Long id) {
-        Optional<Salary> salary = salaryRepository.findById(id);
-        return salary.map(this::convertToDTO).orElse(null);
-    }
-
-    public SalaryDTO updateSalary(Long id, SalaryDTO dto) {
+    public ResponseEntity<ApiResponse<SalaryDTO>> updateSalary(Long id, SalaryDTO dto) {
         Optional<Salary> optional = salaryRepository.findById(id);
         if (optional.isPresent()) {
-            Salary s = optional.get();
-            s.setSalaryCode(dto.getSalaryCode()); // Có thể cần thay đổi mã lương
-            s.setMonth(dto.getMonth());
-            s.setYear(dto.getYear());
-            s.setBasicSalary(dto.getBasicSalary());
-            s.setBonusSalary(dto.getBonusSalary());
-            s.setOvertimeSalary(dto.getOvertimeSalary());
-            s.setAllowances(dto.getAllowances());
+            Salary salary = optional.get();
+            salary.setSalaryCode(dto.getSalaryCode());
+
+            LocalDateTime now = LocalDateTime.now();
+            salary.setMonth(now.getMonthValue());
+            salary.setYear(now.getYear());
+
+            Employee employee = employeeRepository.findById(dto.getEmployee().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+            double basicSalary = employee.getPosition().getBasicSalary();
+            salary.setBasicSalary(basicSalary);
+
+            // Cập nhật các trường với giá trị mới nếu có
+            salary.setBonusSalary(dto.getBonusSalary() != null ? dto.getBonusSalary() : salary.getBonusSalary());
+            salary.setOvertimeSalary(dto.getOvertimeSalary() != null ? dto.getOvertimeSalary() : salary.getOvertimeSalary());
+            salary.setAllowances(dto.getAllowances() != null ? dto.getAllowances() : salary.getAllowances());
 
             List<Violation> violations = violationRepository.findByEmployeeId(dto.getEmployee().getId());
             double totalViolationMoney = violations.stream()
                     .mapToDouble(v -> v.getViolationType().getViolationMoney())
                     .sum();
-            s.setDeductions(totalViolationMoney);
+            salary.setDeductions(totalViolationMoney);
 
-            // Tính tổng lương
-            s.setTotalSalary(calculateTotalSalary(s));
-            s.setUpdatedAt(LocalDateTime.now()); // Cập nhật ngày giờ
-            Salary updated = salaryRepository.save(s);
-            return convertToDTO(updated);
+            salary.setTotalSalary(calculateTotalSalary(salary));
+            salary.setUpdatedAt(now);
+
+            Salary updated = salaryRepository.save(salary);
+            ApiResponse<SalaryDTO> successResponse = ApiResponse.success(convertToDTO(updated), "Salary updated successfully");
+            return new ResponseEntity<>(successResponse, HttpStatus.OK);
         }
-        return null;
+        ApiResponse<SalaryDTO> notFoundResponse = ApiResponse.notfound(null, "Salary not found");
+        return new ResponseEntity<>(notFoundResponse, HttpStatus.NOT_FOUND);
     }
 
-
-    public void deleteSalary(Long id) {
-        salaryRepository.deleteById(id);
+    public ResponseEntity<ApiResponse<Void>> deleteSalary(Long id) {
+        try {
+            salaryRepository.deleteById(id);
+            ApiResponse<Void> successResponse = ApiResponse.success(null, "Salary deleted successfully");
+            return new ResponseEntity<>(successResponse, HttpStatus.OK);
+        } catch (Exception ex) {
+            ApiResponse<Void> errorResponse = ApiResponse.errorServer("An unexpected error occurred", "ERROR");
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    public List<SalaryDTO> searchSalariesByEmployeeName(String employeeName) {
-        List<Salary> salaries = salaryRepository.findByEmployeeFullnameContaining(employeeName); // Đã sửa ở đây
-        return salaries.stream()
+    public ResponseEntity<ApiResponse<List<SalaryDTO>>> getAllSalaries() {
+        List<Salary> salaries = salaryRepository.findAll();
+        List<SalaryDTO> salaryDTOs = salaries.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+        ApiResponse<List<SalaryDTO>> successResponse = ApiResponse.success(salaryDTOs, "Salaries fetched successfully");
+        return new ResponseEntity<>(successResponse, HttpStatus.OK);
     }
 
+    public ResponseEntity<ApiResponse<SalaryDTO>> getSalaryById(Long id) {
+        Optional<Salary> salary = salaryRepository.findById(id);
+        return salary.map(s -> new ResponseEntity<>(ApiResponse.success(convertToDTO(s), "Salary fetched successfully"), HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(ApiResponse.notfound(null, "Salary not found"), HttpStatus.NOT_FOUND));
+    }
 
-    public List<SalaryDTO> searchSalariesByMonthAndYear(Integer month, Integer year) {
+    public ResponseEntity<ApiResponse<List<SalaryDTO>>> searchSalariesByEmployeeName(String employeeName) {
+        List<Salary> salaries = salaryRepository.findByEmployeeFullnameContaining(employeeName);
+        if (salaries.isEmpty()) {
+            return new ResponseEntity<>(ApiResponse.notfound(null, "No salaries found for employee"), HttpStatus.NOT_FOUND);
+        }
+        List<SalaryDTO> salaryDTOs = salaries.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(ApiResponse.success(salaryDTOs, "Salaries fetched successfully"), HttpStatus.OK);
+    }
+
+    public ResponseEntity<ApiResponse<List<SalaryDTO>>> searchSalariesByMonthAndYear(Integer month, Integer year) {
         List<Salary> salaries = salaryRepository.findByMonthAndYear(month, year);
-        return salaries.stream()
+        if (salaries.isEmpty()) {
+            return new ResponseEntity<>(ApiResponse.notfound(null, "No salaries found for the specified month and year"), HttpStatus.NOT_FOUND);
+        }
+        List<SalaryDTO> salaryDTOs = salaries.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+        return new ResponseEntity<>(ApiResponse.success(salaryDTOs, "Salaries fetched successfully"), HttpStatus.OK);
     }
 
-    public List<SalaryDTO> searchSalariesByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+    public ResponseEntity<ApiResponse<List<SalaryDTO>>> searchSalariesByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
         List<Salary> salaries = salaryRepository.findByDateSalaryBetween(startDate, endDate);
-        return salaries.stream()
+        if (salaries.isEmpty()) {
+            return new ResponseEntity<>(ApiResponse.notfound(null, "No salaries found for the specified date range"), HttpStatus.NOT_FOUND);
+        }
+        List<SalaryDTO> salaryDTOs = salaries.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+        return new ResponseEntity<>(ApiResponse.success(salaryDTOs, "Salaries fetched successfully"), HttpStatus.OK);
     }
 
     private double calculateTotalSalary(Salary salary) {
@@ -141,7 +190,8 @@ public class SalaryService {
         Employee employee = salary.getEmployee();
         EmployeeDTO employeeDTO = (employee != null)
                 ? new EmployeeDTO(employee.getId(), employee.getFullname(), employee.getEmail())
-                : null;        return new SalaryDTO(
+                : null;
+        return new SalaryDTO(
                 salary.getId(),
                 salary.getSalaryCode(),
                 salary.getMonth(),
@@ -152,15 +202,20 @@ public class SalaryService {
                 salary.getAllowances(),
                 salary.getDeductions(),
                 salary.getTotalSalary(),
-                Date.from(salary.getDateSalary().atZone(java.time.ZoneId.systemDefault()).toInstant()),
+                salary.getDateSalary(),
                 employeeDTO,
-                Date.from(salary.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant()),
-                Date.from(salary.getUpdatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant())
+                salary.getCreatedAt(),   // Sử dụng LocalDateTime trực tiếp
+                salary.getUpdatedAt()
         );
     }
 
     private String generateSalaryCode() {
-        // Logic to generate unique salary code
-        return "SAL-" + System.currentTimeMillis(); // Ví dụ đơn giản
+        return "SAL-" + System.currentTimeMillis();
+    }
+
+    public ResponseEntity<ApiResponse<SalaryDTO>> getSalaryBySalaryCode(String salaryCode) {
+        Optional<Salary> salary = salaryRepository.findBySalaryCode(salaryCode);
+        return salary.map(s -> new ResponseEntity<>(ApiResponse.success(convertToDTO(s), "Salary fetched successfully"), HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(ApiResponse.notfound(null, "Salary not found"), HttpStatus.NOT_FOUND));
     }
 }

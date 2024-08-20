@@ -6,7 +6,7 @@ import bizworks.backend.dtos.AttendanceSummaryDTO;
 import bizworks.backend.dtos.EmployeeDTO;
 import bizworks.backend.models.Attendance;
 import bizworks.backend.models.Employee;
-import bizworks.backend.repository.AttendanceRepository;;
+import bizworks.backend.repository.AttendanceRepository;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

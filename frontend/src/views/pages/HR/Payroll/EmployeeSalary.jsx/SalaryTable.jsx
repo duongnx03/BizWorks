@@ -4,6 +4,7 @@ import Salary from "../../../../../assets/json/employeeSalary";
 import { Table } from "antd";
 import EditSalaryModal from "../../../../../components/modelpopup/EditSalaryModal";
 import DeleteModal from "../../../../../components/modelpopup/deletePopup";
+import SearchBox from "../../../../../components/SearchBox";
 
 const SalaryTable = () => {
   const data = Salary.Salary;
@@ -34,44 +35,17 @@ const SalaryTable = () => {
       dataIndex: "email",
       sorter: (a, b) => a.email.length - b.email.length,
     },
-
     {
-      title: "Join Date",
+      title: "Position",
+      dataIndex: "positions",
+    },
+    {
+      title: "Salary Date",
       dataIndex: "joiningDate",
       sorter: (a, b) => a.joiningDate.length - b.joiningDate.length,
     },
     {
-      title: "Position",
-      dataIndex: "roles",
-      render: (text) => (
-        <div className="dropdown">
-          <Link
-            to="#"
-            className="btn btn-white btn-sm btn-rounded dropdown-toggle"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
-            {text}{" "}
-          </Link>
-          <div className="dropdown-menu">
-            <Link className="dropdown-item" to="#">
-              Software Engineer
-            </Link>
-            <Link className="dropdown-item" to="#">
-              Software Tester
-            </Link>
-            <Link className="dropdown-item" to="#">
-              Frontend Developer
-            </Link>
-            <Link className="dropdown-item" to="#">
-              UI/UX Developer
-            </Link>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: "Salary",
+      title: "Net Salary",
       dataIndex: "salary",
       render: (text) => <span>${text}</span>,
       sorter: (a, b) => a.salary.length - b.salary.length,
@@ -123,6 +97,7 @@ const SalaryTable = () => {
       <div className="row">
         <div className="col-md-12">
           <div className="table-responsive">
+          <SearchBox />
             <Table
               className="table-striped"
               style={{ overflowX: "auto" }}
@@ -130,6 +105,7 @@ const SalaryTable = () => {
               dataSource={data}
               rowKey={(record) => record.id}
             />
+            
           </div>
         </div>
       </div>

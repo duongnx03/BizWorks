@@ -47,6 +47,7 @@ public class PositionService {
     public Position savePosition(PositionDTO positionDTO) {
         Position position = new Position();
         position.setPositionName(positionDTO.getPositionName());
+        position.setBasicSalary(positionDTO.getBasicSalary());
 
         if (positionDTO.getDepartmentId() != null) {
             Department department = departmentRepository.findById(positionDTO.getDepartmentId())
@@ -82,6 +83,7 @@ public class PositionService {
                 .orElseThrow(() -> new EntityNotFoundException("Position not found with id: " + id));
 
         position.setPositionName(positionDTO.getPositionName());
+        position.setBasicSalary(positionDTO.getBasicSalary());
 
         if (positionDTO.getDepartmentId() != null) {
             Department department = departmentRepository.findById(positionDTO.getDepartmentId())
@@ -109,6 +111,7 @@ public class PositionService {
         PositionDTO dto = new PositionDTO();
         dto.setId(position.getId());
         dto.setPositionName(position.getPositionName());
+        dto.setBasicSalary(position.getBasicSalary());
 
         if (position.getDepartment() != null) {
             dto.setDepartmentId(position.getDepartment().getId());

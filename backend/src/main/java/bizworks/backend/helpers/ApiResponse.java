@@ -24,6 +24,10 @@ public class ApiResponse<T> {
         return new ApiResponse<>(data, message, "NOT_FOUND", null);
     }
 
+    public static <T> ApiResponse<T> badRequest(String message) {
+        return new ApiResponse<>(null, message, "BAD REQUEST", null);
+    }
+
     public static <T> ApiResponse<T> badRequest(BindingResult bindingResult) {
         List<String> errorsBadRequest = bindingResult.getAllErrors().stream()
                 .map(ObjectError::getDefaultMessage)

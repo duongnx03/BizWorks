@@ -10,7 +10,6 @@ import SalaryTable from "./SalaryTable";
 
 const EmployeeSalary = () => {
   const [setSelectedOption] = useState(null);
-  const [setSelecttwo] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedDateTwo, setSelectedDateTwo] = useState(null);
 
@@ -65,11 +64,6 @@ const EmployeeSalary = () => {
     
   ];
 
-  const optionsTwo = [
-    { value: "--Select--", label: "--Select--" },
-    { value: "Cash", label: "Cash" },
-    { value: "Paypal", label: "Paypal" },
-  ];
   const customStyles = {
     option: (provided, state) => ({
       ...provided,
@@ -84,13 +78,13 @@ const EmployeeSalary = () => {
     <>
       <div className="page-wrapper">
         <div className="content container-fluid">
-          <Breadcrumbs
+          {/* <Breadcrumbs
             maintitle="Employee Salary"
             title="Dashboard"
             subtitle="Salary"
             modal="#add_salary"
             name="Add Salary"
-          />
+          /> */}
 
           <div className="row filter-row">
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
@@ -115,6 +109,27 @@ const EmployeeSalary = () => {
               </div>
             </div>
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
+              <div
+                className={
+                  focused || inputValue !== ""
+                    ? "input-block form-focus focused"
+                    : "input-block form-focus"
+                }
+              >
+                <input
+                  type="text"
+                  className="form-control floating"
+                  value={inputValue}
+                  onFocus={handleLabelClick}
+                  onBlur={handleInputBlur}
+                  onChange={handleInputChange}
+                />
+                <label className="focus-label" onClick={handleLabelClick}>
+                  Salary Code
+                </label>
+              </div>
+            </div>
+            <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
               <div className="input-block mb-3 form-focus select-focus">
                 <Select
                   placeholder="--Select--"
@@ -125,19 +140,7 @@ const EmployeeSalary = () => {
                 />
                 <label className="focus-label">Department</label>
               </div>
-            </div>
-            <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
-              <div className="input-block mb-3 form-focus select-focus">
-                <Select
-                  placeholder="--Select--"
-                  onChange={setSelecttwo}
-                  options={optionsTwo}
-                  className="select floating"
-                  styles={customStyles}
-                />
-                <label className="focus-label">Paid By</label>
-              </div>
-            </div>
+            </div>  
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
               <div
                 className={`input-block mb-3 form-focus ${

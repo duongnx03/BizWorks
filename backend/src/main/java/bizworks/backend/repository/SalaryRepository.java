@@ -11,9 +11,11 @@ import java.util.Optional;
 
 @Repository
 public interface SalaryRepository extends JpaRepository<Salary,Long> {
-    List<Salary> findBySalaryCode(String salaryCode);
     List<Salary> findByMonthAndYear(Integer month, Integer year);
     List<Salary> findByEmployeeFullnameContaining(String fullname);
     List<Salary> findByDateSalaryBetween(LocalDateTime startDate, LocalDateTime endDate);
     Optional<Salary> findTopByEmployeeIdOrderByDateSalaryDesc(Long employeeId);
+    Optional<Salary> findBySalaryCode(String salaryCode);
+    boolean existsByEmployeeIdAndMonthAndYear(Long employeeId, int month, int year);
+    Optional<Salary> findByEmployeeId(Long employeeId);
 }

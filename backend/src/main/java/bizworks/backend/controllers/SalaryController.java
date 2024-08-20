@@ -1,6 +1,7 @@
 package bizworks.backend.controllers;
 
 import bizworks.backend.dtos.SalaryDTO;
+import bizworks.backend.helpers.ApiResponse;
 import bizworks.backend.services.SalaryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/salaries")
 public class SalaryController {
+
     private final SalaryService salaryService;
 
     public SalaryController(SalaryService salaryService) {
@@ -18,54 +20,51 @@ public class SalaryController {
     }
 
     @PostMapping
-    public ResponseEntity<SalaryDTO> createSalary(@RequestBody SalaryDTO dto) {
-        SalaryDTO created = salaryService.createSalary(dto);
-        return ResponseEntity.ok(created);
+    public ResponseEntity<ApiResponse<SalaryDTO>> createSalary(@RequestBody SalaryDTO dto) {
+        return salaryService.createSalary(dto);
     }
 
     @GetMapping
-    public ResponseEntity<List<SalaryDTO>> getAllSalaries() {
-        List<SalaryDTO> salaries = salaryService.getAllSalaries();
-        return ResponseEntity.ok(salaries);
+    public ResponseEntity<ApiResponse<List<SalaryDTO>>> getAllSalaries() {
+        return salaryService.getAllSalaries();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SalaryDTO> getSalaryById(@PathVariable Long id) {
-        SalaryDTO salary = salaryService.getSalaryById(id);
-        return salary != null ? ResponseEntity.ok(salary) : ResponseEntity.notFound().build();
+    public ResponseEntity<ApiResponse<SalaryDTO>> getSalaryById(@PathVariable Long id) {
+        return salaryService.getSalaryById(id);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SalaryDTO> updateSalary(@PathVariable Long id, @RequestBody SalaryDTO dto) {
-        SalaryDTO updated = salaryService.updateSalary(id, dto);
-        return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
+    public ResponseEntity<ApiResponse<SalaryDTO>> updateSalary(@PathVariable Long id, @RequestBody SalaryDTO dto) {
+        return salaryService.updateSalary(id, dto);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSalary(@PathVariable Long id) {
-        salaryService.deleteSalary(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<ApiResponse<Void>> deleteSalary(@PathVariable Long id) {
+        return salaryService.deleteSalary(id);
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<SalaryDTO>> searchSalaries(@RequestParam String employeeName) {
-        List<SalaryDTO> salaries = salaryService.searchSalariesByEmployeeName(employeeName);
-        return ResponseEntity.ok(salaries);
+    public ResponseEntity<ApiResponse<List<SalaryDTO>>> searchSalaries(@RequestParam String employeeName) {
+        return salaryService.searchSalariesByEmployeeName(employeeName);
     }
 
     @GetMapping("/search-by-month-year")
-    public ResponseEntity<List<SalaryDTO>> searchSalariesByMonthAndYear(
+    public ResponseEntity<ApiResponse<List<SalaryDTO>>> searchSalariesByMonthAndYear(
             @RequestParam Integer month,
             @RequestParam Integer year) {
-        List<SalaryDTO> salaries = salaryService.searchSalariesByMonthAndYear(month, year);
-        return ResponseEntity.ok(salaries);
+        return salaryService.searchSalariesByMonthAndYear(month, year);
     }
 
     @GetMapping("/search-by-date")
-    public ResponseEntity<List<SalaryDTO>> searchSalariesByDate(
+    public ResponseEntity<ApiResponse<List<SalaryDTO>>> searchSalariesByDate(
             @RequestParam LocalDateTime fromDate,
             @RequestParam LocalDateTime toDate) {
-        List<SalaryDTO> salaries = salaryService.searchSalariesByDateRange(fromDate, toDate);
-        return ResponseEntity.ok(salaries);
+        return salaryService.searchSalariesByDateRange(fromDate, toDate);
+    }
+
+    @GetMapping("/search-by-code/{salaryCode}")
+    public ResponseEntity<ApiResponse<SalaryDTO>> getSalaryByCode(@PathVariable String salaryCode) {
+        return salaryService.getSalaryBySalaryCode(salaryCode);
     }
 }

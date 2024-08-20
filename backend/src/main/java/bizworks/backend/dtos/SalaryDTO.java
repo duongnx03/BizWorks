@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -14,14 +15,14 @@ public class SalaryDTO {
     private String salaryCode; // Mã tự động (nếu cần)
     private int month; // Tháng trả lương
     private int year; // Năm trả lương
-    private double basicSalary; // Lương cơ bản
-    private double bonusSalary; // Thưởng
-    private double overtimeSalary; // Lương tăng ca
-    private double allowances; // Các khoản phụ cấp
-    private double deductions; // Các khoản khấu trừ
-    private double totalSalary; // Tổng lương
-    private Date dateSalary; // Ngày nhận lương
+    private Double basicSalary; // Lương cơ bản
+    private Double bonusSalary; // Thưởng
+    private Double overtimeSalary; // Lương tăng ca
+    private Double allowances; // Các khoản phụ cấp
+    private Double deductions; // Các khoản khấu trừ
+    private Double totalSalary; // Tổng lương
+    private LocalDateTime dateSalary; // Ngày nhận lương
     private EmployeeDTO employee; // Thông tin nhân viên
-    private Date createdAt; // Ngày tạo
-    private Date updatedAt; // Ngày cập nhật
+    private LocalDateTime createdAt; // Ngày tạo
+    private LocalDateTime updatedAt; // Ngày cập nhật
 }
