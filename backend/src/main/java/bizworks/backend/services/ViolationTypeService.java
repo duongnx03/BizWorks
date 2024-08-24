@@ -1,7 +1,9 @@
 package bizworks.backend.services;
 
 import bizworks.backend.dtos.ViolationTypeDTO;
+import bizworks.backend.models.Violation;
 import bizworks.backend.models.ViolationType;
+import bizworks.backend.repository.ViolationRepository;
 import bizworks.backend.repository.ViolationTypeRepository;
 import org.springframework.stereotype.Service;
 
@@ -12,9 +14,13 @@ import java.util.Optional;
 public class ViolationTypeService {
 
     private ViolationTypeRepository violationTypeRepository;
+    private ViolationRepository violationRepository;
+    private ViolationService violationService;
 
-    public ViolationTypeService(ViolationTypeRepository violationTypeRepository) {
+    public ViolationTypeService(ViolationTypeRepository violationTypeRepository, ViolationRepository violationRepository, ViolationService violationService) {
         this.violationTypeRepository = violationTypeRepository;
+        this.violationRepository = violationRepository;
+        this.violationService = violationService;
     }
 
     public ViolationTypeDTO createViolationType(ViolationTypeDTO dto) {
@@ -48,12 +54,47 @@ public class ViolationTypeService {
             vt.setType(dto.getType());
             vt.setViolationMoney(dto.getViolationMoney());
             ViolationType updated = violationTypeRepository.save(vt);
+
+            // Cập nhật tất cả các Violation liên quan
+            List<Violation> relatedViolations = violationRepository.findByViolationTypeId(updated.getId());
+            for (Violation violation : relatedViolations) {
+                violation.setViolationType(updated);
+                violationRepository.save(violation);
+            }
+
+            // Cập nhật lại Salary nếu cần
+            relatedViolations.forEach(v -> violationService.updateSalaryForEmployee(v.getEmployee().getId()));
+
             return new ViolationTypeDTO(updated.getId(), updated.getType(), updated.getViolationMoney());
         }
         return null; // Handle as needed
     }
 
-    public void deleteViolationType(Long id) {
-        violationTypeRepository.deleteById(id);
+
+//    public void deleteViolationType(Long id) {
+//        // Tìm tất cả các Violation liên quan
+//        List<Violation> relatedViolations = violationRepository.findByViolationTypeId(id);
+//
+//        // Xóa các Violation liên quan và cập nhật Salary
+//        for (Violation violation : relatedViolations) {
+//            violationRepository.deleteById(violation.getId());
+//            violationService.updateSalaryForEmployee(violation.getEmployee().getId());
+//        }
+//
+//        violationTypeRepository.deleteById(id); // Xóa ViolationType
+//    }
+public void deleteViolationType(Long id) {
+    // Tìm tất cả các Violation liên quan
+    List<Violation> relatedViolations = violationRepository.findByViolationTypeId(id);
+
+    // Nếu tồn tại bất kỳ Violation nào liên quan, trả về thông báo lỗi
+    if (!relatedViolations.isEmpty()) {
+        throw new RuntimeException("Violation type cannot be deleted because there is a related violation.");
     }
+
+    // Nếu không có Violation nào liên quan, tiến hành xóa ViolationType
+    violationTypeRepository.deleteById(id);
+}
+
+
 }

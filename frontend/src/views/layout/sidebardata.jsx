@@ -1,134 +1,132 @@
 
 export const SidebarData = [
-
-
   {
-    tittle: 'MAIN',
+    tittle: "MAIN",
     showAsTab: false,
     separateRoute: false,
     menu: [
       {
-        menuValue: 'Dashboard',
+        menuValue: "Dashboard",
         hasSubRoute: true,
         showSubRoute: false,
         route: "#",
         icon: "la la-dashcube",
         subMenus: [
           {
-            menuValue: 'Admin Dashboard',
+            menuValue: "Admin Dashboard",
             route: "/admin-dashboard",
           },
           {
-            menuValue: 'Employee Dashboard',
+            menuValue: "Employee Dashboard",
             route: "/employee-dashboard",
           },
           // {
           //   menuValue: 'Deals Dashboard',
           //   route: "/deals-dashboard",
           // },
-          // {
-          //   menuValue: 'Leads Dashboard',
-          //   route: "/leads-dashboard",
-          // },
+          {
+            menuValue: "Leads Dashboard",
+            route: "/leads-dashboard",
+          },
         ],
       },
-      {
-        menuValue: 'Apps',
-        hasSubRoute: true,
-        showSubRoute: false,
-        route: "#",
-        icon: "la la-cube",
-        subMenus: [
-          // {
-          //   menuValue: 'Chats',
-          //   route: "/chat",
-          // },
-          // {
-          //   menuValue: 'Calls',
-          //   route: "#",
-          //   showMenuRoute: true,
-          //   subMenusValues: [
-          //       {
-          //           menuValue: 'Voice Call',
-          //           route: "/voice-call",
-          //         },
-          //       {
-          //           menuValue: 'Video Call',
-          //           route: "/video-call",
-          //         },
-          //       {
-          //           menuValue: 'Outgoing Call',
-          //           route: "/outgoing-call",
-          //         },
-          //       {
-          //           menuValue: 'Incoming Call',
-          //           route: "/incoming-call",
-          //         },
-          //   ]
-          // },
-          {
-            menuValue: 'Calendar',
-            route: "/events",
-          },
-          {
-            menuValue: 'Contacts',
-            route: "/contacts",
-          },
-          // {
-          //   menuValue: 'Email',
-          //   route: "/inbox",
-          // },
-          // {
-          //   menuValue: 'File Manager',
-          //   route: "/file-manager",
-          // },
-        ],
-      },
+      // {
+      //   menuValue: 'Apps',
+      //   hasSubRoute: true,
+      //   showSubRoute: false,
+      //   route: "#",
+      //   icon: "la la-cube",
+      //   subMenus: [
+      // {
+      //   menuValue: 'Chats',
+      //   route: "/chat",
+      // },
+      // {
+      //   menuValue: 'Calls',
+      //   route: "#",
+      //   showMenuRoute: true,
+      //   subMenusValues: [
+      //       {
+      //           menuValue: 'Voice Call',
+      //           route: "/voice-call",
+      //         },
+      //       {
+      //           menuValue: 'Video Call',
+      //           route: "/video-call",
+      //         },
+      //       {
+      //           menuValue: 'Outgoing Call',
+      //           route: "/outgoing-call",
+      //         },
+      //       {
+      //           menuValue: 'Incoming Call',
+      //           route: "/incoming-call",
+      //         },
+      //   ]
+      // },
+      // {
+      //   menuValue: 'Calendar',
+      //   route: "/events",
+      // },
+      // {
+      //   menuValue: 'Contacts',
+      //   route: "/contacts",
+      // },
+      // {
+      //   menuValue: 'Email',
+      //   route: "/inbox",
+      // },
+      // {
+      //   menuValue: 'File Manager',
+      //   route: "/file-manager",
+      // },
+      //       ],
+      //     },
     ],
   },
 
   {
-    tittle: 'ADMIN',
+    tittle: "ADMIN",
     showAsTab: false,
     separateRoute: false,
     menu: [
       {
-        menuValue: 'Admintration',
+        menuValue: "Admintration",
         hasSubRoute: true,
         showSubRoute: false,
         route: "#",
         icon: "la la-user",
         subMenus: [
           {
-            menuValue: 'All Employees',
+            menuValue: "All Employees",
             route: "/employees",
           },
+          // {
+          //   menuValue: 'Holidays',
+          //   route: "/holidays",
+          // },
           {
-            menuValue: 'Holidays',
-            route: "/holidays",
-          },
-          {
-            menuValue: 'Leaves',
+            menuValue: "Leaves",
             route: "/adminleaves",
           },
           {
-            menuValue: 'Departments',
+            menuValue: "Departments",
             route: "/departments",
           },
           {
-            menuValue: 'ViolationType',
+            menuValue: "ViolationType",
             route: "/violation-types",
-          }, 
-          {
-            menuValue: 'Violation',
-            route: "/violations",
-          }, 
-          {
-            menuValue: 'Shift & Schedule',
-            route: "/shift-scheduling",
           },
           {
-            menuValue: 'Overtime',
+            menuValue: "Violation",
+            route: "/violations",
+          },
+          // {
+          //   menuValue: 'Shift & Schedule',
+          //   route: "/shift-scheduling",
+          // },
+          {
+            menuValue: "Overtime",
             route: "/overtime",
           },
         ],
@@ -136,35 +134,35 @@ export const SidebarData = [
     ],
   },
   {
-    tittle: 'EMPLOYEES',
+    tittle: "EMPLOYEES",
     showAsTab: false,
     separateRoute: false,
     menu: [
       {
-        menuValue: 'Employees',
+        menuValue: "Employees",
         hasSubRoute: true,
         showSubRoute: false,
         route: "#",
         icon: "la la-user",
         subMenus: [
           {
-            menuValue: 'Attendance',
+            menuValue: "Attendance",
             route: "/attendance-employee",
           },
           {
-            menuValue: 'Attendance Data',
+            menuValue: "Attendance Data",
             route: "/adminattendance",
           },
+          // {
+          //   menuValue: 'Holidays',
+          //   route: "/holidays",
+          // },
           {
-            menuValue: 'Holidays',
-            route: "/holidays",
-          },
-          {
-            menuValue: 'Leaves',
+            menuValue: "Leaves",
             route: "/leaves-employee",
           },
           {
-            menuValue: 'Training Programs',
+            menuValue: "Training Programs",
             route: "/training-programs",
           },
         ],
@@ -273,60 +271,60 @@ export const SidebarData = [
   //   ],
   // },
   {
-    tittle: 'HR',
+    tittle: "HR",
     showAsTab: false,
     separateRoute: false,
     menu: [
       {
-        menuValue: 'Payroll',
+        menuValue: "Payroll",
         hasSubRoute: true,
         showSubRoute: false,
         icon: "la la-money",
         subMenus: [
           {
-            menuValue: 'Salary',
+            menuValue: "Salary",
             route: "/salary",
           },
           {
-            menuValue: 'Payslip',
+            menuValue: "Payslip",
             route: "/salary-view",
           },
           {
-            menuValue: 'Payroll Items',
+            menuValue: "Payroll Items",
             route: "/payroll-items",
           },
           {
-            menuValue: 'Taxes',
+            menuValue: "Taxes",
             route: "/taxes",
           },
         ],
       },
       {
-        menuValue: 'Sales',
+        menuValue: "Sales",
         hasSubRoute: true,
         showSubRoute: false,
         icon: "la la-files-o",
         subMenus: [
           {
-            menuValue: 'Estimates',
+            menuValue: "Estimates",
             route: "/estimates",
           },
           {
-            menuValue: 'Invoices',
+            menuValue: "Invoices",
             route: "/invoices",
           },
           {
-            menuValue: 'Payments',
+            menuValue: "Payments",
             route: "/payments",
           },
           {
-            menuValue: 'Expenses',
+            menuValue: "Expenses",
             route: "/expenses",
           },
           {
-            menuValue: 'Provident Fund',
+            menuValue: "Provident Fund",
             route: "/provident-fund",
-          },         
+          },
         ],
       },
       // {
@@ -355,9 +353,8 @@ export const SidebarData = [
       //   ],
       // },
 
-      
       {
-        menuValue: 'Policies',
+        menuValue: "Policies",
         hasSubRoute: false,
         showSubRoute: false,
         route: "/policies",
@@ -371,50 +368,50 @@ export const SidebarData = [
         subMenus: [
           {
             menuValue: "Expense Report",
-            route: "/expense-reports"
+            route: "/expense-reports",
           },
           {
             menuValue: "Invoice Report",
-            route: "/invoice-reports"
+            route: "/invoice-reports",
           },
           {
             menuValue: "Payments Report",
-            route: "/payments-reports"
+            route: "/payments-reports",
           },
           {
             menuValue: "Project Report",
-            route: "/project-reports"
+            route: "/project-reports",
           },
           {
             menuValue: "Task Report",
-            route: "/task-reports"
+            route: "/task-reports",
           },
           {
             menuValue: "Attendance Report",
-            route: "/attendance-reports"
+            route: "/attendance-reports",
           },
           {
             menuValue: "Leave Report",
-            route: "/leave-reports"
+            route: "/leave-reports",
           },
           {
             menuValue: "Payslip Report",
-            route: "/payslip-reports"
+            route: "/payslip-reports",
           },
           {
             menuValue: "Daily Report",
-            route: "/daily-reports"
+            route: "/daily-reports",
           },
           {
             menuValue: "User Report",
-            route: "/user-reports"
+            route: "/user-reports",
           },
           {
             menuValue: "Employee Report",
-            route: "/employee-reports"
+            route: "/employee-reports",
           },
-        ]
-      }
+        ],
+      },
     ],
   },
   // {
@@ -500,7 +497,6 @@ export const SidebarData = [
   //   route: "/termination",
   //   icon: "la la-times-circle",
   // },
-
 
   //   ],
   // },
@@ -718,9 +714,6 @@ export const SidebarData = [
   //   ],
   // },
 
-
-
-
   // {
   //   tittle: 'UI INTERFACE',
   //   showAsTab: false,
@@ -854,7 +847,7 @@ export const SidebarData = [
   //     {
   //       menuValue: 'Documentation',
   //       hasSubRoute: false,
-  //       showSubRoute: false,       
+  //       showSubRoute: false,
   //       route: "#",
   //       icon: "la la-file-text",
   //     },
@@ -877,7 +870,6 @@ export const SidebarData = [
 
   //       ]
   //     },
-
 
   //   ],
   // },

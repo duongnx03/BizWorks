@@ -75,15 +75,7 @@ const EditSalaryModal = () => {
                   <div className="col-sm-6">
                     <h4 className="text-primary">Earnings</h4>
                     <div className="input-block mb-3">
-                      <label className="col-form-label">Basic</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="input-block mb-3">
                       <label className="col-form-label">Bonus</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Overtime</label>
                       <input className="form-control" type="text" />
                     </div>
                     <div className="input-block mb-3">
@@ -92,15 +84,7 @@ const EditSalaryModal = () => {
                     </div>
                   </div>
                   <div className="col-sm-6">
-                    <h4 className="text-primary">Deductions</h4>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Leave</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Violation</label>
-                      <input className="form-control" type="text" />
-                    </div>              
+                    <h4 className="text-primary">Deductions</h4>      
                     <div className="input-block mb-3">
                       <label className="col-form-label">Advance salary</label>
                       <input className="form-control" type="text" />
@@ -109,11 +93,11 @@ const EditSalaryModal = () => {
                       <label className="col-form-label">Prof. Tax</label>
                       <input className="form-control" type="text" />
                     </div>
-                    <div className="add-more">
+                    {/* <div className="add-more">
                       <Link to="#">
                         <i className="fa-solid fa-plus-circle" /> Add More
                       </Link>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
                 <div className="submit-section">

@@ -19,7 +19,7 @@ const AddViolation = ({ violationData, onSave, onAdd }) => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, {withCredentials: true});
-        const data = response.data.map(emp => ({ value: emp.id, label: emp.fullname }));
+        const data = response.data.data.map(emp => ({ value: emp.id, label: emp.fullname }));
         setEmployees(data);
       } catch (error) {
         console.error("Error fetching employees:", error);
@@ -165,7 +165,7 @@ const AddViolation = ({ violationData, onSave, onAdd }) => {
                     options={[
                       { value: 1, label: "Pending" },
                       { value: 2, label: "Resolved" },
-                      { value: 3, label: "Rejected" },
+                      { value: 3, label: "Cancel" },
                     ]}
                     value={selectedStatus}
                     placeholder="Select"
@@ -257,7 +257,7 @@ const AddViolation = ({ violationData, onSave, onAdd }) => {
                     options={[
                       { value: 1, label: "Pending" },
                       { value: 2, label: "Resolved" },
-                      { value: 3, label: "Rejected" },
+                      { value: 3, label: "Cancel" },
                     ]}
                     value={selectedStatus}
                     placeholder="Select"

@@ -52,7 +52,7 @@ public class ViolationService {
         // Tạo và trả về ViolationDTO
         return new ViolationDTO(
                 saved.getId(),
-                new EmployeeDTO(saved.getEmployee().getId(), saved.getEmployee().getFullname(), saved.getEmployee().getEmail()), // Trả về EmployeeDTO
+                new EmployeeDTO(saved.getEmployee().getId(), saved.getEmployee().getFullname(), saved.getEmployee().getEmail(), saved.getEmployee().getPhone(), saved.getEmployee().getAvatar(),saved.getEmployee().getStartDate(),saved.getEmployee().getDepartment().getDepartmentName(),saved.getEmployee().getPosition().getPositionName()), // Trả về EmployeeDTO
                 new ViolationTypeDTO(saved.getViolationType().getId(), saved.getViolationType().getType(), saved.getViolationType().getViolationMoney()), // Trả về ViolationTypeDTO
                 saved.getViolationDate(),
                 saved.getReason(),
@@ -94,7 +94,7 @@ public class ViolationService {
         return violations.stream()
                 .map(v -> new ViolationDTO(
                         v.getId(),
-                        new EmployeeDTO(v.getEmployee().getId(), v.getEmployee().getFullname(), v.getEmployee().getEmail()), // Trả về EmployeeDTO
+                        new EmployeeDTO(v.getEmployee().getId(), v.getEmployee().getFullname(), v.getEmployee().getEmail(), v.getEmployee().getPhone(), v.getEmployee().getAvatar(), v.getEmployee().getStartDate(), v.getEmployee().getDepartment().getDepartmentName(),v.getEmployee().getPosition().getPositionName() ), // Trả về EmployeeDTO
                         new ViolationTypeDTO(v.getViolationType().getId(), v.getViolationType().getType(), v.getViolationType().getViolationMoney()), // Trả về ViolationTypeDTO
                         v.getViolationDate(),
                         v.getReason(),
@@ -127,9 +127,10 @@ public class ViolationService {
             v.setReason(dto.getReason());
             v.setStatus(dto.getStatus());
             Violation updated = violationRepository.save(v);
+            updateSalaryForEmployee(updated.getEmployee().getId());
             return new ViolationDTO(
                     updated.getId(),
-                    new EmployeeDTO(updated.getEmployee().getId(), updated.getEmployee().getFullname(),updated.getEmployee().getEmail()), // Trả về EmployeeDTO
+                    new EmployeeDTO(updated.getEmployee().getId(), updated.getEmployee().getFullname(),updated.getEmployee().getEmail(),updated.getEmployee().getPhone(),updated.getEmployee().getAvatar(),updated.getEmployee().getStartDate(),updated.getEmployee().getDepartment().getDepartmentName(),updated.getEmployee().getPosition().getPositionName()), // Trả về EmployeeDTO
                     new ViolationTypeDTO(updated.getViolationType().getId(), updated.getViolationType().getType(), updated.getViolationType().getViolationMoney()), // Trả về ViolationTypeDTO
                     updated.getViolationDate(),
                     updated.getReason(),
@@ -139,8 +140,17 @@ public class ViolationService {
     }
 
     public void deleteViolation(Long id) {
-        violationRepository.deleteById(id);
+        Optional<Violation> violationOpt = violationRepository.findById(id);
+        if (violationOpt.isPresent()) {
+            Violation violation = violationOpt.get();
+            Long employeeId = violation.getEmployee().getId();
+            violationRepository.deleteById(id);
+
+            // Cập nhật lương cho nhân viên sau khi xoá vi phạm
+            updateSalaryForEmployee(employeeId);
+        }
     }
+
 
     public List<ViolationDTO> searchViolationsByEmployeeName(String employeeName) {
         // Tìm tất cả các vi phạm mà nhân viên có tên chứa employeeName
@@ -148,7 +158,7 @@ public class ViolationService {
         return violations.stream()
                 .map(v -> new ViolationDTO(
                         v.getId(),
-                        new EmployeeDTO(v.getEmployee().getId(), v.getEmployee().getFullname(), v.getEmployee().getEmail()), // Trả về EmployeeDTO
+                        new EmployeeDTO(v.getEmployee().getId(), v.getEmployee().getFullname(), v.getEmployee().getEmail(), v.getEmployee().getPhone(), v.getEmployee().getAvatar(), v.getEmployee().getStartDate(), v.getEmployee().getDepartment().getDepartmentName(),v.getEmployee().getPosition().getPositionName()), // Trả về EmployeeDTO
                         new ViolationTypeDTO(v.getViolationType().getId(), v.getViolationType().getType(), v.getViolationType().getViolationMoney()), // Trả về ViolationTypeDTO
                         v.getViolationDate(),
                         v.getReason(),

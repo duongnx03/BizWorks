@@ -58,6 +58,9 @@ public class AuthenticationService {
     @Autowired
     private UserDetailsService userDetailsService;
 
+    @Autowired
+    private SalaryService salaryService;
+
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
     }
@@ -81,6 +84,8 @@ public class AuthenticationService {
         employee.setEndDate(null);
         employee.setUser(user);
         employeeService.save(employee);
+
+        salaryService.createSalaryForEmployee(employee);
 
         VerifyAccount verifyAccount = verifyAccountService.createVerifyAccount(user);
         sendVerificationEmail(request.getEmail(), request.getFullname(), verifyAccount.getVerificationCode(), request.getPassword());

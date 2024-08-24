@@ -1,22 +1,46 @@
-import React, { useState } from "react";
-
-import Breadcrumbs from "../../../../../components/Breadcrumbs";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Link } from "react-router-dom";
 import Select from "react-select";
 import DatePicker from "react-datepicker";
+import Breadcrumbs from "../../../../../components/Breadcrumbs";
 import "react-datepicker/dist/react-datepicker.css";
 import AddSalaryModal from "../../../../../components/modelpopup/AddSalaryModal";
 import SalaryTable from "./SalaryTable";
+import { base_url } from "../../../../../base_urls";
 
 const EmployeeSalary = () => {
-  const [setSelectedOption] = useState(null);
+  const [selectedOption, setSelectedOption] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedDateTwo, setSelectedDateTwo] = useState(null);
-
-  const [dateTwo, setdateTwo] = useState(false);
+  const [dateTwo, setDateTwo] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [focused, setFocused] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [salaryData, setSalaryData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchSalaries = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${base_url}/api/salaries`, { withCredentials: true });
+      console.log('Fetched data:', response.data); // Kiểm tra dữ liệu nhận được
+  
+      // Lấy dữ liệu từ thuộc tính 'data' của phản hồi
+      if (Array.isArray(response.data.data)) {
+        setSalaryData(response.data.data);
+      } else {
+        console.error('Data is not an array:', response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching salaries:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchSalaries();
+  }, []);
 
   const handleLabelClick = () => {
     setFocused(true);
@@ -44,24 +68,26 @@ const EmployeeSalary = () => {
     setIsFocused(false);
   };
 
-  const handleFocustwo = () => {
-    setdateTwo(true);
+  const handleFocusTwo = () => {
+    setDateTwo(true);
   };
-  const handleBlurtwo = () => {
-    setdateTwo(false);
+
+  const handleBlurTwo = () => {
+    setDateTwo(false);
   };
 
   const handleDateChange = (date) => {
     setSelectedDate(date);
   };
+
   const handleDateChangeTwo = (date) => {
     setSelectedDateTwo(date);
   };
+
   const options = [
     { value: "--Select--", label: "--Select--" },
     { value: "A01", label: "A01" },
     { value: "A02", label: "A02" },
-    
   ];
 
   const customStyles = {
@@ -74,17 +100,18 @@ const EmployeeSalary = () => {
       },
     }),
   };
+
   return (
     <>
       <div className="page-wrapper">
         <div className="content container-fluid">
-          {/* <Breadcrumbs
+          <Breadcrumbs
             maintitle="Employee Salary"
             title="Dashboard"
             subtitle="Salary"
             modal="#add_salary"
             name="Add Salary"
-          /> */}
+          />
 
           <div className="row filter-row">
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
@@ -140,14 +167,14 @@ const EmployeeSalary = () => {
                 />
                 <label className="focus-label">Department</label>
               </div>
-            </div>  
+            </div>
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
               <div
                 className={`input-block mb-3 form-focus ${
                   isFocused ? "focused" : ""
                 }`}
               >
-                <div className="cal-icon focused ">
+                <div className="cal-icon focused">
                   <DatePicker
                     className="form-control floating datetimepicker"
                     selected={selectedDate}
@@ -168,11 +195,11 @@ const EmployeeSalary = () => {
               >
                 <div className="cal-icon">
                   <DatePicker
-                    className="form-control floating datetimepicker "
+                    className="form-control floating datetimepicker"
                     selected={selectedDateTwo}
                     onChange={handleDateChangeTwo}
-                    onFocus={handleFocustwo}
-                    onBlur={handleBlurtwo}
+                    onFocus={handleFocusTwo}
+                    onBlur={handleBlurTwo}
                     dateFormat="dd-MM-yyyy"
                   />
                 </div>
@@ -187,7 +214,7 @@ const EmployeeSalary = () => {
             </div>
           </div>
 
-          <SalaryTable />
+          <SalaryTable data={salaryData} loading={loading} />
         </div>
       </div>
       <AddSalaryModal />

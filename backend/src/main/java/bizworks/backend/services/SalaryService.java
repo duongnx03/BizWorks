@@ -35,6 +35,43 @@ public class SalaryService {
         this.violationRepository = violationRepository;
     }
 
+    public void createSalaryForEmployee(Employee employee) {
+        // Lấy thông tin hiện tại
+        LocalDateTime now = LocalDateTime.now();
+        int currentMonth = now.getMonthValue();
+        int currentYear = now.getYear();
+
+        // Kiểm tra xem bảng lương cho nhân viên này đã tồn tại trong tháng và năm hiện tại chưa
+        boolean exists = salaryRepository.existsByEmployeeIdAndMonthAndYear(employee.getId(), currentMonth, currentYear);
+        if (!exists) {
+            // Tạo mới Salary nếu không tồn tại bản ghi
+            Salary salary = new Salary();
+            salary.setSalaryCode(generateSalaryCode()); // Tạo mã tự động cho phiếu lương
+            salary.setMonth(currentMonth);
+            salary.setYear(currentYear);
+            salary.setBasicSalary(employee.getPosition() != null ? employee.getPosition().getBasicSalary() : 0.0);
+            salary.setBonusSalary(0.0);
+            salary.setOvertimeSalary(0.0);
+            salary.setAllowances(0.0);
+
+            // Tính tiền phạt từ Violation
+            List<Violation> violations = violationRepository.findByEmployeeId(employee.getId());
+            double totalViolationMoney = violations.stream()
+                    .mapToDouble(v -> v.getViolationType().getViolationMoney())
+                    .sum();
+            salary.setDeductions(totalViolationMoney);
+
+            // Tính tổng lương
+            salary.setTotalSalary(calculateTotalSalary(salary));
+            salary.setDateSalary(LocalDateTime.now()); // Ngày nhận lương
+            salary.setCreatedAt(LocalDateTime.now()); // Ngày tạo bản ghi
+            salary.setUpdatedAt(LocalDateTime.now()); // Ngày cập nhật bản ghi
+            salary.setEmployee(employee);
+
+            salaryRepository.save(salary);
+        }
+    }
+
     public ResponseEntity<ApiResponse<SalaryDTO>> createSalary(@RequestBody SalaryDTO dto) {
         // Lấy thông tin hiện tại
         LocalDateTime now = LocalDateTime.now();
@@ -189,7 +226,12 @@ public class SalaryService {
     private SalaryDTO convertToDTO(Salary salary) {
         Employee employee = salary.getEmployee();
         EmployeeDTO employeeDTO = (employee != null)
-                ? new EmployeeDTO(employee.getId(), employee.getFullname(), employee.getEmail())
+                ? new EmployeeDTO(employee.getId(), employee.getFullname(), employee.getEmail(), employee.getPhone(),
+                employee.getAvatar(),
+                employee.getStartDate(),
+                (employee.getDepartment() != null) ? employee.getDepartment().getDepartmentName() : null, // Adjust if Department is not a String
+                (employee.getPosition() != null) ? employee.getPosition().getPositionName() : null        // Adjust if Position is not a String
+        )
                 : null;
         return new SalaryDTO(
                 salary.getId(),

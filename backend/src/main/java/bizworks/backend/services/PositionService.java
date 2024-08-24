@@ -5,12 +5,15 @@ import bizworks.backend.dtos.PositionDTO;
 import bizworks.backend.models.Department;
 import bizworks.backend.models.Employee;
 import bizworks.backend.models.Position;
+import bizworks.backend.models.Salary;
 import bizworks.backend.repository.DepartmentRepository;
 import bizworks.backend.repository.EmployeeRepository;
 import bizworks.backend.repository.PositionRepository;
+import bizworks.backend.repository.SalaryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +30,9 @@ public class PositionService {
 
     @Autowired
     private EmployeeRepository employeeRepository;
+
+    @Autowired
+    private SalaryRepository salaryRepository; // Thêm SalaryRepository
 
     public List<PositionDTO> getAllPositions() {
         return positionRepository.findAll().stream()
@@ -78,6 +84,7 @@ public class PositionService {
         positionRepository.deleteById(id);
     }
 
+    @Transactional
     public Position updatePosition(Long id, PositionDTO positionDTO) {
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Position not found with id: " + id));
@@ -103,10 +110,32 @@ public class PositionService {
             position.setEmployee(null);
         }
 
-        return positionRepository.save(position);
+        // Lưu Position
+        Position updatedPosition = positionRepository.save(position);
+
+        // Cập nhật tất cả các Salary liên quan
+        List<Employee> employees = employeeRepository.findByPositionId(id);
+        for (Employee employee : employees) {
+            List<Salary> salaries = salaryRepository.findByEmployeeId(employee.getId());
+            for (Salary salary : salaries) {
+                salary.setBasicSalary(updatedPosition.getBasicSalary());
+                salary.setTotalSalary(calculateTotalSalary(salary)); // Tính lại tổng lương
+                salaryRepository.save(salary);
+            }
+        }
+
+        return updatedPosition;
     }
 
-    // Change this method to public
+    // Helper method to calculate total salary
+    private double calculateTotalSalary(Salary salary) {
+        return salary.getBasicSalary()
+                + salary.getBonusSalary()
+                + salary.getOvertimeSalary()
+                + salary.getAllowances()
+                - salary.getDeductions();
+    }
+
     public PositionDTO convertToDTO(Position position) {
         PositionDTO dto = new PositionDTO();
         dto.setId(position.getId());

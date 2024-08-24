@@ -71,7 +71,7 @@ const AddSalaryModal = () => {
                     </div>
                   </div>
                 </div>
-                <div className="row">
+                {/* <div className="row">
                   <div className="col-sm-6">
                     <h4 className="text-primary">Earnings</h4>
                     <div className="input-block mb-3">
@@ -115,7 +115,7 @@ const AddSalaryModal = () => {
                       </Link>
                     </div>
                   </div>
-                </div>
+                </div> */}
                 <div className="submit-section">
                   <button
                     className="btn btn-primary submit-btn"

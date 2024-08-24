@@ -11,4 +11,6 @@ import java.util.List;
 public interface ViolationRepository extends JpaRepository<Violation, Long> {
     List<Violation> findByEmployeeFullnameContaining(String fullname);
     List<Violation> findByEmployeeId(Long employeeId);
+    List<Violation> findByViolationTypeId(Long violationTypeId);
+
 }

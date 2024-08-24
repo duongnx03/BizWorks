@@ -1,58 +1,69 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import Salary from "../../../../../assets/json/employeeSalary";
 import { Table } from "antd";
 import EditSalaryModal from "../../../../../components/modelpopup/EditSalaryModal";
 import DeleteModal from "../../../../../components/modelpopup/deletePopup";
 import SearchBox from "../../../../../components/SearchBox";
+import PaySlip from "../Payslip";
+const SalaryTable = ({ data, loading }) => {
+  const [selectedSalary, setSelectedSalary] = useState(null);
 
-const SalaryTable = () => {
-  const data = Salary.Salary;
+  const handleGenerateSlip = (salary) => {
+    setSelectedSalary(salary);
+  };
+
   const columns = [
     {
       title: "Employee Name",
-      dataIndex: "name",
-      render: (text, record) => (
+      dataIndex: "employee",
+      render: (employee) => (
         <div className="table-avatar">
           <Link to="/profile" className="avatar">
-            <img alt="" src={record.avatar} />
+            <img alt="" src={employee.avatar} /> {/* Assuming employee has an avatar field */}
           </Link>
           <Link to="/profile">
-            {text} <span>{record.name}</span>
+            {employee.fullname}
           </Link>
         </div>
       ),
-      sorter: (a, b) => a.name.length - b.name.length,
+      sorter: (a, b) => a.employee.fullname.localeCompare(b.employee.fullname),
     },
     // {
-    //   title: "Code",
-    //   dataIndex: "employeeId",
-    //   sorter: (a, b) => a.employeeId.length - b.employeeId.length,
+    //   title: "Salary Code",
+    //   dataIndex: "salaryCode",
+    //   sorter: (a, b) => a.salaryCode.localeCompare(b.salaryCode),
     // },
-
     {
       title: "Email",
-      dataIndex: "email",
-      sorter: (a, b) => a.email.length - b.email.length,
+      dataIndex: "employee",
+      render: (employee) => employee.email,
+      sorter: (a, b) => a.employee.email.localeCompare(b.employee.email),
+    },
+    {
+      title: "Department",
+      dataIndex: "employee",
+      render: (employee) => employee.department, // Assuming department is part of employee
     },
     {
       title: "Position",
-      dataIndex: "positions",
+      dataIndex: "employee",
+      render: (employee) => employee.position, // Assuming position is part of employee
     },
     {
       title: "Salary Date",
-      dataIndex: "joiningDate",
-      sorter: (a, b) => a.joiningDate.length - b.joiningDate.length,
+      dataIndex: "dateSalary",
+      render: (dateSalary) => new Date(dateSalary).toLocaleDateString(), // Format date
+      sorter: (a, b) => new Date(a.dateSalary) - new Date(b.dateSalary),
     },
     {
       title: "Net Salary",
-      dataIndex: "salary",
-      render: (text) => <span>${text}</span>,
-      sorter: (a, b) => a.salary.length - b.salary.length,
+      dataIndex: "totalSalary",
+      render: (text) => <span>${text.toFixed(2)}</span>,
+      sorter: (a, b) => a.totalSalary - b.totalSalary,
     },
     {
       title: "Action",
-      render: () => (
+      render: (text, record) => (
         <div className="dropdown dropdown-action text-end">
           <Link
             to="#"
@@ -92,20 +103,21 @@ const SalaryTable = () => {
       ),
     },
   ];
+
   return (
     <>
       <div className="row">
         <div className="col-md-12">
           <div className="table-responsive">
-          <SearchBox />
+            <SearchBox />
             <Table
               className="table-striped"
               style={{ overflowX: "auto" }}
               columns={columns}
               dataSource={data}
               rowKey={(record) => record.id}
+              loading={loading}
             />
-            
           </div>
         </div>
       </div>

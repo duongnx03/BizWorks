@@ -25,10 +25,15 @@ public class EmployeeDTO {
     private String department;
     private String position;
 
-    public EmployeeDTO(Long id, String fullname, String email) {
+    public EmployeeDTO(Long id, String fullname, String email, String phone, String avatar, LocalDate startDate, String department, String position) {
         this.id = id;
         this.fullname = fullname;
         this.email = email;
+        this.phone = phone;
+        this.avatar = avatar;
+        this.startDate = startDate;
+        this.department = department;
+        this.position = position;
     }
 
     public EmployeeDTO(Long id) {

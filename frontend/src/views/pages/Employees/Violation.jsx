@@ -35,7 +35,7 @@ const Violation = () => {
   const fetchEmployees = async () => {
     try {
       const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, {withCredentials: true});
-      return response.data;
+      return response.data.data;
     } catch (error) {
       console.error("Error fetching employees:", error);
       return [];
@@ -180,7 +180,7 @@ const Violation = () => {
                   ? "far fa-dot-circle text-purple"
                   : text === "Pending"
                   ? "far fa-dot-circle text-info"
-                  : text === "Rejected"
+                  : text === "Cancel"
                   ? "far fa-dot-circle text-danger"
                   : "far fa-dot-circle text-success"
               }
