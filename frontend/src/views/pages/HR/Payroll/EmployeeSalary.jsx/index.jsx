@@ -26,7 +26,6 @@ const EmployeeSalary = () => {
       const response = await axios.get(`${base_url}/api/salaries`, { withCredentials: true });
       console.log('Fetched data:', response.data); // Kiểm tra dữ liệu nhận được
   
-      // Lấy dữ liệu từ thuộc tính 'data' của phản hồi
       if (Array.isArray(response.data.data)) {
         setSalaryData(response.data.data);
       } else {
@@ -38,6 +37,7 @@ const EmployeeSalary = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchSalaries();
   }, []);

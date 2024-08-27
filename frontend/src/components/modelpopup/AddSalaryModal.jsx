@@ -1,18 +1,35 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Select from "react-select";
 
 const AddSalaryModal = () => {
-  const [setselectOne] = useState(null);
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [error, setError] = useState(null); // Thêm trạng thái lỗi
 
-  const department = [
-    { value: 1, label: "A01" },
-    { value: 2, label: "A02" },
-  ];
-  const employee = [
-    { value: 1, label: "Dien" },
-    { value: 2, label: "Duong k" },
-  ];
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/employee/getAllEmployees', {
+          withCredentials: true,
+        });
+
+        if (response.data && response.data.data) {
+          const employeeOptions = response.data.data.map((emp) => ({
+            value: emp.id,
+            label: emp.fullname,
+          }));
+          setEmployees(employeeOptions);
+        } else {
+          console.error("Unexpected response structure for employees");
+        }
+      } catch (error) {
+        console.error("Error fetching employee data:", error);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
 
   const customStyles = {
     option: (provided, state) => ({
@@ -24,13 +41,41 @@ const AddSalaryModal = () => {
       },
     }),
   };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError(null); // Reset lỗi khi bắt đầu gửi request
+
+    if (selectedEmployee) {
+      try {
+        console.log("Submitting employee with ID:", selectedEmployee.value);
+
+        const response = await axios.post('http://localhost:8080/api/salaries', {withCredentials: true},{
+          employee: { id: selectedEmployee.value },
+        });
+
+        console.log("API Response:", response.data);
+
+        // Close modal
+        const modal = document.querySelector('#add_salary');
+        if (modal) {
+          const modalInstance = new window.bootstrap.Modal(modal);
+          modalInstance.hide();
+        }
+      } catch (error) {
+        console.error("Error submitting data:", error);
+        setError("Failed to submit data. Please try again."); // Cập nhật lỗi
+      }
+    } else {
+      console.error("No employee selected");
+      setError("Please select an employee."); // Cập nhật lỗi
+    }
+  };
+
   return (
     <>
       <div id="add_salary" className="modal custom-modal fade" role="dialog">
-        <div
-          className="modal-dialog modal-dialog-centered modal-lg"
-          role="document"
-        >
+        <div className="modal-dialog modal-dialog-centered modal-lg" role="document">
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">Add Staff Salary</h5>
@@ -44,84 +89,26 @@ const AddSalaryModal = () => {
               </button>
             </div>
             <div className="modal-body">
-              <form action="salary">
+              <form onSubmit={handleSubmit}>
                 <div className="row">
-                  <div className="col-sm-6">
+                  <div className="col-sm-12">
                     <div className="input-block mb-3">
-                      <label className="col-form-label">Select Department</label>
-                      <Select
-                        placeholder="Select"
-                        options={department}
-                        onChange={setselectOne}
-                        className="select"
-                        styles={customStyles}
-                      />
-                    </div>
-                  </div>
-                  <div className="col-sm-6">
-                  <div className="input-block mb-3">
                       <label className="col-form-label">Select Staff</label>
                       <Select
                         placeholder="Select"
-                        options={employee}
-                        onChange={setselectOne}
+                        options={employees}
+                        onChange={setSelectedEmployee}
                         className="select"
                         styles={customStyles}
                       />
                     </div>
                   </div>
                 </div>
-                {/* <div className="row">
-                  <div className="col-sm-6">
-                    <h4 className="text-primary">Earnings</h4>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Basic</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Bonus</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Overtime</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Allowance</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                  </div>
-                  <div className="col-sm-6">
-                    <h4 className="text-primary">Deductions</h4>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Leave</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Violation</label>
-                      <input className="form-control" type="text" />
-                    </div>              
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Advance salary</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">Prof. Tax</label>
-                      <input className="form-control" type="text" />
-                    </div>
-                    <div className="add-more">
-                      <Link to="#">
-                        <i className="fa-solid fa-plus-circle" /> Add More
-                      </Link>
-                    </div>
-                  </div>
-                </div> */}
+                {error && <p className="text-danger">{error}</p>}
                 <div className="submit-section">
                   <button
                     className="btn btn-primary submit-btn"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                    type="reset"
+                    type="submit"
                   >
                     Submit
                   </button>

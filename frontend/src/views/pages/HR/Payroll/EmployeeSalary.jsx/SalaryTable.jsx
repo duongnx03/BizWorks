@@ -1,15 +1,17 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Table } from "antd";
 import EditSalaryModal from "../../../../../components/modelpopup/EditSalaryModal";
 import DeleteModal from "../../../../../components/modelpopup/deletePopup";
 import SearchBox from "../../../../../components/SearchBox";
-import PaySlip from "../Payslip";
+
 const SalaryTable = ({ data, loading }) => {
   const [selectedSalary, setSelectedSalary] = useState(null);
+  const navigate = useNavigate(); // Use useNavigate instead of useHistory
 
   const handleGenerateSlip = (salary) => {
     setSelectedSalary(salary);
+    navigate("/salary-view", { state: { salary } }); // Navigate to PaySlip page with salary data
   };
 
   const columns = [
@@ -28,11 +30,6 @@ const SalaryTable = ({ data, loading }) => {
       ),
       sorter: (a, b) => a.employee.fullname.localeCompare(b.employee.fullname),
     },
-    // {
-    //   title: "Salary Code",
-    //   dataIndex: "salaryCode",
-    //   sorter: (a, b) => a.salaryCode.localeCompare(b.salaryCode),
-    // },
     {
       title: "Email",
       dataIndex: "employee",
@@ -96,10 +93,13 @@ const SalaryTable = ({ data, loading }) => {
     },
     {
       title: "Payslip",
-      render: () => (
-        <Link className="btn btn-sm btn-primary" to="/salary-view">
+      render: (record) => (
+        <button
+          className="btn btn-sm btn-primary"
+          onClick={() => handleGenerateSlip(record)}
+        >
           Generate Slip
-        </Link>
+        </button>
       ),
     },
   ];

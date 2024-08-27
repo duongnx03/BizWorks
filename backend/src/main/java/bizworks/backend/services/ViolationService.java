@@ -41,7 +41,7 @@ public class ViolationService {
         // Thiết lập các thuộc tính khác
         violation.setViolationDate(dto.getViolationDate());
         violation.setReason(dto.getReason());
-        violation.setStatus(dto.getStatus());
+        violation.setStatus("Pending");
 
         // Lưu đối tượng Violation vào cơ sở dữ liệu
         Violation saved = violationRepository.save(violation);
@@ -94,8 +94,8 @@ public class ViolationService {
         return violations.stream()
                 .map(v -> new ViolationDTO(
                         v.getId(),
-                        new EmployeeDTO(v.getEmployee().getId(), v.getEmployee().getFullname(), v.getEmployee().getEmail(), v.getEmployee().getPhone(), v.getEmployee().getAvatar(), v.getEmployee().getStartDate(), v.getEmployee().getDepartment().getDepartmentName(),v.getEmployee().getPosition().getPositionName() ), // Trả về EmployeeDTO
-                        new ViolationTypeDTO(v.getViolationType().getId(), v.getViolationType().getType(), v.getViolationType().getViolationMoney()), // Trả về ViolationTypeDTO
+                        v.getEmployee() != null ? new EmployeeDTO(v.getEmployee().getId(), v.getEmployee().getFullname(), v.getEmployee().getEmail(), v.getEmployee().getPhone(), v.getEmployee().getAvatar(), v.getEmployee().getStartDate(), v.getEmployee().getDepartment() != null ? v.getEmployee().getDepartment().getDepartmentName() : null, v.getEmployee().getPosition() != null ? v.getEmployee().getPosition().getPositionName() : null) : null,
+                        v.getViolationType() != null ? new ViolationTypeDTO(v.getViolationType().getId(), v.getViolationType().getType(), v.getViolationType().getViolationMoney()) : null,
                         v.getViolationDate(),
                         v.getReason(),
                         v.getStatus()))
@@ -177,5 +177,17 @@ public class ViolationService {
                         v.getReason(),
                         v.getStatus()))
                 .collect(Collectors.toList());
+    }
+
+    public void updateViolationStatus(Long id, String status) {
+        Optional<Violation> optional = violationRepository.findById(id);
+        if (optional.isPresent()) {
+            Violation violation = optional.get();
+            violation.setStatus(status);
+            violationRepository.save(violation);
+
+            // Cập nhật lương cho nhân viên sau khi thay đổi trạng thái vi phạm
+            updateSalaryForEmployee(violation.getEmployee().getId());
+        }
     }
 }

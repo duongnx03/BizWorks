@@ -5,6 +5,7 @@ import bizworks.backend.dtos.EmployeeUpdateDTO;
 import bizworks.backend.helpers.ApiResponse;
 import bizworks.backend.models.Employee;
 import bizworks.backend.services.EmployeeService;
+import bizworks.backend.services.SalaryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,8 @@ import java.util.stream.Collectors;
 public class EmployeeController {
     @Autowired
     private EmployeeService employeeService;
+    @Autowired
+    private SalaryService salaryService;
 
     @GetMapping("/getAllEmployees")
     public ResponseEntity<ApiResponse<?>> findAll() {
@@ -55,6 +58,8 @@ public class EmployeeController {
     public ResponseEntity<ApiResponse<?>> getEmployeeById(@PathVariable Long id) {
         try {
             EmployeeDTO employeeDTO = employeeService.getEmployeeById(id);
+            Employee employee = employeeService.findById(id);
+            salaryService.createSalaryForEmployeeIfNotExists(employee);
             return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(employeeDTO, "Get employee successfully"));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));

@@ -44,6 +44,11 @@ public class ViolationController {
         return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
     }
 
+    @PutMapping("/{id}/status")
+    public void updateViolationStatus(@PathVariable Long id, @RequestParam String status) {
+        violationService.updateViolationStatus(id, status);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteViolation(@PathVariable Long id) {
         violationService.deleteViolation(id);

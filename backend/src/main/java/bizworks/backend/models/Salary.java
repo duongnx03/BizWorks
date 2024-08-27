@@ -31,6 +31,7 @@ public class Salary {
     private double basicSalary; // Lương cơ bản
     private double bonusSalary; // Thưởng
     private double overtimeSalary; // Lương tăng ca
+    private double advanceSalary; // Số tiền tạm ứng lương
     private double allowances; // Các khoản phụ cấp
     private double deductions; // Các khoản khấu trừ
     private double totalSalary; // Tổng lương

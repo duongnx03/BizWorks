@@ -133,7 +133,8 @@ public class PositionService {
                 + salary.getBonusSalary()
                 + salary.getOvertimeSalary()
                 + salary.getAllowances()
-                - salary.getDeductions();
+                - salary.getDeductions()
+                - salary.getAdvanceSalary();
     }
 
     public PositionDTO convertToDTO(Position position) {

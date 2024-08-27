@@ -18,6 +18,7 @@ public class SalaryDTO {
     private Double basicSalary; // Lương cơ bản
     private Double bonusSalary; // Thưởng
     private Double overtimeSalary; // Lương tăng ca
+    private Double advanceSalary; // Số tiền tạm ứng lương
     private Double allowances; // Các khoản phụ cấp
     private Double deductions; // Các khoản khấu trừ
     private Double totalSalary; // Tổng lương

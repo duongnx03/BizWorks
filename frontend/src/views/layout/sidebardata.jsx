@@ -285,10 +285,10 @@ export const SidebarData = [
             menuValue: "Salary",
             route: "/salary",
           },
-          {
-            menuValue: "Payslip",
-            route: "/salary-view",
-          },
+          // {
+          //   menuValue: "Payslip",
+          //   route: "/salary-view",
+          // },
           {
             menuValue: "Payroll Items",
             route: "/payroll-items",

@@ -1,9 +1,18 @@
 import React from "react";
-
+import { useLocation } from "react-router-dom";
 import Breadcrumbs from "../../../../../components/Breadcrumbs";
 import { Applogo } from "../../../../../Routes/ImagePath";
+import { toWords } from "number-to-words";
 
 const PaySlip = () => {
+  const location = useLocation();
+  const { salary } = location.state || {}; // Retrieve salary from the state
+
+  if (!salary) {
+    return <div>No salary data available.</div>; // Handle case where data is not passed
+  }
+
+  // Assuming salary has the necessary fields
   return (
     <div className="page-wrapper">
       <div className="content container-fluid">
@@ -20,7 +29,7 @@ const PaySlip = () => {
             <div className="card">
               <div className="card-body">
                 <h4 className="payslip-title">
-                  Payslip for the month of August 2024
+                  Payslip for the month of {new Date(salary.dateSalary).toLocaleString('default', { month: 'long' })} {new Date(salary.dateSalary).getFullYear()}
                 </h4>
                 <div className="row">
                   <div className="col-sm-6 m-b-20">
@@ -34,10 +43,10 @@ const PaySlip = () => {
                   </div>
                   <div className="col-sm-6 m-b-20">
                     <div className="invoice-details">
-                      <h3 className="text-uppercase">Payslip #SAL_002</h3>
+                      <h3 className="text-uppercase">Payslip #{salary.salaryCode}</h3>
                       <ul className="list-unstyled">
                         <li>
-                          Salary Month: <span>August, 2024</span>
+                          Salary Month: <span>{new Date(salary.dateSalary).toLocaleString('default', { month: 'long' })}, {new Date(salary.dateSalary).getFullYear()}</span>
                         </li>
                       </ul>
                     </div>
@@ -48,14 +57,13 @@ const PaySlip = () => {
                     <ul className="list-unstyled">
                       <li>
                         <h5 className="mb-0">
-                          <strong>Duongk</strong>
+                          <strong>{salary.employee?.fullname}</strong>
                         </h5>
                       </li>
                       <li>
-                        <span>Web Designer</span>
+                        <span>{salary.employee?.position}</span>
                       </li>
-                      {/* <li>Employee ID: BW-014</li> */}
-                      <li>Joining Date: 1 Jan 2023</li>
+                      <li>Joining Date: {new Date(salary.employee?.startDate).toLocaleDateString()}</li>
                     </ul>
                   </div>
                 </div>
@@ -69,33 +77,33 @@ const PaySlip = () => {
                         <tbody>
                           <tr>
                             <td>
-                              <strong>Basic Salary</strong>{" "}
-                              <span className="float-end">$2500</span>
+                              <strong>Basic Salary</strong> 
+                              <span className="float-end">${salary.basicSalary.toFixed(2)}</span>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong> Allowance</strong>{" "}
-                              <span className="float-end">$100</span>
+                              <strong>Allowance</strong> 
+                              <span className="float-end">${salary.allowances.toFixed(2)}</span>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>Bonus</strong>{" "}
-                              <span className="float-end">$150</span>
+                              <strong>Bonus</strong> 
+                              <span className="float-end">${salary.bonusSalary.toFixed(2)}</span>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>Overtime</strong>{" "}
-                              <span className="float-end">$550</span>
+                              <strong>Overtime</strong> 
+                              <span className="float-end">${salary.overtimeSalary.toFixed(2)}</span>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>Total Earnings</strong>{" "}
+                              <strong>Total Earnings</strong> 
                               <span className="float-end">
-                                <strong>$3300</strong>
+                                <strong>${(salary.basicSalary + salary.allowances + salary.bonusSalary + salary.overtimeSalary).toFixed(2)}</strong>
                               </span>
                             </td>
                           </tr>
@@ -112,33 +120,33 @@ const PaySlip = () => {
                         <tbody>
                           <tr>
                             <td>
-                              <strong>Tax Deducted at Source (T.D.S.)</strong>{" "}
-                              <span className="float-end">$0</span>
+                              <strong>Tax Deducted at Source (T.D.S.)</strong> 
+                              <span className="float-end">$0.00</span>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>VAT</strong>{" "}
-                              <span className="float-end">$0</span>
+                              <strong>VAT</strong> 
+                              <span className="float-end">$0.00</span>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>Violations</strong>{" "}
-                              <span className="float-end">$0</span>
+                              <strong>Violations</strong> 
+                              <span className="float-end">${salary.deductions.toFixed(2)}</span>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>Advance salary</strong>{" "}
-                              <span className="float-end">$300</span>
+                              <strong>Advance Salary</strong> 
+                              <span className="float-end">${salary.advanceSalary.toFixed(2)}</span>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>Total Deductions</strong>{" "}
+                              <strong>Total Deductions</strong> 
                               <span className="float-end">
-                                <strong>$300</strong>
+                                <strong>${(salary.deductions + salary.advanceSalary).toFixed(2)}</strong>
                               </span>
                             </td>
                           </tr>
@@ -148,8 +156,7 @@ const PaySlip = () => {
                   </div>
                   <div className="col-sm-12">
                     <p>
-                      <strong>Net Salary: $3000</strong> (Three thousand $
-                       only.)
+                      <strong>Net Salary: ${salary.totalSalary.toFixed(2)}</strong> ({toWords(salary.totalSalary).replace(/,/g, '')} dollars only.)
                     </p>
                   </div>
                 </div>
