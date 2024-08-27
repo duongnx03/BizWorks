@@ -98,7 +98,7 @@ const SalaryTable = ({ data, loading }) => {
           className="btn btn-sm btn-primary"
           onClick={() => handleGenerateSlip(record)}
         >
-          Generate Slip
+          View
         </button>
       ),
     },

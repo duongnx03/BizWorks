@@ -134,6 +134,86 @@ export const SidebarData = [
     ],
   },
   {
+    tittle: "Manager",
+    showAsTab: false,
+    separateRoute: false,
+    menu: [
+      {
+        menuValue: "Management",
+        hasSubRoute: true,
+        showSubRoute: false,
+        route: "#",
+        icon: "la la-user",
+        subMenus: [
+          {
+            menuValue: "All Employees",
+            route: "/employees",
+          },
+          {
+            menuValue: 'Holidays',
+            route: "/holidays",
+          },
+          {
+            menuValue: "Leaves",
+            route: "/adminleaves",
+          },
+          {
+            menuValue: "Departments",
+            route: "/departments",
+          },
+          {
+            menuValue: "ViolationType",
+            route: "/violation-types",
+          },
+          {
+            menuValue: "Violation",
+            route: "/violations",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    tittle: "Leader",
+    showAsTab: false,
+    separateRoute: false,
+    menu: [
+      {
+        menuValue: "Lead",
+        hasSubRoute: true,
+        showSubRoute: false,
+        route: "#",
+        icon: "la la-user",
+        subMenus: [
+          {
+            menuValue: "All Employees",
+            route: "/employees",
+          },
+          {
+            menuValue: 'Holidays',
+            route: "/holidays",
+          },
+          {
+            menuValue: "Leaves",
+            route: "/adminleaves",
+          },
+          {
+            menuValue: "Departments",
+            route: "/departments",
+          },
+          {
+            menuValue: "ViolationType",
+            route: "/violation-types",
+          },
+          {
+            menuValue: "Violation",
+            route: "/violations",
+          },
+        ],
+      },
+    ],
+  },
+  {
     tittle: "EMPLOYEES",
     showAsTab: false,
     separateRoute: false,

@@ -41,7 +41,7 @@ public class ViolationService {
         // Thiết lập các thuộc tính khác
         violation.setViolationDate(dto.getViolationDate());
         violation.setReason(dto.getReason());
-        violation.setStatus("Pending");
+        violation.setStatus("New");
 
         // Lưu đối tượng Violation vào cơ sở dữ liệu
         Violation saved = violationRepository.save(violation);

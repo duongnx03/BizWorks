@@ -57,7 +57,7 @@ const Violation = () => {
       const totalEmployeesWithViolations = uniqueEmployeeIds.length;
       const totalViolations = violationsData.length;
       const pendingViolations = violationsData.filter(
-        (v) => v.status === "Pending"
+        (v) => v.status === "New"
       ).length;
       const cancelViolations = violationsData.filter(
         (v) => v.status === "Cancel"
@@ -74,7 +74,7 @@ const Violation = () => {
           month: "this month",
         },
         {
-          title: "Pending Request",
+          title: "New",
           value: pendingViolations,
         },
         {
@@ -228,7 +228,7 @@ const Violation = () => {
           >
             <i
               className={
-                text === "Pending"
+                text === "New"
                   ? "far fa-dot-circle text-danger"
                   : text === "Resolved"
                   ? "far fa-dot-circle text-success"
@@ -244,17 +244,17 @@ const Violation = () => {
             <li>
               <button
                 className="dropdown-item"
-                onClick={() => handleStatusChange(record.id, "Pending")}
+                onClick={() => handleStatusChange(record.id, "New")}
               >
-                <i className="far fa-dot-circle text-danger" /> Pending
+                <i className="far fa-dot-circle text-danger" /> New
               </button>
             </li>
             <li>
               <button
                 className="dropdown-item"
-                onClick={() => handleStatusChange(record.id, "Resolved")}
+                onClick={() => handleStatusChange(record.id, "Approved")}
               >
-                <i className="far fa-dot-circle text-success" /> Resolved
+                <i className="far fa-dot-circle text-success" /> Approved
               </button>
             </li>
             <li>
