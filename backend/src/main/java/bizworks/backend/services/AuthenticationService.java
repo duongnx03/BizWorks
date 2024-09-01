@@ -1,9 +1,8 @@
-package bizwebsite.example.demo.services;
-
-import bizwebsite.example.demo.dtos.*;
-import bizwebsite.example.demo.models.*;
-import bizwebsite.example.demo.repositories.ForgotPasswordRepository;
-import bizwebsite.example.demo.repositories.UserRepository;
+package  bizworks.backend.services;
+import  bizworks.backend.dtos.*;
+import  bizworks.backend.models.*;
+import  bizworks.backend.repository.ForgotPasswordRepository;
+import  bizworks.backend.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,7 +13,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -60,6 +58,9 @@ public class AuthenticationService {
     @Autowired
     private UserDetailsService userDetailsService;
 
+    @Autowired
+    private SalaryService salaryService;
+
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
     }
@@ -84,9 +85,10 @@ public class AuthenticationService {
         employee.setUser(user);
         employeeService.save(employee);
 
+        salaryService.createSalaryForEmployee(employee);
+
         VerifyAccount verifyAccount = verifyAccountService.createVerifyAccount(user);
-        sendVerificationEmail(request.getEmail(), request.getFullname(), verifyAccount.getVerificationCode(),
-                request.getPassword());
+        sendVerificationEmail(request.getEmail(), request.getFullname(), verifyAccount.getVerificationCode(), request.getPassword());
 
         return request;
     }
@@ -94,7 +96,8 @@ public class AuthenticationService {
     public AuthenticationResponse authenticate(AuthenticationRequest request, HttpServletResponse response) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
             SecurityContextHolder.getContext().setAuthentication(authentication);
             var user = userRepository.findByEmail(request.getEmail()).orElseThrow();
             var jwtToken = jwtService.generateToken(user);
@@ -133,8 +136,7 @@ public class AuthenticationService {
     public void forgotPassword(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
         ForgotPassword forgotPassword;
-        Optional<ForgotPassword> existingForgotPassword = forgotPasswordRepository
-                .findForgotPasswordByUserId(user.getId());
+        Optional<ForgotPassword> existingForgotPassword = forgotPasswordRepository.findForgotPasswordByUserId(user.getId());
 
         if (existingForgotPassword.isPresent()) {
             forgotPassword = forgotPasswordService.updateVerificationCode(user);
@@ -216,16 +218,7 @@ public class AuthenticationService {
         }
     }
 
-    public User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            String email = ((UserDetails) authentication.getPrincipal()).getUsername();
-            return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-        }
-        throw new RuntimeException("No user is authenticated");
-    }
-
-    public void sendVerificationEmail(String email, String fullname, String verificationCode, String password) {
+    private void sendVerificationEmail(String email, String fullname, String verificationCode, String password) {
         String subject = "Account Verification";
         String content = "<html>"
                 + "<body style='font-family: Arial, sans-serif; padding: 20px;'>"

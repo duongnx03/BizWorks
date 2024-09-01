@@ -1,8 +1,8 @@
-package bizwebsite.example.demo.controllers;
+package bizworks.backend.controllers;
 
-import bizwebsite.example.demo.dtos.PositionDTO;
-import bizwebsite.example.demo.models.Position;
-import bizwebsite.example.demo.services.PositionService;
+import bizworks.backend.dtos.PositionDTO;
+import bizworks.backend.models.Position;
+import bizworks.backend.services.PositionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,53 +11,53 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/positions")
+@RequestMapping("/api/positions")
+@CrossOrigin(origins = "http://localhost:3000")
 public class PositionController {
 
     @Autowired
     private PositionService positionService;
 
+    // Get all positions
+    @GetMapping
+    public ResponseEntity<List<PositionDTO>> getAllPositions() {
+        List<PositionDTO> positions = positionService.getAllPositions();
+        return new ResponseEntity<>(positions, HttpStatus.OK);
+    }
+
+    // Get positions by department ID
+    @GetMapping("/by-department")
+    public ResponseEntity<List<PositionDTO>> getPositionsByDepartment(@RequestParam Long departmentId) {
+        List<PositionDTO> positions = positionService.getPositionsByDepartment(departmentId);
+        return new ResponseEntity<>(positions, HttpStatus.OK);
+    }
+
+    // Get a position by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Position> getPositionById(@PathVariable Long id) {
-        Position position = positionService.findById(id);
-        return ResponseEntity.ok(position);
+    public ResponseEntity<PositionDTO> getPositionById(@PathVariable Long id) {
+        return positionService.getPositionById(id)
+                .map(position -> ResponseEntity.ok(positionService.convertToDTO(position)))
+                .orElse(ResponseEntity.notFound().build());
     }
 
+    // Create a new position
     @PostMapping
-    public ResponseEntity<Position> createPosition(@RequestBody PositionDTO positionDTO) {
-        Position position = positionService.createPosition(positionDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(position);
+    public ResponseEntity<PositionDTO> createPosition(@RequestBody PositionDTO positionDTO) {
+        Position createdPosition = positionService.savePosition(positionDTO);
+        return new ResponseEntity<>(positionService.convertToDTO(createdPosition), HttpStatus.CREATED);
     }
 
+    // Update an existing position
     @PutMapping("/{id}")
-    public ResponseEntity<Position> updatePosition(@PathVariable Long id, @RequestBody PositionDTO positionDTO) {
-        Position position = positionService.updatePosition(id, positionDTO);
-        return ResponseEntity.ok(position);
+    public ResponseEntity<PositionDTO> updatePosition(@PathVariable Long id, @RequestBody PositionDTO positionDTO) {
+        Position updatedPosition = positionService.updatePosition(id, positionDTO);
+        return ResponseEntity.ok(positionService.convertToDTO(updatedPosition));
     }
 
+    // Delete a position
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePosition(@PathVariable Long id) {
         positionService.deletePosition(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/{positionId}/assign/{employeeId}")
-    public ResponseEntity<Void> assignPositionToEmployee(@PathVariable Long positionId, @PathVariable Long employeeId) {
-        positionService.assignPositionToEmployee(positionId, employeeId);
-        return ResponseEntity.ok().build();
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Position>> listPositions() {
-        List<Position> positions = positionService.listAllPositions();
-        return ResponseEntity.ok(positions);
-    }
-
-    // If you need a separate endpoint for detailed information, consider changing
-    // the path
-    @GetMapping("/details/{id}")
-    public ResponseEntity<Position> getPositionDetails(@PathVariable Long id) {
-        Position position = positionService.getPositionById(id);
-        return ResponseEntity.ok(position);
     }
 }
