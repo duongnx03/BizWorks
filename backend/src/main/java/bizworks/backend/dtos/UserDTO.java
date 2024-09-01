@@ -12,10 +12,10 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDTO {
-    private String fullname;
-    private String email;
-    private String password;
-    private String role;
-    private LocalDate startDate;
+        private String fullname;
+        private String email;
+        private String password;
+        private String role;
+        private LocalDate startDate;
 }
     
