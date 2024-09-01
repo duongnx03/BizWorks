@@ -1,23 +1,17 @@
-package bizworks.backend.services;
+package bizwebsite.example.demo.services;
 
-import bizworks.backend.dtos.EmployeeDTO;
-import bizworks.backend.dtos.PositionDTO;
-import bizworks.backend.models.Department;
-import bizworks.backend.models.Employee;
-import bizworks.backend.models.Position;
-import bizworks.backend.models.Salary;
-import bizworks.backend.repository.DepartmentRepository;
-import bizworks.backend.repository.EmployeeRepository;
-import bizworks.backend.repository.PositionRepository;
-import bizworks.backend.repository.SalaryRepository;
-import jakarta.persistence.EntityNotFoundException;
+import bizwebsite.example.demo.dtos.PositionDTO;
+
+import bizwebsite.example.demo.models.Employee;
+import bizwebsite.example.demo.models.Position;
+import bizwebsite.example.demo.models.User;
+import bizwebsite.example.demo.repositories.PositionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class PositionService {
@@ -26,135 +20,77 @@ public class PositionService {
     private PositionRepository positionRepository;
 
     @Autowired
-    private DepartmentRepository departmentRepository;
+    private AuthenticationService authenticationService;
 
     @Autowired
-    private EmployeeRepository employeeRepository;
+    private EmployeeService employeeService;
 
-    @Autowired
-    private SalaryRepository salaryRepository; // Thêm SalaryRepository
-
-    public List<PositionDTO> getAllPositions() {
-        return positionRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    public Position findById(Long id) {
+        Optional<Position> optionalPosition = positionRepository.findById(id);
+        if (optionalPosition.isPresent()) {
+            return optionalPosition.get();
+        } else {
+            throw new RuntimeException("Position not found with id " + id);
+        }
     }
 
-    public List<PositionDTO> getPositionsByDepartment(Long departmentId) {
-        return positionRepository.findByDepartmentId(departmentId).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
+    public Position createPosition(PositionDTO positionDTO) {
+        User currentUser = authenticationService.getCurrentUser();
+        checkRole(currentUser, Arrays.asList("MANAGE", "Leader"));
 
-    public Optional<Position> getPositionById(Long id) {
-        return positionRepository.findById(id);
-    }
-
-    public Position savePosition(PositionDTO positionDTO) {
         Position position = new Position();
         position.setPositionName(positionDTO.getPositionName());
-        position.setBasicSalary(positionDTO.getBasicSalary());
+        position.setDescription(positionDTO.getDescription());
+        return positionRepository.save(position);
+    }
 
-        if (positionDTO.getDepartmentId() != null) {
-            Department department = departmentRepository.findById(positionDTO.getDepartmentId())
-                    .orElseThrow(() -> new EntityNotFoundException("Department not found"));
-            position.setDepartment(department);
-        }
+    public Position updatePosition(Long id, PositionDTO positionDTO) {
+        User currentUser = authenticationService.getCurrentUser();
+        checkRole(currentUser, Arrays.asList("MANAGE", "Leader"));
 
-        if (positionDTO.getEmployeeId() != null) {
-            Employee employee = employeeRepository.findById(positionDTO.getEmployeeId())
-                    .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
-            position.setEmployee(employee);
-            // Save employee if necessary (if employee is new or changed)
-            employeeRepository.save(employee);
-        }
-
+        Position position = positionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Position not found"));
+        position.setPositionName(positionDTO.getPositionName());
+        position.setDescription(positionDTO.getDescription());
         return positionRepository.save(position);
     }
 
     public void deletePosition(Long id) {
-        Position position = positionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Position not found with id: " + id));
-
-        if (position.getEmployee() != null) {
-            position.getEmployee().setPosition(null);
-            employeeRepository.save(position.getEmployee());
-        }
+        User currentUser = authenticationService.getCurrentUser();
+        checkRole(currentUser, Arrays.asList("MANAGE", "Leader"));
 
         positionRepository.deleteById(id);
     }
 
-    @Transactional
-    public Position updatePosition(Long id, PositionDTO positionDTO) {
-        Position position = positionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Position not found with id: " + id));
+    public void assignPositionToEmployee(Long positionId, Long employeeId) {
+        User currentUser = authenticationService.getCurrentUser();
+        System.out.println("Current User: " + currentUser.getEmail() + " with role: " + currentUser.getRole());
 
-        position.setPositionName(positionDTO.getPositionName());
-        position.setBasicSalary(positionDTO.getBasicSalary());
+        checkRole(currentUser, Arrays.asList("MANAGE", "LEADER"));
 
-        if (positionDTO.getDepartmentId() != null) {
-            Department department = departmentRepository.findById(positionDTO.getDepartmentId())
-                    .orElseThrow(() -> new EntityNotFoundException("Department not found"));
-            position.setDepartment(department);
-        } else {
-            position.setDepartment(null);
-        }
+        Position position = positionRepository.findById(positionId)
+                .orElseThrow(() -> new RuntimeException("Position not found"));
+        System.out.println("Found Position: " + position.getPositionName());
 
-        if (positionDTO.getEmployeeId() != null) {
-            Employee employee = employeeRepository.findById(positionDTO.getEmployeeId())
-                    .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
-            position.setEmployee(employee);
-            employee.setPosition(position);
-            employeeRepository.save(employee);
-        } else {
-            position.setEmployee(null);
-        }
+        Employee employee = employeeService.findById(employeeId);
+        System.out.println("Found Employee: " + employee.getFullname());
 
-        // Lưu Position
-        Position updatedPosition = positionRepository.save(position);
-
-        // Cập nhật tất cả các Salary liên quan
-        List<Employee> employees = employeeRepository.findByPositionId(id);
-        for (Employee employee : employees) {
-            List<Salary> salaries = salaryRepository.findByEmployeeId(employee.getId());
-            for (Salary salary : salaries) {
-                salary.setBasicSalary(updatedPosition.getBasicSalary());
-                salary.setTotalSalary(calculateTotalSalary(salary)); // Tính lại tổng lương
-                salaryRepository.save(salary);
-            }
-        }
-
-        return updatedPosition;
+        employee.setPosition(position);
+        employeeService.save(employee);
     }
 
-    // Helper method to calculate total salary
-    private double calculateTotalSalary(Salary salary) {
-        return salary.getBasicSalary()
-                + salary.getBonusSalary()
-                + salary.getOvertimeSalary()
-                + salary.getAllowances()
-                - salary.getDeductions()
-                - salary.getAdvanceSalary();
+    public List<Position> listAllPositions() {
+        return positionRepository.findAll();
     }
 
-    public PositionDTO convertToDTO(Position position) {
-        PositionDTO dto = new PositionDTO();
-        dto.setId(position.getId());
-        dto.setPositionName(position.getPositionName());
-        dto.setBasicSalary(position.getBasicSalary());
+    public Position getPositionById(Long id) {
+        return positionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Position not found"));
+    }
 
-        if (position.getDepartment() != null) {
-            dto.setDepartmentId(position.getDepartment().getId());
-            dto.setDepartmentName(position.getDepartment().getDepartmentName());
+    private void checkRole(User user, List<String> allowedRoles) {
+        if (!allowedRoles.contains(user.getRole())) {
+            throw new RuntimeException("User does not have the required permissions.");
         }
-
-        if (position.getEmployee() != null) {
-            EmployeeDTO employeeDTO = new EmployeeDTO();
-            employeeDTO.setId(position.getEmployee().getId());
-            employeeDTO.setFullname(position.getEmployee().getFullname());
-            dto.setEmployee(employeeDTO);
-        }
-
-        return dto;
     }
 }

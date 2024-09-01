@@ -1,15 +1,9 @@
-package bizworks.backend.repository;
+package bizwebsite.example.demo.repositories;
 
-import bizworks.backend.models.Position;
+import bizwebsite.example.demo.models.Position;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
+@Repository
 public interface PositionRepository extends JpaRepository<Position, Long> {
-    List<Position> findByDepartmentId(Long departmentId);
-
-    @Query("SELECT p FROM Position p LEFT JOIN FETCH p.employee WHERE p.department.id = :departmentId")
-    List<Position> findByDepartmentIdWithEmployee(@Param("departmentId") Long departmentId);
 }

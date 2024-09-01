@@ -1,18 +1,15 @@
-package bizworks.backend.dtos;
+package bizwebsite.example.demo.dtos;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class PositionDTO {
     private Long id;
     private String positionName;
-    private double basicSalary;
-    private Long departmentId;
-    private String departmentName;
-    private EmployeeDTO employee;
-    private Long employeeId; // Only keep the ID of the Employee
+    private String description;
 }

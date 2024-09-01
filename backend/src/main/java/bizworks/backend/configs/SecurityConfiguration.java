@@ -1,4 +1,4 @@
-package bizworks.backend.configs;
+package bizwebsite.example.demo.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -30,19 +30,25 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/auth/register").hasAnyAuthority("ADMIN")
                         .requestMatchers("/api/auth/logout").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER")
                         .requestMatchers("/api/auth/refresh").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER")
-                        .requestMatchers("/api/verify/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER")
-                        .requestMatchers("/api/auth/reset-password").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER")
-                        .requestMatchers("/api/departments/**").hasAnyAuthority("ADMIN")
-                        .requestMatchers("/api/positions/**").hasAnyAuthority("ADMIN")
+                        .requestMatchers("/api/verify/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER", "MANAGE")
+                        .requestMatchers("/api/auth/reset-password")
+                        .hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER", "MANAGE")
                         .requestMatchers("/api/employee/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER")
                         .requestMatchers("/api/attendance/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER")
                         .requestMatchers("/api/violation-types/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER")
                         .requestMatchers("/api/violations/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER")
                         .requestMatchers("/api/salaries/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER")
+                        .requestMatchers("/api//companies/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER")
+                        .requestMatchers("/api/job-posts/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER")
+                        .requestMatchers("/api/applications/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER")
+                        .requestMatchers("/api/departments/**").hasAnyAuthority("ADMIN", "LEADER", "MANAGE")
+                        .requestMatchers("/api/positions/**").hasAnyAuthority("ADMIN", "LEADER", "MANAGE")
                         .anyRequest().authenticated())
+
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
         return httpSecurity.build();
     }
 }
