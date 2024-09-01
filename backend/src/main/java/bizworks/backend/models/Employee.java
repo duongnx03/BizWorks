@@ -35,8 +35,8 @@ public class Employee {
     @JoinColumn(name = "position_id")
     private Position position;
 
-        @OneToMany(mappedBy = "employee", cascade = CascadeType.MERGE)
-        private List<Attendance> attendances;
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.MERGE)
+    private List<Attendance> attendances;
 
     @OneToMany(mappedBy = "employee", cascade = CascadeType.MERGE)
     private List<LeaveRequest> leaveRequests;
