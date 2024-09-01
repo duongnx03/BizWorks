@@ -9,53 +9,62 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/departments")
-@CrossOrigin(origins = "http://localhost:3000")
 public class DepartmentController {
 
     @Autowired
     private DepartmentService departmentService;
 
     @GetMapping
-    public ResponseEntity<List<DepartmentDTO>> getAllDepartments() {
-        List<DepartmentDTO> departments = departmentService.getAllDepartments();
-        return new ResponseEntity<>(departments, HttpStatus.OK);
+    public ResponseEntity<List<Department>> getAllDepartments() {
+        try {
+            List<Department> departments = departmentService.getAllDepartments();
+            return ResponseEntity.ok(departments);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Hoặc xử lý lỗi chi tiết hơn
+        }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DepartmentDTO> getDepartmentById(@PathVariable Long id) {
-        DepartmentDTO departmentDTO = departmentService.getDepartmentById(id);
-        if (departmentDTO != null) {
-            return ResponseEntity.ok(departmentDTO);
-        } else {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<Department> getDepartmentById(@PathVariable Long id) {
+        try {
+            Department department = departmentService.findById(id);
+            return ResponseEntity.ok(department);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // Hoặc xử lý lỗi chi tiết hơn
         }
     }
 
     @PostMapping
-    public ResponseEntity<DepartmentDTO> createDepartment(@RequestBody DepartmentDTO departmentDTO) {
-        // Attempt to save the department
-        Optional<Department> createdDepartmentOpt = departmentService.saveDepartment(departmentDTO);
-
-        // Check if the department was successfully created
-        if (createdDepartmentOpt.isPresent()) {
-            // Convert to DTO and return with HTTP 201 Created
-            DepartmentDTO departmentDTOResponse = departmentService.convertToDTO(createdDepartmentOpt.get());
-            return new ResponseEntity<>(departmentDTOResponse, HttpStatus.CREATED);
-        } else {
-            // Return with HTTP 409 Conflict if the department already exists
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
+    public ResponseEntity<Department> createDepartment(@RequestBody DepartmentDTO departmentDTO) {
+        try {
+            Department department = departmentService.createDepartment(departmentDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(department);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Hoặc xử lý lỗi chi tiết hơn
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DepartmentDTO> updateDepartment(@PathVariable Long id,
+    public ResponseEntity<Department> updateDepartment(@PathVariable Long id,
             @RequestBody DepartmentDTO departmentDTO) {
-        Department updatedDepartment = departmentService.updateDepartment(id, departmentDTO);
-        return ResponseEntity.ok(departmentService.convertToDTO(updatedDepartment));
+        try {
+            Department department = departmentService.updateDepartment(id, departmentDTO);
+            return ResponseEntity.ok(department);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Hoặc xử lý lỗi chi tiết hơn
+        }
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
+        try {
+            departmentService.deleteDepartment(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Hoặc xử lý lỗi chi tiết hơn
+        }
+    }
 }
