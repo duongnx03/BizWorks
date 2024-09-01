@@ -230,7 +230,7 @@ const Violation = () => {
               className={
                 text === "New"
                   ? "far fa-dot-circle text-danger"
-                  : text === "Resolved"
+                  : text === "Approved"
                   ? "far fa-dot-circle text-success"
                   : "far fa-dot-circle text-secondary"
               }

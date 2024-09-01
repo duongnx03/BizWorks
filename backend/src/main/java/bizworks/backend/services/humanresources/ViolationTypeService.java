@@ -1,4 +1,4 @@
-package bizworks.backend.services;
+package bizworks.backend.services.humanresources;
 
 import bizworks.backend.dtos.ViolationTypeDTO;
 import bizworks.backend.models.Violation;

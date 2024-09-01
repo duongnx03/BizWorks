@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 public class PositionDTO {
     private Long id;
     private String positionName;
-    private double basicSalary;
     private Long departmentId;
     private String departmentName;
     private EmployeeDTO employee;

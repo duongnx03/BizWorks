@@ -1,4 +1,4 @@
-package bizworks.backend.services;
+package bizworks.backend.services.accountant;
 
 import bizworks.backend.dtos.EmployeeDTO;
 import bizworks.backend.dtos.SalaryDTO;
@@ -9,7 +9,7 @@ import bizworks.backend.models.Violation;
 import bizworks.backend.repository.EmployeeRepository;
 import bizworks.backend.repository.SalaryRepository;
 import bizworks.backend.repository.ViolationRepository;
-import jakarta.annotation.PostConstruct;
+import bizworks.backend.services.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -116,7 +115,7 @@ public class SalaryService {
             salary.setSalaryCode(salaryCode); // Tạo mã tự động cho phiếu lương
             salary.setMonth(currentMonth);
             salary.setYear(currentYear);
-            salary.setBasicSalary(employee.getPosition() != null ? employee.getPosition().getBasicSalary() : 0.0);
+            salary.setBasicSalary(0.0);
             salary.setBonusSalary(0.0);
             salary.setOvertimeSalary(0.0);
             salary.setAdvanceSalary(0.0);
@@ -162,7 +161,7 @@ public class SalaryService {
         salary.setSalaryCode(generateSalaryCode()); // Tạo mã tự động cho phiếu lương
         salary.setMonth(currentMonth);
         salary.setYear(currentYear);
-        salary.setBasicSalary(employee.getPosition().getBasicSalary());
+        salary.setBasicSalary(dto.getBasicSalary() != null ? dto.getBasicSalary() : 0.0);
         salary.setBonusSalary(dto.getBonusSalary() != null ? dto.getBonusSalary() : 0.0);
         salary.setOvertimeSalary(dto.getOvertimeSalary() != null ? dto.getOvertimeSalary() : 0.0);
         salary.setAdvanceSalary(dto.getAdvanceSalary() != null ? dto.getAdvanceSalary() : 0.0);
@@ -198,10 +197,10 @@ public class SalaryService {
             salary.setMonth(now.getMonthValue());
             salary.setYear(now.getYear());
 
-            Employee employee = employeeRepository.findById(dto.getEmployee().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
-            double basicSalary = employee.getPosition().getBasicSalary();
-            salary.setBasicSalary(basicSalary);
+//            Employee employee = employeeRepository.findById(dto.getEmployee().getId())
+//                    .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+//            double basicSalary = employee.getPosition().getBasicSalary();
+            salary.setBasicSalary(dto.getBasicSalary() != null ? dto.getBasicSalary() : salary.getBasicSalary());
 
             // Cập nhật các trường với giá trị mới nếu có
             salary.setBonusSalary(dto.getBonusSalary() != null ? dto.getBonusSalary() : salary.getBonusSalary());

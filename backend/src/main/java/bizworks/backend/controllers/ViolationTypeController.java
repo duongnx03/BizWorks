@@ -1,7 +1,7 @@
 package bizworks.backend.controllers;
 
 import bizworks.backend.dtos.ViolationTypeDTO;
-import bizworks.backend.services.ViolationTypeService;
+import bizworks.backend.services.humanresources.ViolationTypeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

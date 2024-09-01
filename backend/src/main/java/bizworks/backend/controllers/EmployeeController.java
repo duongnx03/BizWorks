@@ -5,7 +5,7 @@ import bizworks.backend.dtos.EmployeeUpdateDTO;
 import bizworks.backend.helpers.ApiResponse;
 import bizworks.backend.models.Employee;
 import bizworks.backend.services.EmployeeService;
-import bizworks.backend.services.SalaryService;
+import bizworks.backend.services.accountant.SalaryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

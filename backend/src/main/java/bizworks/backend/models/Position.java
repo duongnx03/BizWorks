@@ -20,9 +20,6 @@ public class Position {
 
     private String positionName;
 
-    @Column(name = "basic_salary", nullable = false)
-    private double basicSalary;
-
     @ManyToOne
     @JoinColumn(name = "department_id")
     private Department department;

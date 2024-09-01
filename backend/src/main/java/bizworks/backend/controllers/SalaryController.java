@@ -2,7 +2,7 @@ package bizworks.backend.controllers;
 
 import bizworks.backend.dtos.SalaryDTO;
 import bizworks.backend.helpers.ApiResponse;
-import bizworks.backend.services.SalaryService;
+import bizworks.backend.services.accountant.SalaryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

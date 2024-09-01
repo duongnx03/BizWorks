@@ -1,15 +1,16 @@
-package bizworks.backend.services;
+package bizworks.backend.services.humanresources;
 
 import bizworks.backend.dtos.EmployeeDTO;
 import bizworks.backend.dtos.ViolationDTO;
 import bizworks.backend.dtos.ViolationTypeDTO;
-import bizworks.backend.models.Employee;
 import bizworks.backend.models.Salary;
 import bizworks.backend.models.Violation;
 import bizworks.backend.repository.EmployeeRepository;
 import bizworks.backend.repository.SalaryRepository;
 import bizworks.backend.repository.ViolationRepository;
 import bizworks.backend.repository.ViolationTypeRepository;
+import bizworks.backend.services.MailService;
+import jakarta.mail.MessagingException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -24,11 +25,18 @@ public class ViolationService {
     private final ViolationTypeRepository violationTypeRepository;
     private final SalaryRepository salaryRepository;
 
-    public ViolationService(ViolationRepository violationRepository, EmployeeRepository employeeRepository, ViolationTypeRepository violationTypeRepository, SalaryRepository salaryRepository) {
+    private final MailService mailService;
+
+    public ViolationService(ViolationRepository violationRepository,
+                            EmployeeRepository employeeRepository,
+                            ViolationTypeRepository violationTypeRepository,
+                            SalaryRepository salaryRepository,
+                            MailService mailService) {
         this.violationRepository = violationRepository;
         this.employeeRepository = employeeRepository;
         this.violationTypeRepository = violationTypeRepository;
         this.salaryRepository = salaryRepository;
+        this.mailService = mailService;
     }
 
     public ViolationDTO createViolation(ViolationDTO dto) {
@@ -46,6 +54,8 @@ public class ViolationService {
         // Lưu đối tượng Violation vào cơ sở dữ liệu
         Violation saved = violationRepository.save(violation);
 
+        sendViolationEmail(saved, "created");
+
         // Cập nhật lương cho nhân viên sau khi tạo vi phạm
         updateSalaryForEmployee(saved.getEmployee().getId());
 
@@ -58,7 +68,6 @@ public class ViolationService {
                 saved.getReason(),
                 saved.getStatus());
     }
-
 
     public void updateSalaryForEmployee(Long employeeId) {
         Optional<Salary> latestSalaryOpt = salaryRepository.findTopByEmployeeIdOrderByDateSalaryDesc(employeeId);
@@ -127,6 +136,8 @@ public class ViolationService {
             v.setReason(dto.getReason());
             v.setStatus(dto.getStatus());
             Violation updated = violationRepository.save(v);
+
+            sendViolationEmail(v, "updated");
             updateSalaryForEmployee(updated.getEmployee().getId());
             return new ViolationDTO(
                     updated.getId(),
@@ -185,9 +196,44 @@ public class ViolationService {
             Violation violation = optional.get();
             violation.setStatus(status);
             violationRepository.save(violation);
+            sendViolationEmail(violation, "status updated");
 
             // Cập nhật lương cho nhân viên sau khi thay đổi trạng thái vi phạm
             updateSalaryForEmployee(violation.getEmployee().getId());
         }
     }
+
+    private void sendViolationEmail(Violation violation, String action) {
+        String to = violation.getEmployee().getEmail();
+        String subject = "Violation " + action;
+        String content = "<div style=\"font-family: Arial, sans-serif; color: #333; line-height: 1.6;\">"
+                + "<h2 style=\"color: #4CAF50;\">Dear " + violation.getEmployee().getFullname() + ",</h2>"
+                + "<p>A violation has been <strong>" + action + "</strong>.</p>"
+                + "<h3 style=\"color: #2196F3;\">Violation Details:</h3>"
+                + "<table style=\"width: 100%; border-collapse: collapse;\">"
+                + "<tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Violation Money:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + violation.getViolationType().getViolationMoney() + "</td>"
+                + "</tr>"
+                + "<tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + violation.getReason() + "</td>"
+                + "</tr>"
+                + "<tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Status:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + violation.getStatus() + "</td>"
+                + "</tr>"
+                + "</table>"
+                + "<p style=\"margin-top: 20px;\">Please contact the administrator for more information.</p>"
+                + "<p>Best regards,</p>"
+                + "<p style=\"color: #999;\">Bizworks Team</p>"
+                + "</div>";
+
+        try {
+            mailService.sendEmail(to, subject, content);
+        } catch (MessagingException e) {
+            e.printStackTrace(); // Handle email sending error
+        }
+    }
+
 }

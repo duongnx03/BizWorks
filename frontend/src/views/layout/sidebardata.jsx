@@ -190,10 +190,6 @@ export const SidebarData = [
             route: "/employees",
           },
           {
-            menuValue: 'Holidays',
-            route: "/holidays",
-          },
-          {
             menuValue: "Leaves",
             route: "/adminleaves",
           },
@@ -433,13 +429,13 @@ export const SidebarData = [
       //   ],
       // },
 
-      {
-        menuValue: "Policies",
-        hasSubRoute: false,
-        showSubRoute: false,
-        route: "/policies",
-        icon: "la la-file-pdf-o",
-      },
+      // {
+      //   menuValue: "Policies",
+      //   hasSubRoute: false,
+      //   showSubRoute: false,
+      //   route: "/policies",
+      //   icon: "la la-file-pdf-o",
+      // },
       {
         menuValue: "Reports",
         hasSubRoute: true,

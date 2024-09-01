@@ -1,9 +1,7 @@
 package bizworks.backend.controllers;
 
 import bizworks.backend.dtos.ViolationDTO;
-import bizworks.backend.models.Employee;
-import bizworks.backend.models.Violation;
-import bizworks.backend.services.ViolationService;
+import bizworks.backend.services.humanresources.ViolationService;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

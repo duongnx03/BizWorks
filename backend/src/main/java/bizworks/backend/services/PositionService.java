@@ -53,7 +53,7 @@ public class PositionService {
     public Position savePosition(PositionDTO positionDTO) {
         Position position = new Position();
         position.setPositionName(positionDTO.getPositionName());
-        position.setBasicSalary(positionDTO.getBasicSalary());
+
 
         if (positionDTO.getDepartmentId() != null) {
             Department department = departmentRepository.findById(positionDTO.getDepartmentId())
@@ -90,7 +90,6 @@ public class PositionService {
                 .orElseThrow(() -> new EntityNotFoundException("Position not found with id: " + id));
 
         position.setPositionName(positionDTO.getPositionName());
-        position.setBasicSalary(positionDTO.getBasicSalary());
 
         if (positionDTO.getDepartmentId() != null) {
             Department department = departmentRepository.findById(positionDTO.getDepartmentId())
@@ -112,36 +111,36 @@ public class PositionService {
 
         // Lưu Position
         Position updatedPosition = positionRepository.save(position);
-
-        // Cập nhật tất cả các Salary liên quan
-        List<Employee> employees = employeeRepository.findByPositionId(id);
-        for (Employee employee : employees) {
-            List<Salary> salaries = salaryRepository.findByEmployeeId(employee.getId());
-            for (Salary salary : salaries) {
-                salary.setBasicSalary(updatedPosition.getBasicSalary());
-                salary.setTotalSalary(calculateTotalSalary(salary)); // Tính lại tổng lương
-                salaryRepository.save(salary);
-            }
-        }
-
         return updatedPosition;
     }
 
+        // Cập nhật tất cả các Salary liên quan
+//        List<Employee> employees = employeeRepository.findByPositionId(id);
+//        for (Employee employee : employees) {
+//            List<Salary> salaries = salaryRepository.findByEmployeeId(employee.getId());
+//            for (Salary salary : salaries) {
+//                salary.setBasicSalary(updatedPosition.getBasicSalary());
+//                salary.setTotalSalary(calculateTotalSalary(salary)); // Tính lại tổng lương
+//                salaryRepository.save(salary);
+//            }
+//        }
+
+
+
     // Helper method to calculate total salary
-    private double calculateTotalSalary(Salary salary) {
-        return salary.getBasicSalary()
-                + salary.getBonusSalary()
-                + salary.getOvertimeSalary()
-                + salary.getAllowances()
-                - salary.getDeductions()
-                - salary.getAdvanceSalary();
-    }
+//    private double calculateTotalSalary(Salary salary) {
+//        return salary.getBasicSalary()
+//                + salary.getBonusSalary()
+//                + salary.getOvertimeSalary()
+//                + salary.getAllowances()
+//                - salary.getDeductions()
+//                - salary.getAdvanceSalary();
+//    }
 
     public PositionDTO convertToDTO(Position position) {
         PositionDTO dto = new PositionDTO();
         dto.setId(position.getId());
         dto.setPositionName(position.getPositionName());
-        dto.setBasicSalary(position.getBasicSalary());
 
         if (position.getDepartment() != null) {
             dto.setDepartmentId(position.getDepartment().getId());
