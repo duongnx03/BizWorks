@@ -3,8 +3,8 @@ package bizworks.backend.services.humanresources;
 import bizworks.backend.dtos.ViolationTypeDTO;
 import bizworks.backend.models.Violation;
 import bizworks.backend.models.ViolationType;
-import bizworks.backend.repository.ViolationRepository;
-import bizworks.backend.repository.ViolationTypeRepository;
+import bizworks.backend.repositories.ViolationRepository;
+import bizworks.backend.repositories.ViolationTypeRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

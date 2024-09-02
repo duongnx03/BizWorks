@@ -1,7 +1,6 @@
-package bizworks.backend.repository;
+package bizworks.backend.repositories;
 
 import bizworks.backend.models.Employee;
-import bizworks.backend.models.Position;
 import bizworks.backend.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

@@ -4,7 +4,7 @@ import bizworks.backend.dtos.EmployeeDTO;
 import bizworks.backend.dtos.EmployeeUpdateDTO;
 import bizworks.backend.helpers.FileUpload;
 import bizworks.backend.models.Employee;
-import bizworks.backend.repository.EmployeeRepository;
+import bizworks.backend.repositories.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

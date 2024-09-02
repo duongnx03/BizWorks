@@ -1,4 +1,4 @@
-package bizworks.backend.repository;
+package bizworks.backend.repositories;
 
 import bizworks.backend.models.Attendance;
 import org.springframework.data.jpa.repository.JpaRepository;

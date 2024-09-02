@@ -1,7 +1,7 @@
 package bizworks.backend.services;
 
 import bizworks.backend.models.User;
-import bizworks.backend.repository.UserRepository;
+import bizworks.backend.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

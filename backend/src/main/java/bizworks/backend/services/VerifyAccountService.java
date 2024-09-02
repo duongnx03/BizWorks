@@ -3,7 +3,7 @@ package bizworks.backend.services;
 import bizworks.backend.dtos.VerifyAccountDTO;
 import bizworks.backend.models.User;
 import bizworks.backend.models.VerifyAccount;
-import bizworks.backend.repository.VerifyAccountRepository;
+import bizworks.backend.repositories.VerifyAccountRepository;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

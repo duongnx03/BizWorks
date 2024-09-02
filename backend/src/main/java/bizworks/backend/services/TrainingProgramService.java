@@ -5,12 +5,11 @@ import bizworks.backend.dtos.TrainingProgramDTO;
 import bizworks.backend.models.Department;
 import bizworks.backend.models.Employee;
 import bizworks.backend.models.TrainingProgram;
-import bizworks.backend.repository.DepartmentRepository;
-import bizworks.backend.repository.EmployeeRepository;
-import bizworks.backend.repository.TrainingProgramRepository;
+import bizworks.backend.repositories.DepartmentRepository;
+import bizworks.backend.repositories.EmployeeRepository;
+import bizworks.backend.repositories.TrainingProgramRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

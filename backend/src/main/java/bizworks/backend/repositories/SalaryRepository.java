@@ -1,6 +1,5 @@
-package bizworks.backend.repository;
+package bizworks.backend.repositories;
 
-import bizworks.backend.models.Employee;
 import bizworks.backend.models.Salary;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
