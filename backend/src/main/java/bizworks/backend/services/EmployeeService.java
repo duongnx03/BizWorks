@@ -3,8 +3,12 @@ package bizworks.backend.services;
 import bizworks.backend.dtos.EmployeeDTO;
 import bizworks.backend.dtos.EmployeeUpdateDTO;
 import bizworks.backend.helpers.FileUpload;
+import bizworks.backend.models.Department;
 import bizworks.backend.models.Employee;
+import bizworks.backend.models.User;
+import bizworks.backend.repositories.DepartmentRepository;
 import bizworks.backend.repositories.EmployeeRepository;
+import bizworks.backend.repositories.PositionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +28,10 @@ public class EmployeeService {
     private String subFolder = "avatars";
     private String uploadFolder = "uploads";
     private String urlImage = rootUrl + uploadFolder + File.separator + subFolder;
-
+    @Autowired
+    private PositionRepository positionRepository;
+    @Autowired
+    private DepartmentRepository departmentRepository;
     public List<Employee> findAll() {
         return employeeRepository.findAll();
     }
@@ -91,13 +98,25 @@ public class EmployeeService {
         employeeDTO.setEndDate(employee.getEndDate());
         employeeDTO.setGender(employee.getGender());
         if(employee.getDepartment() != null || employee.getPosition() != null){
-            employeeDTO.setDepartment(employee.getDepartment().getDepartmentName());
+            employeeDTO.setDepartment(employee.getDepartment().getName());
             employeeDTO.setPosition(employee.getPosition().getPositionName());
         }else{
             employeeDTO.setDepartment(null);
             employeeDTO.setPosition(null);
         }
         return employeeDTO;
+    }
+    public Employee findByUser(User user) {
+        return employeeRepository.findByUser(user).orElse(null);
+    }
+    public boolean isEmployeeInHRDepartment(Long employeeId) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        Department hrDepartment = departmentRepository.findByName("HR Department")
+                .orElseThrow(() -> new RuntimeException("HR Department not found"));
+
+        return hrDepartment.getId().equals(employee.getDepartment().getId());
     }
 }
 
