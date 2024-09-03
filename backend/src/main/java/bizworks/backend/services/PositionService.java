@@ -34,14 +34,17 @@ public class PositionService {
             throw new RuntimeException("Position not found with id " + id);
         }
     }
+
     public List<Position> getAllPositions() {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "ADMIN"));
         return positionRepository.findAll();
     }
+
     public List<Position> getPositionsByDepartmentId(Long departmentId) {
         return positionRepository.findByDepartmentId(departmentId);
     }
+
     public List<PositionDTO> findByDepartment(Long departmentId) {
         List<Position> positions = positionRepository.findByDepartmentId(departmentId);
         return positions.stream()
@@ -57,15 +60,16 @@ public class PositionService {
 
     public Position createPosition(PositionDTO positionDTO) {
         User currentUser = authenticationService.getCurrentUser();
-        checkRole(currentUser, Arrays.asList("MANAGE", "LEADER")); // Kiểm tra vai trò
+        checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
         Position position = new Position();
         position.setPositionName(positionDTO.getPositionName());
         position.setDescription(positionDTO.getDescription());
         return positionRepository.save(position);
     }
+
     public Position updatePosition(Long id, PositionDTO positionDTO) {
         User currentUser = authenticationService.getCurrentUser();
-        checkRole(currentUser, Arrays.asList("MANAGE", "Leader"));
+        checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Position not found"));
         position.setPositionName(positionDTO.getPositionName());
@@ -75,14 +79,14 @@ public class PositionService {
 
     public void deletePosition(Long id) {
         User currentUser = authenticationService.getCurrentUser();
-        checkRole(currentUser, Arrays.asList("MANAGE", "Leader"));
+        checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
         positionRepository.deleteById(id);
     }
 
     public void assignPositionToEmployee(Long positionId, Long employeeId) {
         User currentUser = authenticationService.getCurrentUser();
         System.out.println("Current User: " + currentUser.getEmail() + " with role: " + currentUser.getRole());
-        checkRole(currentUser, Arrays.asList("MANAGE", "LEADER")); // Kiểm tra vai trò của người dùng
+        checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN")); // Kiểm tra vai trò của người dùng
         Position position = positionRepository.findById(positionId)
                 .orElseThrow(() -> new RuntimeException("Position not found"));
         System.out.println("Found Position: " + position.getPositionName());
@@ -91,6 +95,7 @@ public class PositionService {
         employee.setPosition(position);
         employeeService.save(employee);
     }
+
     public List<Position> listAllPositions() {
         return positionRepository.findAll();
     }
@@ -106,3 +111,4 @@ public class PositionService {
         }
     }
 }
+
