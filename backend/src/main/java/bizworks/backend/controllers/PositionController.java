@@ -11,53 +11,61 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/positions")
-@CrossOrigin(origins = "http://localhost:3000")
+@RequestMapping("/positions")
 public class PositionController {
 
     @Autowired
     private PositionService positionService;
 
-    // Get all positions
     @GetMapping
-    public ResponseEntity<List<PositionDTO>> getAllPositions() {
-        List<PositionDTO> positions = positionService.getAllPositions();
-        return new ResponseEntity<>(positions, HttpStatus.OK);
+    public ResponseEntity<List<Position>> getAllPositions() {
+        try {
+            List<Position> positions = positionService.getAllPositions();
+            return ResponseEntity.ok(positions);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Hoặc xử lý lỗi chi tiết hơn
+        }
     }
 
-    // Get positions by department ID
-    @GetMapping("/by-department")
-    public ResponseEntity<List<PositionDTO>> getPositionsByDepartment(@RequestParam Long departmentId) {
-        List<PositionDTO> positions = positionService.getPositionsByDepartment(departmentId);
-        return new ResponseEntity<>(positions, HttpStatus.OK);
-    }
-
-    // Get a position by ID
     @GetMapping("/{id}")
-    public ResponseEntity<PositionDTO> getPositionById(@PathVariable Long id) {
-        return positionService.getPositionById(id)
-                .map(position -> ResponseEntity.ok(positionService.convertToDTO(position)))
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Position> getPositionById(@PathVariable Long id) {
+        Position position = positionService.findById(id);
+        return ResponseEntity.ok(position);
     }
 
-    // Create a new position
     @PostMapping
-    public ResponseEntity<PositionDTO> createPosition(@RequestBody PositionDTO positionDTO) {
-        Position createdPosition = positionService.savePosition(positionDTO);
-        return new ResponseEntity<>(positionService.convertToDTO(createdPosition), HttpStatus.CREATED);
+    public ResponseEntity<Position> createPosition(@RequestBody PositionDTO positionDTO) {
+        Position position = positionService.createPosition(positionDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(position);
     }
 
-    // Update an existing position
     @PutMapping("/{id}")
-    public ResponseEntity<PositionDTO> updatePosition(@PathVariable Long id, @RequestBody PositionDTO positionDTO) {
-        Position updatedPosition = positionService.updatePosition(id, positionDTO);
-        return ResponseEntity.ok(positionService.convertToDTO(updatedPosition));
+    public ResponseEntity<Position> updatePosition(@PathVariable Long id, @RequestBody PositionDTO positionDTO) {
+        Position position = positionService.updatePosition(id, positionDTO);
+        return ResponseEntity.ok(position);
     }
 
-    // Delete a position
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePosition(@PathVariable Long id) {
         positionService.deletePosition(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{positionId}/assign/{employeeId}")
+    public ResponseEntity<Void> assignPositionToEmployee(@PathVariable Long positionId, @PathVariable Long employeeId) {
+        positionService.assignPositionToEmployee(positionId, employeeId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<Position>> listPositions() {
+        List<Position> positions = positionService.listAllPositions();
+        return ResponseEntity.ok(positions);
+    }
+
+    @GetMapping("/details/{id}")
+    public ResponseEntity<Position> getPositionDetails(@PathVariable Long id) {
+        Position position = positionService.getPositionById(id);
+        return ResponseEntity.ok(position);
     }
 }
