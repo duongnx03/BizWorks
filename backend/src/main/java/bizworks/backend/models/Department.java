@@ -1,4 +1,4 @@
-package bizwebsite.example.demo.models;
+package bizworks.backend.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -21,4 +21,8 @@ public class Department {
 
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
     private List<Employee> employees;
+
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private Department department;
 }

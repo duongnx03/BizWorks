@@ -271,7 +271,7 @@ public class AttendanceService {
         employeeDTO.setEndDate(employee.getEndDate());
         employeeDTO.setStartDate(employee.getStartDate());
         if(employee.getDepartment() != null || employee.getPosition() != null){
-            employeeDTO.setDepartment(employee.getDepartment().getDepartmentName());
+            employeeDTO.setDepartment(employee.getDepartment().getName());
             employeeDTO.setPosition(employee.getPosition().getPositionName());
         }else{
             employeeDTO.setDepartment(null);

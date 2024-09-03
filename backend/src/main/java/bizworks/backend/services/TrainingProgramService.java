@@ -135,7 +135,7 @@ public class TrainingProgramService {
 
         if (trainingProgram.getDepartment() != null) {
             dto.setDepartmentId(trainingProgram.getDepartment().getId());
-            dto.setDepartmentName(trainingProgram.getDepartment().getDepartmentName());
+            dto.setDepartmentName(trainingProgram.getDepartment().getName());
         }
 
         if (trainingProgram.getTrainer() != null) {

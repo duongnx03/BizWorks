@@ -299,7 +299,7 @@ public class SalaryService {
                 ? new EmployeeDTO(employee.getId(), employee.getFullname(), employee.getEmail(), employee.getPhone(),
                 employee.getAvatar(),
                 employee.getStartDate(),
-                (employee.getDepartment() != null) ? employee.getDepartment().getDepartmentName() : null, // Adjust if Department is not a String
+                (employee.getDepartment() != null) ? employee.getDepartment().getName() : null, // Adjust if Department is not a String
                 (employee.getPosition() != null) ? employee.getPosition().getPositionName() : null        // Adjust if Position is not a String
         )
                 : null;

@@ -33,6 +33,7 @@ public class Salary {
     private double allowances; // Các khoản phụ cấp
     private double deductions; // Các khoản khấu trừ
     private double totalSalary; // Tổng lương
+    private double advanceSalary; // Tiền ứng lương
 
     @Column(name = "date_salary", nullable = false)
     private LocalDateTime dateSalary; // Ngày nhận lương

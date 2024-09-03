@@ -1,4 +1,4 @@
-package bizworks.backend.config.Util;
+package bizworks.backend.configs.Util;
 import bizworks.backend.models.User;
 import bizworks.backend.repositories.UserRepository;
 import org.springframework.security.core.Authentication;

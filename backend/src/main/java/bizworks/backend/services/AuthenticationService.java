@@ -1,9 +1,9 @@
-package  bizworks.backend.services;
-import  bizworks.backend.dtos.*;
-import  bizworks.backend.models.*;
-import  bizworks.backend.repositories.ForgotPasswordRepository;
-import  bizworks.backend.repositories.UserRepository;
-import bizworks.backend.services.accountant.SalaryService;
+package bizworks.backend.services;
+
+import bizworks.backend.dtos.*;
+import bizworks.backend.models.*;
+import bizworks.backend.repositories.ForgotPasswordRepository;
+import bizworks.backend.repositories.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +14,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -59,9 +60,6 @@ public class AuthenticationService {
     @Autowired
     private UserDetailsService userDetailsService;
 
-    @Autowired
-    private SalaryService salaryService;
-
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
     }
@@ -85,8 +83,6 @@ public class AuthenticationService {
         employee.setEndDate(null);
         employee.setUser(user);
         employeeService.save(employee);
-
-        salaryService.createSalaryForEmployee(employee);
 
         VerifyAccount verifyAccount = verifyAccountService.createVerifyAccount(user);
         sendVerificationEmail(request.getEmail(), request.getFullname(), verifyAccount.getVerificationCode(), request.getPassword());
@@ -218,8 +214,15 @@ public class AuthenticationService {
             // Handle the error appropriately in a real application
         }
     }
-
-    private void sendVerificationEmail(String email, String fullname, String verificationCode, String password) {
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            String email = ((UserDetails) authentication.getPrincipal()).getUsername();
+            return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        }
+        throw new RuntimeException("No user is authenticated");
+    }
+    public  void sendVerificationEmail(String email, String fullname, String verificationCode, String password) {
         String subject = "Account Verification";
         String content = "<html>"
                 + "<body style='font-family: Arial, sans-serif; padding: 20px;'>"

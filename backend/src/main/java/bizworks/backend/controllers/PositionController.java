@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/positions")
+@RequestMapping("/api/positions")
 public class PositionController {
 
     @Autowired
@@ -56,13 +56,21 @@ public class PositionController {
         positionService.assignPositionToEmployee(positionId, employeeId);
         return ResponseEntity.ok().build();
     }
-
+    @GetMapping("/department/{departmentId}")
+    public ResponseEntity<List<Position>> getPositionsByDepartmentId(@PathVariable Long departmentId) {
+        List<Position> positions = positionService.getPositionsByDepartmentId(departmentId);
+        return ResponseEntity.ok(positions);
+    }
     @GetMapping("/list")
     public ResponseEntity<List<Position>> listPositions() {
         List<Position> positions = positionService.listAllPositions();
         return ResponseEntity.ok(positions);
     }
-
+    @GetMapping("/by-department")
+    public ResponseEntity<List<PositionDTO>> getPositionsByDepartment(@RequestParam Long departmentId) {
+        List<PositionDTO> positions = positionService.findByDepartment(departmentId);
+        return ResponseEntity.ok(positions);
+    }
     @GetMapping("/details/{id}")
     public ResponseEntity<Position> getPositionDetails(@PathVariable Long id) {
         Position position = positionService.getPositionById(id);
