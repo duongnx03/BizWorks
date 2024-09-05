@@ -1,11 +1,14 @@
 package bizworks.backend.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+
 @Entity
 @Table(name = "positions")
 @Data
@@ -19,7 +22,11 @@ public class Position {
     private String description;
 
     @OneToMany(mappedBy = "position", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Employee> employees;
 
-    private Long departmentId;
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    @JsonBackReference
+    private Department department;
 }

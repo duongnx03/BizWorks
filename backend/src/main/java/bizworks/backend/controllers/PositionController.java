@@ -63,7 +63,7 @@ public class PositionController {
     }
     @GetMapping("/list")
     public ResponseEntity<List<Position>> listPositions() {
-        List<Position> positions = positionService.listAllPositions();
+        List<Position> positions = positionService.getAllPositions();
         return ResponseEntity.ok(positions);
     }
     @GetMapping("/by-department")
@@ -71,9 +71,10 @@ public class PositionController {
         List<PositionDTO> positions = positionService.findByDepartment(departmentId);
         return ResponseEntity.ok(positions);
     }
+
     @GetMapping("/details/{id}")
     public ResponseEntity<Position> getPositionDetails(@PathVariable Long id) {
-        Position position = positionService.getPositionById(id);
+        Position position = positionService.findById(id);
         return ResponseEntity.ok(position);
     }
 }

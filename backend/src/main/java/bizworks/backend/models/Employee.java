@@ -1,5 +1,6 @@
 package bizworks.backend.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,10 +30,12 @@ public class Employee {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
+    @JsonBackReference
     private Department department;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "position_id")
+    @JsonBackReference
     private Position position;
 
         @OneToMany(mappedBy = "employee", cascade = CascadeType.MERGE)

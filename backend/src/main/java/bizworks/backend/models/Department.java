@@ -1,5 +1,8 @@
 package bizworks.backend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,9 +23,9 @@ public class Department {
     private String description;
 
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Employee> employees;
-
-    @ManyToOne
-    @JoinColumn(name = "department_id")
-    private Department department;
+    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private List<Position> positions;
 }

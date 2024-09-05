@@ -2,9 +2,11 @@ package bizworks.backend.services;
 
 import bizworks.backend.dtos.EmployeeDTO;
 import bizworks.backend.dtos.EmployeeUpdateDTO;
+import bizworks.backend.dtos.PositionDTO;
 import bizworks.backend.helpers.FileUpload;
 import bizworks.backend.models.Department;
 import bizworks.backend.models.Employee;
+import bizworks.backend.models.Position;
 import bizworks.backend.models.User;
 import bizworks.backend.repositories.DepartmentRepository;
 import bizworks.backend.repositories.EmployeeRepository;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+
 
 @Service
 public class EmployeeService {
@@ -85,6 +88,7 @@ public class EmployeeService {
         return employeeRepository.save(employee);
     }
 
+
     public EmployeeDTO convertToDTO(Employee employee) {
         EmployeeDTO employeeDTO = new EmployeeDTO();
         employeeDTO.setId(employee.getId());
@@ -97,26 +101,28 @@ public class EmployeeService {
         employeeDTO.setStartDate(employee.getStartDate());
         employeeDTO.setEndDate(employee.getEndDate());
         employeeDTO.setGender(employee.getGender());
-        if(employee.getDepartment() != null || employee.getPosition() != null){
-            employeeDTO.setDepartment(employee.getDepartment().getName());
-            employeeDTO.setPosition(employee.getPosition().getPositionName());
-        }else{
-            employeeDTO.setDepartment(null);
-            employeeDTO.setPosition(null);
-        }
+
+        employeeDTO.setDepartmentId(employee.getDepartment() != null ? employee.getDepartment().getId() : null);
+        employeeDTO.setDepartmentName(employee.getDepartment() != null ? employee.getDepartment().getName() : null);
+
+        employeeDTO.setPositionId(employee.getPosition() != null ? employee.getPosition().getId() : null);
+        employeeDTO.setPositionName(employee.getPosition() != null ? employee.getPosition().getPositionName() : null);
+
         return employeeDTO;
     }
+
     public Employee findByUser(User user) {
         return employeeRepository.findByUser(user).orElse(null);
     }
     public boolean isEmployeeInHRDepartment(Long employeeId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
-
         Department hrDepartment = departmentRepository.findByName("HR Department")
                 .orElseThrow(() -> new RuntimeException("HR Department not found"));
-
-        return hrDepartment.getId().equals(employee.getDepartment().getId());
+        boolean isInHRDepartment = hrDepartment.getId().equals(employee.getDepartment().getId());
+        System.out.println("Employee Department ID: " + employee.getDepartment().getId());
+        System.out.println("HR Department ID: " + hrDepartment.getId());
+        return isInHRDepartment;
     }
 }
 

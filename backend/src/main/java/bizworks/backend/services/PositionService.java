@@ -1,10 +1,11 @@
 package bizworks.backend.services;
 
 import bizworks.backend.dtos.PositionDTO;
-
+import bizworks.backend.models.Department;
 import bizworks.backend.models.Employee;
 import bizworks.backend.models.Position;
 import bizworks.backend.models.User;
+import bizworks.backend.repositories.DepartmentRepository;
 import bizworks.backend.repositories.PositionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,9 @@ public class PositionService {
 
     @Autowired
     private PositionRepository positionRepository;
+
+    @Autowired
+    private DepartmentRepository departmentRepository;
 
     @Autowired
     private AuthenticationService authenticationService;
@@ -48,32 +52,46 @@ public class PositionService {
     public List<PositionDTO> findByDepartment(Long departmentId) {
         List<Position> positions = positionRepository.findByDepartmentId(departmentId);
         return positions.stream()
-                .map(position -> {
-                    PositionDTO dto = PositionDTO.from(position);
-                    dto.setEmployees(position.getEmployees().stream()
-                            .map(Employee::getFullname)
-                            .collect(Collectors.toList()));
-                    return dto;
-                })
+                .map(PositionDTO::from)
                 .collect(Collectors.toList());
     }
 
+    public PositionDTO convertToDTO(Position position) {
+        return PositionDTO.from(position);
+    }
     public Position createPosition(PositionDTO positionDTO) {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
+
         Position position = new Position();
         position.setPositionName(positionDTO.getPositionName());
         position.setDescription(positionDTO.getDescription());
+
+        if (positionDTO.getDepartment() != null && positionDTO.getDepartment().getId() != null) {
+            Department department = departmentRepository.findById(positionDTO.getDepartment().getId())
+                    .orElseThrow(() -> new RuntimeException("Department not found"));
+            position.setDepartment(department);
+        }
+
         return positionRepository.save(position);
     }
 
     public Position updatePosition(Long id, PositionDTO positionDTO) {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
+
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Position not found"));
+
         position.setPositionName(positionDTO.getPositionName());
         position.setDescription(positionDTO.getDescription());
+
+        if (positionDTO.getDepartment() != null && positionDTO.getDepartment().getId() != null) {
+            Department department = departmentRepository.findById(positionDTO.getDepartment().getId())
+                    .orElseThrow(() -> new RuntimeException("Department not found"));
+            position.setDepartment(department);
+        }
+
         return positionRepository.save(position);
     }
 
@@ -85,30 +103,20 @@ public class PositionService {
 
     public void assignPositionToEmployee(Long positionId, Long employeeId) {
         User currentUser = authenticationService.getCurrentUser();
-        System.out.println("Current User: " + currentUser.getEmail() + " with role: " + currentUser.getRole());
-        checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN")); // Kiểm tra vai trò của người dùng
+        checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
+
         Position position = positionRepository.findById(positionId)
                 .orElseThrow(() -> new RuntimeException("Position not found"));
-        System.out.println("Found Position: " + position.getPositionName());
+
         Employee employee = employeeService.findById(employeeId);
-        System.out.println("Found Employee: " + employee.getFullname());
+
         employee.setPosition(position);
+
         employeeService.save(employee);
     }
-
-    public List<Position> listAllPositions() {
-        return positionRepository.findAll();
-    }
-
-    public Position getPositionById(Long id) {
-        return positionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Position not found"));
-    }
-
-    private void checkRole(User user, List<String> allowedRoles) {
-        if (!allowedRoles.contains(user.getRole())) {
-            throw new RuntimeException("User does not have the required permissions.");
+    private void checkRole(User user, List<String> roles) {
+        if (user == null || !roles.contains(user.getRole())) {
+            throw new RuntimeException("User does not have the required role");
         }
     }
 }
-

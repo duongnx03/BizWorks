@@ -37,11 +37,10 @@ public class DepartmentService {
         checkRole(currentUser, Arrays.asList("MANAGE", "ADMIN"));
 
         Department department = new Department();
-        department.setName(departmentDTO.getName());
+        department.setName(departmentDTO.getDepartmentName());
         department.setDescription(departmentDTO.getDescription());
         return departmentRepository.save(department);
     }
-
     public Department updateDepartment(Long id, DepartmentDTO departmentDTO) {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "ADMIN"));
@@ -49,10 +48,10 @@ public class DepartmentService {
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Department not found with id: " + id));
 
-        if (departmentDTO.getName() == null || departmentDTO.getDescription() == null) {
+        if (departmentDTO.getDepartmentName() == null || departmentDTO.getDescription() == null) {
             throw new IllegalArgumentException("Name and Description cannot be null");
         }
-        department.setName(departmentDTO.getName());
+        department.setName(departmentDTO.getDepartmentName());
         department.setDescription(departmentDTO.getDescription());
         return departmentRepository.save(department);
     }

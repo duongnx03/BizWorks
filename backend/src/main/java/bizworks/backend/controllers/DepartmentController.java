@@ -36,17 +36,16 @@ public class DepartmentController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // Hoặc xử lý lỗi chi tiết hơn
         }
     }
-
     @PostMapping
     public ResponseEntity<Department> createDepartment(@RequestBody DepartmentDTO departmentDTO) {
         try {
             Department department = departmentService.createDepartment(departmentDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(department);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Hoặc xử lý lỗi chi tiết hơn
+            e.printStackTrace(); // In ra thông tin chi tiết lỗi
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);  // Trả về lỗi chi tiết hơn
         }
     }
-
     @PutMapping("/{id}")
     public ResponseEntity<Department> updateDepartment(@PathVariable Long id, @RequestBody DepartmentDTO departmentDTO) {
         try {
