@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import axios from "axios";
 import ClipLoader from "react-spinners/ClipLoader";
+import { Modal } from "react-bootstrap";
+import Webcam from "react-webcam";
+import { toast, ToastContainer } from 'react-toastify';
 
 const getHours = (timeString) => {
-  const [hours, minutes] = timeString.split(':').map(Number);
-  return hours + (minutes / 60);
+  const [hours, minutes] = timeString.split(":").map(Number);
+  return hours + minutes / 60;
 };
 
 const calculateWorkTime = (checkInTime, checkOutTime) => {
@@ -18,7 +21,7 @@ const calculateWorkTime = (checkInTime, checkOutTime) => {
   const hours = Math.floor(diffInMinutes / 60);
   const minutes = diffInMinutes % 60;
 
-  return `${hours}.${minutes < 10 ? '0' : ''}${minutes} hrs`;
+  return `${hours}.${minutes < 10 ? "0" : ""}${minutes} hrs`;
 };
 
 const getCurrentWorkTime = (checkInTime) => {
@@ -31,21 +34,29 @@ const getCurrentWorkTime = (checkInTime) => {
   const hours = Math.floor(diffInMinutes / 60);
   const minutes = diffInMinutes % 60;
 
-  return `${hours}.${minutes < 10 ? '0' : ''}${minutes} hrs`;
+  return `${hours}.${minutes < 10 ? "0" : ""}${minutes} hrs`;
 };
 
 const updateTodayActivity = async (setAttendance, setTodayActivity) => {
   try {
-    const response = await axios.get('http://localhost:8080/api/attendance/getByEmailAndDate', { withCredentials: true });
+    const response = await axios.get(
+      "http://localhost:8080/api/attendance/getByEmailAndDate",
+      { withCredentials: true }
+    );
     if (response.data.data) {
       const data = response.data.data;
       setAttendance(data);
       setTodayActivity({
-        checkInTime: data?.checkInTime ? new Date(data.checkInTime).toLocaleString() : "",
-        checkOutTime: data?.checkOutTime ? new Date(data.checkOutTime).toLocaleString() : "",
-        workTime: data?.checkInTime && data?.checkOutTime
-          ? calculateWorkTime(data.checkInTime, data.checkOutTime)
-          : "00:00"
+        checkInTime: data?.checkInTime
+          ? new Date(data.checkInTime).toLocaleString()
+          : "",
+        checkOutTime: data?.checkOutTime
+          ? new Date(data.checkOutTime).toLocaleString()
+          : "",
+        workTime:
+          data?.checkInTime && data?.checkOutTime
+            ? calculateWorkTime(data.checkInTime, data.checkOutTime)
+            : "00:00",
       });
     }
   } catch (error) {
@@ -59,7 +70,7 @@ const AttendanceEmployee = () => {
   const [totalWorkTime, setTotalWorkTime] = useState({
     totalWorkTimeInWeek: 0,
     totalWorkTimeInMonth: 0,
-    totalOvertimeInMonth: 0
+    totalOvertimeInMonth: 0,
   });
   const [todayActivity, setTodayActivity] = useState({
     checkInTime: "",
@@ -67,6 +78,9 @@ const AttendanceEmployee = () => {
     workTime: "00:00",
   });
   const [loading, setLoading] = useState(false);
+  const [modalShow, setModalShow] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const webcamRef = useRef(null);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -83,7 +97,10 @@ const AttendanceEmployee = () => {
   useEffect(() => {
     const fetchTotalWorkTime = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/attendance/totalWorkAndOvertime', { withCredentials: true });
+        const response = await axios.get(
+          "http://localhost:8080/api/attendance/totalWorkAndOvertime",
+          { withCredentials: true }
+        );
         if (response.data.data) {
           setTotalWorkTime(response.data.data);
         }
@@ -97,30 +114,53 @@ const AttendanceEmployee = () => {
   const handleCheckIn = async () => {
     const now = new Date();
     const checkInTime = new Date();
-    checkInTime.setHours(7, 58, 0); // 7h58 sáng
+    checkInTime.setHours(7, 55, 0);
 
     setLoading(true);
 
     if (now < checkInTime) {
-      alert("You cannot check in before 7:58 AM.");
+      toast.error("You cannot check in before 7:55 AM.");
+      setLoading(false);
       return;
     }
 
-    try {
-      await axios.post('http://localhost:8080/api/attendance/checkIn', {}, { withCredentials: true });
-      await updateTodayActivity(setTodayActivity);
-    } catch (error) {
-      console.error("Error during check-in: ", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setLoading(true);
+    setModalShow(true);
 
+    setTimeout(() => {
+      if (webcamRef.current) {
+        const imageSrc = webcamRef.current.getScreenshot();
+        setCapturedImage(imageSrc);
+
+        // Tạo form data để gửi ảnh lên server
+        const formData = new FormData();
+        const blob = dataURItoBlob(imageSrc);
+        formData.append("faceImage", blob, "photo.jpg");
+
+        // Gửi yêu cầu check-in
+        axios
+          .post("http://localhost:8080/api/attendance/checkIn", formData, {
+            withCredentials: true,
+          })
+          .then(async () => {
+            await updateTodayActivity(setTodayActivity);
+          })
+          .catch((error) => {
+            toast.error(error.response.data.message);
+          })
+          .finally(() => {
+            setLoading(false);
+            setModalShow(false); 
+            setCapturedImage(null);
+          });
+      }
+    }, 4000); 
+  };
 
   const handleCheckOut = async () => {
     const now = new Date();
     const checkOutTime = new Date();
-    checkOutTime.setHours(16, 58, 0); // 4h58 chiều
+    checkOutTime.setHours(16, 55, 0);
 
     setLoading(true);
 
@@ -129,44 +169,90 @@ const AttendanceEmployee = () => {
       return;
     }
 
-    try {
-      await axios.post('http://localhost:8080/api/attendance/checkOut', {}, { withCredentials: true });
-      await updateTodayActivity(setTodayActivity);
-    } catch (error) {
-      console.error("Error during check-out: ", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setLoading(true);
+    setModalShow(true);
 
+    setTimeout(() => {
+      if (webcamRef.current) {
+        const imageSrc = webcamRef.current.getScreenshot();
+        setCapturedImage(imageSrc);
+
+        // Tạo form data để gửi ảnh lên server
+        const formData = new FormData();
+        const blob = dataURItoBlob(imageSrc);
+        formData.append("faceImage", blob, "photo.jpg");
+
+        // Gửi yêu cầu check-in
+        axios
+          .post("http://localhost:8080/api/attendance/checkOut", formData, {
+            withCredentials: true,
+          })
+          .then(async () => {
+            await updateTodayActivity(setTodayActivity);
+          })
+          .catch((error) => {
+            toast.error(error.response.data.message);
+          })
+          .finally(() => {
+            setLoading(false);
+            setModalShow(false); 
+            setCapturedImage(null);
+          });
+      }
+    }, 4000); 
+  };
 
   const isCheckOutAvailable = () => {
     const checkOutStartTime = new Date(systemTime);
-    checkOutStartTime.setHours(16, 58, 0); // 4h58 chiều
+    checkOutStartTime.setHours(16, 55, 0);
 
-    return attendance && attendance.checkInTime && systemTime >= checkOutStartTime;
+    return (
+      attendance && attendance.checkInTime && systemTime >= checkOutStartTime
+    );
   };
 
   const calculateWorkTimeDisplay = () => {
     if (todayActivity.checkInTime) {
       return todayActivity.checkOutTime
-        ? calculateWorkTime(todayActivity.checkInTime, todayActivity.checkOutTime)
+        ? calculateWorkTime(
+            todayActivity.checkInTime,
+            todayActivity.checkOutTime
+          )
         : getCurrentWorkTime(todayActivity.checkInTime);
     }
     return "00:00";
   };
 
-  return (  
+  const dataURItoBlob = (dataURI) => {
+    const byteString = atob(dataURI.split(",")[1]);
+    const mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: mimeString });
+  };
+
+  return (
     <div className="page-wrapper">
       <div className="content container-fluid">
-        <Breadcrumbs maintitle="Attendance" title="Dashboard" subtitle="Attendance" />
+        <Breadcrumbs
+          maintitle="Attendance"
+          title="Dashboard"
+          subtitle="Attendance"
+        />
 
         <div className="row">
           <div className="col-md-4">
             <div className="card punch-status">
               <div className="card-body">
                 <h5 className="card-title">
-                  Timesheet <small className="text-muted"> {systemTime.toLocaleString()}</small>
+                  Timesheet{" "}
+                  <small className="text-muted">
+                    {" "}
+                    {systemTime.toLocaleString()}
+                  </small>
                 </h5>
                 <div className="punch-info">
                   <div className="punch-hours">
@@ -177,11 +263,17 @@ const AttendanceEmployee = () => {
                   {todayActivity.checkInTime && !todayActivity.checkOutTime ? (
                     <button
                       type="button"
-                      className={`btn ${isCheckOutAvailable() ? 'btn-primary' : 'btn-secondary'} punch-btn`}
+                      className={`btn ${
+                        isCheckOutAvailable() ? "btn-primary" : "btn-secondary"
+                      } punch-btn`}
                       onClick={handleCheckOut}
                       disabled={!isCheckOutAvailable()}
                     >
-                      {loading ? <ClipLoader size={24} color={"#fff"} /> : "Check Out"}
+                      {loading ? (
+                        <ClipLoader size={24} color={"#fff"} />
+                      ) : (
+                        "Check Out"
+                      )}
                     </button>
                   ) : todayActivity.checkOutTime ? (
                     <button
@@ -197,11 +289,14 @@ const AttendanceEmployee = () => {
                       className="btn btn-primary punch-btn"
                       onClick={handleCheckIn}
                     >
-                      {loading ? <ClipLoader size={24} color={"#fff"} /> : "Check In"}
+                      {loading ? (
+                        <ClipLoader size={24} color={"#fff"} />
+                      ) : (
+                        "Check In"
+                      )}
                     </button>
                   )}
                 </div>
-
               </div>
             </div>
           </div>
@@ -215,14 +310,23 @@ const AttendanceEmployee = () => {
                     <p>
                       This Week
                       <strong>
-                        {totalWorkTime?.totalWorkTimeInWeek || 0} <small>/ 40 hrs</small>
+                        {totalWorkTime?.totalWorkTimeInWeek || 0}{" "}
+                        <small>/ 40 hrs</small>
                       </strong>
                     </p>
                     <div className="progress">
                       <div
                         className="progress-bar bg-warning"
                         role="progressbar"
-                        style={{ width: `${(getHours(totalWorkTime?.totalWorkTimeInWeek || '0:00') / 40) * 100}%` }}
+                        style={{
+                          width: `${
+                            (getHours(
+                              totalWorkTime?.totalWorkTimeInWeek || "0:00"
+                            ) /
+                              40) *
+                            100
+                          }%`,
+                        }}
                         aria-valuemin={0}
                         aria-valuemax={100}
                       />
@@ -232,14 +336,23 @@ const AttendanceEmployee = () => {
                     <p>
                       This Month
                       <strong>
-                        {totalWorkTime?.totalWorkTimeInMonth || 0} <small>/ 160 hrs</small>
+                        {totalWorkTime?.totalWorkTimeInMonth || 0}{" "}
+                        <small>/ 160 hrs</small>
                       </strong>
                     </p>
                     <div className="progress">
                       <div
                         className="progress-bar bg-success"
                         role="progressbar"
-                        style={{ width: `${(getHours(totalWorkTime?.totalWorkTimeInMonth || '0:00') / 160) * 100}%` }}
+                        style={{
+                          width: `${
+                            (getHours(
+                              totalWorkTime?.totalWorkTimeInMonth || "0:00"
+                            ) /
+                              160) *
+                            100
+                          }%`,
+                        }}
                         aria-valuemin={0}
                         aria-valuemax={100}
                       />
@@ -249,14 +362,23 @@ const AttendanceEmployee = () => {
                     <p>
                       Overtime in Month
                       <strong>
-                        {totalWorkTime?.totalOvertimeInMonth || 0} <small>/ 8 hrs</small>
+                        {totalWorkTime?.totalOvertimeInMonth || 0}{" "}
+                        <small>/ 8 hrs</small>
                       </strong>
                     </p>
                     <div className="progress">
                       <div
                         className="progress-bar bg-info"
                         role="progressbar"
-                        style={{ width: `${(getHours(totalWorkTime?.totalOvertimeInMonth || '0:00') / 8) * 100}%` }}
+                        style={{
+                          width: `${
+                            (getHours(
+                              totalWorkTime?.totalOvertimeInMonth || "0:00"
+                            ) /
+                              8) *
+                            100
+                          }%`,
+                        }}
                         aria-valuemin={0}
                         aria-valuemax={100}
                       />
@@ -272,28 +394,52 @@ const AttendanceEmployee = () => {
               <div className="card-body">
                 <h5 className="card-title">Today Activity</h5>
                 <ul className="res-activity-list">
-                  {todayActivity.checkInTime &&
+                  {todayActivity.checkInTime && (
                     <li>
                       <p className="mb-0">Check In at</p>
                       <p className="res-activity-time">
-                        <i className="fa-regular fa-clock"></i> {todayActivity.checkInTime}
+                        <i className="fa-regular fa-clock"></i>{" "}
+                        {todayActivity.checkInTime}
                       </p>
                     </li>
-                  }
-                  {todayActivity.checkOutTime &&
+                  )}
+                  {todayActivity.checkOutTime && (
                     <li>
                       <p className="mb-0">Check Out at</p>
                       <p className="res-activity-time">
-                        <i className="fa-regular fa-clock"></i> {todayActivity.checkOutTime}
+                        <i className="fa-regular fa-clock"></i>{" "}
+                        {todayActivity.checkOutTime}
                       </p>
                     </li>
-                  }
+                  )}
                 </ul>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <Modal show={modalShow} onHide={() => setModalShow(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Facial Authentication</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {!capturedImage ? (
+            <Webcam
+              audio={false}
+              ref={webcamRef}
+              screenshotFormat="image/jpeg"
+              width="100%"
+            />
+          ) : (
+            <img
+              src={capturedImage}
+              alt="Captured"
+              style={{ width: "100%", marginTop: "10px" }}
+            />
+          )}
+        </Modal.Body>
+      </Modal>
+      <ToastContainer position="top-center" autoClose={5000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
     </div>
   );
 };

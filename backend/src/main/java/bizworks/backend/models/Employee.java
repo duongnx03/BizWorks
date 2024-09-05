@@ -18,6 +18,7 @@ public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private String empCode;
     private String fullname;
     private LocalDate dob;
     private String address;
@@ -38,8 +39,8 @@ public class Employee {
     @JsonBackReference
     private Position position;
 
-        @OneToMany(mappedBy = "employee", cascade = CascadeType.MERGE)
-        private List<Attendance> attendances;
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.MERGE)
+    private List<Attendance> attendances;
 
     @OneToMany(mappedBy = "employee", cascade = CascadeType.MERGE)
     private List<LeaveRequest> leaveRequests;

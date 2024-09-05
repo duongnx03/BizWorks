@@ -3,7 +3,6 @@ import Breadcrumbs from "../../../components/Breadcrumbs";
 import { AiOutlineCheckCircle, AiOutlineCloseCircle } from "react-icons/ai";
 import { format, getDaysInMonth } from "date-fns";
 import axios from "axios";
-
 import { Link } from "react-router-dom";
 import AttendanceComplaintPopup from "../../../components/modelpopup/AttendanceComplaintPopup";
 
@@ -50,6 +49,7 @@ const fetchAttendanceData = async (setAttendanceData, month, year) => {
 
 const AttendenceAdmin = () => {
   const [attendanceData, setAttendanceData] = useState([]);
+  const [selectedAttendanceId, setSelectedAttendanceId] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1); // tháng là 1-based
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [showComplaintModal, setShowComplaintModal] = useState(false);
@@ -59,7 +59,10 @@ const AttendenceAdmin = () => {
   const daysInMonth = getDaysInMonth(new Date(currentYear, currentMonth - 1));
   const totalPages = Math.ceil(attendanceData.length / recordsPerPage);
 
-  const handleOpenModal = () => setShowComplaintModal(true);
+  const handleOpenModal = (attendanceId) => {
+    setSelectedAttendanceId(attendanceId);
+    setShowComplaintModal(true);
+  };
   const handleCloseModal = () => setShowComplaintModal(false);
 
   useEffect(() => {
@@ -126,7 +129,7 @@ const AttendenceAdmin = () => {
       <div className="page-wrapper">
         <div className="content container-fluid">
           {/* Page Header */}
-          <Breadcrumbs maintitle="Attendance" title="Dashboard" subtitle="Attendance" />
+          <Breadcrumbs maintitle="Attendance Data" title="Dashboard" subtitle="Attendance Data" />
           {/* /Page Header */}
 
           <form className="d-flex align-items-end mb-4" onSubmit={handleMonthYearSubmit}>
@@ -248,7 +251,7 @@ const AttendenceAdmin = () => {
                                 <i className="material-icons">more_vert</i>
                               </Link>
                               <div className="dropdown-menu dropdown-menu-right">
-                                <p className="dropdown-item" onClick={handleOpenModal}>Complaint</p>
+                                <p className="dropdown-item" onClick={() => handleOpenModal(attendance.id)}>Complaint</p>
                               </div>
                             </div>
                           </td>
@@ -289,7 +292,11 @@ const AttendenceAdmin = () => {
                   </div>
                 </div>
               </div>
-              <AttendanceComplaintPopup show={showComplaintModal} onClose={handleCloseModal} />
+              <AttendanceComplaintPopup
+                show={showComplaintModal}
+                onClose={handleCloseModal}
+                attendanceId={selectedAttendanceId}
+              />
             </>
           )}
         </div>

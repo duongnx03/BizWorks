@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
@@ -12,12 +13,10 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDTO {
-        private Long id;
-        private String fullname;
-        private String email;
-        private String password;
-        private String role;
-        private LocalDate startDate;
-        private Long department_id;
-        private Long position_id;
+    private String fullname;
+    private String email;
+    private LocalDate startDate;
+    private Long department_id;
+    private Long position_id;
+    private MultipartFile fileImage;
 }

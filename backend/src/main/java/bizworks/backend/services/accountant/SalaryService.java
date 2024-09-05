@@ -67,7 +67,7 @@ public class SalaryService {
         createSalaryForEmployeeIfNotExists(employee);
 
         // Trả về thông tin nhân viên
-        return employeeService.convertToDTO(employee);
+        return employeeService.convertToEmpDTO(employee);
     }
 
     public void createSalaryForEmployeeIfNotExists(Employee employee) {

@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
 
 const validationSchema = Yup.object().shape({
   password: Yup.string()
@@ -30,11 +31,14 @@ const ResetPassword = () => {
         withCredentials: true,
       });
       console.log(response.data);
-      navigate("/employee-dashboard");
+      toast.success("Reset password successfully");
+      setTimeout(() => {
+        navigate("/employee-dashboard");
+      }, 1000);
       // Chuyển hướng hoặc hiển thị thông báo thành công
     } catch (error) {
       console.error(error);
-      // Xử lý lỗi và thông báo cho người dùng
+      toast.error(error.response?.data?.message || "An error occurred");
     }
   };
 
@@ -50,7 +54,7 @@ const ResetPassword = () => {
           </div>
           <div className="account-box">
             <div className="account-wrapper">
-              <h3 className="account-title">Reset Password</h3>
+              <h3 className="account-title">Change Password</h3>
               <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="input-block mb-3">
                   <label className="col-form-label">New password</label>
@@ -80,6 +84,7 @@ const ResetPassword = () => {
           </div>
         </div>
       </div>
+      <ToastContainer position="top-center" autoClose={5000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
     </div>
   );
 };

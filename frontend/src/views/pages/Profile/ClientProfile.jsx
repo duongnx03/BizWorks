@@ -52,7 +52,7 @@ const ClientProfile = () => {
                         <div className="col-md-5">
                           <div className="profile-info-left">
                             <h3 className="user-name m-t-0">
-                              {profileData.fullname}
+                              {profileData.empCode} - {profileData.fullname}
                             </h3>
                             <h6 className="text-muted">
                               {profileData.department}
@@ -60,9 +60,6 @@ const ClientProfile = () => {
                             <small className="text-muted">
                               {profileData.position}
                             </small>
-                            <div className="staff-id">
-                              Employee ID : {profileData.id}
-                            </div>
                             <div className="small doj text-muted">
                               Date of Join : {new Date(profileData.startDate).toLocaleDateString()}
                             </div>

@@ -28,9 +28,12 @@ const AttendanceReport = () => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/departments", {
-          withCredentials: true,
-        });
+        const response = await axios.get(
+          "http://localhost:8080/api/departments",
+          {
+            withCredentials: true,
+          }
+        );
 
         const departmentOptions = response.data.map((dept) => ({
           value: dept.id,
@@ -53,8 +56,13 @@ const AttendanceReport = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/attendance/getAll", { withCredentials: true });
-        const sortedData = response.data.data.sort((a, b) => new Date(b.attendanceDate) - new Date(a.attendanceDate));
+        const response = await axios.get(
+          "http://localhost:8080/api/attendance/getAll",
+          { withCredentials: true }
+        );
+        const sortedData = response.data.data.sort(
+          (a, b) => new Date(b.attendanceDate) - new Date(a.attendanceDate)
+        );
         setData(sortedData);
         setFilteredData(sortedData);
         setTotalPages(Math.ceil(sortedData.length / ITEMS_PER_PAGE));
@@ -67,39 +75,56 @@ const AttendanceReport = () => {
   }, []);
 
   useEffect(() => {
-    const hasFilters = inputValue || selectedDepartment || selectedPosition || fromDate || toDate;
+    const hasFilters =
+      inputValue ||
+      selectedDepartment ||
+      selectedPosition ||
+      fromDate ||
+      toDate;
     setIsFiltered(hasFilters);
 
     let result = data;
 
     if (inputValue) {
-      result = result.filter(record =>
-        record.employee.fullname.toLowerCase().includes(inputValue.toLowerCase())
+      result = result.filter((record) =>
+        record.employee.empCode
+          .toLowerCase()
+          .includes(inputValue.toLowerCase())
       );
     }
 
     if (selectedDepartment) {
-      result = result.filter(record =>
-        record.employee.department === selectedDepartment.label
+      result = result.filter(
+        (record) => record.employee.department === selectedDepartment.label
       );
     }
 
     if (selectedPosition) {
-      result = result.filter(record =>
-        record.employee.position === selectedPosition.label
+      result = result.filter(
+        (record) => record.employee.position === selectedPosition.label
       );
     }
 
     if (fromDate && toDate) {
-      result = result.filter(record => {
+      result = result.filter((record) => {
         const recordDate = new Date(record.attendanceDate);
-        return recordDate >= new Date(fromDate) && recordDate <= new Date(toDate).setHours(23, 59, 59, 999);
+        return (
+          recordDate >= new Date(fromDate) &&
+          recordDate <= new Date(toDate).setHours(23, 59, 59, 999)
+        );
       });
     }
 
     setFilteredData(result);
     setTotalPages(Math.ceil(result.length / ITEMS_PER_PAGE));
-  }, [inputValue, selectedDepartment, selectedPosition, fromDate, toDate, data]);
+  }, [
+    inputValue,
+    selectedDepartment,
+    selectedPosition,
+    fromDate,
+    toDate,
+    data,
+  ]);
 
   useEffect(() => {
     setCurrentPage(1); // Reset to first page on filter change
@@ -133,7 +158,10 @@ const AttendanceReport = () => {
   };
 
   // Calculate the data for the current page
-  const paginatedData = filteredData.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="page-wrapper">
@@ -146,17 +174,25 @@ const AttendanceReport = () => {
 
         <div className="row filter-row space">
           <div className="col-sm-6 col-md-3">
-            <div className={focused || inputValue !== "" ? "input-block form-focus focused" : "input-block form-focus"}>
+            <div
+              className={
+                focused || inputValue !== ""
+                  ? "input-block form-focus focused"
+                  : "input-block form-focus"
+              }
+            >
               <input
                 type="text"
                 className="form-control floating"
                 value={inputValue}
                 onFocus={() => setFocused(true)}
-                onBlur={() => { if (inputValue === "") setFocused(false); }}
+                onBlur={() => {
+                  if (inputValue === "") setFocused(false);
+                }}
                 onChange={(e) => setInputValue(e.target.value)}
               />
               <label className="focus-label" onClick={() => setFocused(true)}>
-                Employee Name
+                Employee Code
               </label>
             </div>
           </div>
@@ -221,24 +257,30 @@ const AttendanceReport = () => {
           </div>
 
           <div className="col-sm-6 col-md-9 d-flex align-items-center justify-content-end">
-            <button
-              type="button"
-              className="btn btn-clear"
-              title="Clear Filters"
-              onClick={handleClearFilters}
-              style={{
-                border: 'none',
-                background: 'none',
-                color: '#FF902F',
-                fontSize: '18px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                marginLeft: 'auto',
-              }}
-            >
-              <FaTimes /> 
-            </button>
+            {inputValue ||
+            selectedDepartment ||
+            selectedPosition ||
+            fromDate ||
+            toDate ? (
+              <button
+                type="button"
+                className="btn btn-clear"
+                title="Clear Filters"
+                onClick={handleClearFilters}
+                style={{
+                  border: "none",
+                  background: "none",
+                  color: "#FF902F",
+                  fontSize: "18px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  marginLeft: "auto",
+                }}
+              >
+                <FaTimes />
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -247,22 +289,33 @@ const AttendanceReport = () => {
           paginatedData.length ? (
             <>
               <AttendanceReportTable data={paginatedData} />
-              <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 0' }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  padding: "10px 0",
+                }}
+              >
                 <nav>
                   <ul className="pagination" style={{ margin: 0 }}>
                     {Array.from({ length: totalPages }, (_, index) => (
                       <li
                         key={index + 1}
-                        className={`page-item ${index + 1 === currentPage ? 'active' : ''}`}
-                        style={{ margin: '0 2px' }}
+                        className={`page-item ${
+                          index + 1 === currentPage ? "active" : ""
+                        }`}
+                        style={{ margin: "0 2px" }}
                       >
                         <button
                           onClick={() => handlePageChange(index + 1)}
                           className="page-link"
                           style={{
-                            backgroundColor: index + 1 === currentPage ? '#FF902F' : '#fff',
-                            borderColor: index + 1 === currentPage ? '#FF902F' : '#dee2e6',
-                            color: index + 1 === currentPage ? '#fff' : '#373B3E',
+                            backgroundColor:
+                              index + 1 === currentPage ? "#FF902F" : "#fff",
+                            borderColor:
+                              index + 1 === currentPage ? "#FF902F" : "#dee2e6",
+                            color:
+                              index + 1 === currentPage ? "#fff" : "#373B3E",
                           }}
                         >
                           {index + 1}
@@ -274,10 +327,14 @@ const AttendanceReport = () => {
               </div>
             </>
           ) : (
-            <p className="alert alert-warning">No data available for the selected filters.</p>
+            <p className="alert alert-warning">
+              No data available for the selected filters.
+            </p>
           )
         ) : (
-          <p className="alert alert-info">Please apply filters to view the data.</p>
+          <p className="alert alert-info">
+            Please apply filters to view the data.
+          </p>
         )}
       </div>
     </div>

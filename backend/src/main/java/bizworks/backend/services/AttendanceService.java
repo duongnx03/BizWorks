@@ -1,16 +1,18 @@
 package bizworks.backend.services;
 
-import bizworks.backend.dtos.AttendanceReportDTO;
-import bizworks.backend.dtos.AttendanceDTO;
-import bizworks.backend.dtos.AttendanceSummaryDTO;
-import bizworks.backend.dtos.EmployeeDTO;
+import bizworks.backend.dtos.*;
 import bizworks.backend.models.Attendance;
 import bizworks.backend.models.Employee;
+import bizworks.backend.models.Overtime;
 import bizworks.backend.repositories.AttendanceRepository;
 import jakarta.mail.MessagingException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,15 +23,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class AttendanceService {
-    @Autowired
-    private AttendanceRepository attendanceRepository;
-
-    @Autowired
-    private EmployeeService employeeService;
-
-    @Autowired
-    private MailService mailService;
+    private final AttendanceRepository attendanceRepository;
+    private final EmployeeService employeeService;
+    private final OvertimeService overtimeService;
+    private final MailService mailService;
+    private final FaceRecognitionService faceRecognitionService;
 
     public Attendance save(Attendance attendance) {
         return attendanceRepository.save(attendance);
@@ -39,7 +39,8 @@ public class AttendanceService {
         return attendanceRepository.findAll();
     }
 
-    public List<Attendance> getAttendancesByEmployeeEmail(String email) {
+    public List<Attendance> getAttendancesByEmployeeEmail() {
+        String email = getCurrentUserEmail();
         return attendanceRepository.findByEmployeeEmail(email);
     }
 
@@ -48,16 +49,23 @@ public class AttendanceService {
         return attendanceRepository.findByAttendanceDate(today);
     }
 
-    public Attendance getByEmailAndDate(String email){
+    public Attendance findById(Long id) {
+        return attendanceRepository.findById(id).orElseThrow();
+    }
+
+    public Attendance getByEmailAndDate() {
+        String email = getCurrentUserEmail();
         LocalDate today = LocalDate.now();
         return attendanceRepository.findByEmployeeEmailAndAttendanceDate(email, today);
     }
 
-    public Attendance getAttendanceByEmployeeEmailAndDate(String email, LocalDate attendanceDate) {
+    public Attendance getAttendanceByEmployeeEmailAndDate(LocalDate attendanceDate) {
+        String email = getCurrentUserEmail();
         return attendanceRepository.findByEmployeeEmailAndAttendanceDate(email, attendanceDate);
     }
 
-    public List<Attendance> getAttendancesForMonth(String email, int month, int year) {
+    public List<Attendance> getAttendancesForMonth(int month, int year) {
+        String email = getCurrentUserEmail();
         LocalDate startOfMonth = LocalDate.of(year, month, 1);
         LocalDate endOfMonth = startOfMonth.withDayOfMonth(startOfMonth.lengthOfMonth());
         return attendanceRepository.findByEmployeeEmailAndAttendanceDateBetween(email, startOfMonth, endOfMonth);
@@ -69,7 +77,8 @@ public class AttendanceService {
         return attendanceRepository.findByEmployeeEmailAndAttendanceDateBetween(email, startOfMonth, today);
     }
 
-    public AttendanceReportDTO getTotalWorkAndOvertime(String email, LocalDate inputDate) {
+    public AttendanceReportDTO getTotalWorkAndOvertime(LocalDate inputDate) {
+        String email = getCurrentUserEmail();
         List<Attendance> attendances = attendanceRepository.findByEmployeeEmail(email);
 
         // Tổng giờ làm việc trong tuần tính đến ngày inputDate
@@ -81,8 +90,8 @@ public class AttendanceService {
                     && !attendance.getAttendanceDate().isAfter(inputDate)
                     && "Present".equals(attendance.getStatus())) {
                 totalWorkTimeInWeek = totalWorkTimeInWeek
-                        .plusHours(attendance.getTotalWorkTime().getHour())
-                        .plusMinutes(attendance.getTotalWorkTime().getMinute());
+                        .plusHours(attendance.getOfficeHours().getHour())
+                        .plusMinutes(attendance.getOfficeHours().getMinute());
             }
         }
 
@@ -96,8 +105,8 @@ public class AttendanceService {
                     && !attendance.getAttendanceDate().isAfter(inputDate)
                     && "Present".equals(attendance.getStatus())) {
                 totalWorkTimeInMonth = totalWorkTimeInMonth
-                        .plusHours(attendance.getTotalWorkTime().getHour())
-                        .plusMinutes(attendance.getTotalWorkTime().getMinute());
+                        .plusHours(attendance.getOfficeHours().getHour())
+                        .plusMinutes(attendance.getOfficeHours().getMinute());
                 totalOvertimeInMonth = totalOvertimeInMonth
                         .plusHours(attendance.getOvertime().getHour())
                         .plusMinutes(attendance.getOvertime().getMinute());
@@ -110,89 +119,142 @@ public class AttendanceService {
                 formatDuration(totalOvertimeInMonth)
         );
     }
+
     private String formatDuration(Duration duration) {
         long hours = duration.toHours();
         long minutes = duration.toMinutes() % 60;
         return String.format("%02d:%02d", hours, minutes);
     }
 
-    public Attendance checkIn(String email) {
-        LocalDate today = LocalDate.now();
-        Attendance existingAttendance = getAttendanceByEmployeeEmailAndDate(email, today);
-        if (existingAttendance != null) {
-            throw new RuntimeException("You have already checked in today");
-        } else {
-            Attendance attendance = new Attendance();
-            Employee employee = employeeService.findByEmail(email);
-            attendance.setCheckInTime(LocalDateTime.now());
-            attendance.setBreakTimeStart(null);
-            attendance.setBreakTimeEnd(null);
-            attendance.setCheckOutTime(null);
-            attendance.setAttendanceDate(today);
-            attendance.setTotalWorkTime(null);
-            attendance.setOvertime(null);
-            attendance.setStatus("In Progress");
-            attendance.setEmployee(employee);
-            return save(attendance);
-        }
-    }
-
-    public Attendance checkOut(String email) throws MessagingException {
-        LocalDate attendanceDate = LocalDate.now();
+    public Attendance checkIn(MultipartFile faceImage) throws IOException {
+        String email = getCurrentUserEmail();
         LocalDateTime currentDateTime = LocalDateTime.now();
-        LocalDateTime breakTimeStart = currentDateTime.with(LocalTime.of(12, 0));
-        LocalDateTime breakTimeEnd = currentDateTime.with(LocalTime.of(13, 0));
-        Attendance attendance = getAttendanceByEmployeeEmailAndDate(email, attendanceDate);
-        LocalDateTime checkOutTime = LocalDateTime.now();
-        attendance.setBreakTimeStart(breakTimeStart);
-        attendance.setBreakTimeEnd(breakTimeEnd);
-        attendance.setCheckOutTime(checkOutTime);
-        attendance.setStatus("Present");
-
-        // Calculate the total worked time
-        LocalDateTime checkInTime = attendance.getCheckInTime();
-
-
-        if (checkInTime == null || checkOutTime == null) {
-            throw new RuntimeException("Check-in or check-out time is missing.");
-        }
-
-        Duration breakDuration = Duration.ZERO;
-        if (breakTimeStart != null && breakTimeEnd != null) {
-            breakDuration = Duration.between(breakTimeStart, breakTimeEnd);
-        }
-
-        Duration workedDuration = Duration.between(checkInTime, checkOutTime);
-        Duration actualWorkedDuration = workedDuration.minus(breakDuration);
-
-        // Set total work time
-        attendance.setTotalWorkTime(LocalTime.of(
-                (int) actualWorkedDuration.toHours(),
-                (int) actualWorkedDuration.toMinutes() % 60
-        ));
-
-        // Set overtime
-        long standardWorkMinutes = 480; // 8 hours in minutes
-        long actualWorkedMinutes = actualWorkedDuration.toMinutes();
-        if (actualWorkedMinutes > standardWorkMinutes) {
-            long overtimeMinutes = actualWorkedMinutes - standardWorkMinutes;
-            attendance.setOvertime(LocalTime.of(
-                    (int) overtimeMinutes / 60,
-                    (int) overtimeMinutes % 60
-            ));
+        LocalDateTime startCheckInTime = currentDateTime.with(LocalTime.of(7, 55));
+        LocalDateTime endCheckInTime = currentDateTime.with(LocalTime.of(8, 5));
+        if (currentDateTime.isBefore(startCheckInTime)) {
+            throw new RuntimeException("You cannot check in at this time. Allowed time is between 7:55 and 8:05.");
         } else {
-            attendance.setOvertime(LocalTime.of(0, 0));
+            boolean verifyFace = faceRecognitionService.verifyEmployeeFace(email, faceImage);
+            if (verifyFace) {
+                LocalDate today = LocalDate.now();
+                Attendance existingAttendance = getAttendanceByEmployeeEmailAndDate(today);
+                if (existingAttendance != null) {
+                    throw new RuntimeException("You have already checked in today");
+                } else {
+                    LocalDateTime checkInTime;
+                    if (currentDateTime.isAfter(endCheckInTime)) {
+                        //xử lý đi trễ
+                        checkInTime = currentDateTime;
+                    } else {
+                        checkInTime = currentDateTime.with(LocalTime.of(8, 0));
+                    }
+                    Attendance attendance = new Attendance();
+                    Employee employee = employeeService.findByEmail(email);
+                    attendance.setCheckInTime(checkInTime);
+                    attendance.setAttendanceDate(today);
+                    attendance.setStatus("In Progress");
+                    attendance.setEmployee(employee);
+                    return save(attendance);
+                }
+            } else {
+                throw new RuntimeException("Invalid face authentication.");
+            }
         }
-
-        Attendance savedAttendance = save(attendance);
-
-        // Generate and send email content
-        String emailContent = generateEmailContent(savedAttendance);
-        mailService.sendEmail(email, "Attendance Checkout Notification", emailContent);
-
-        return savedAttendance;
     }
 
+    public Attendance checkOut(MultipartFile faceImage) throws IOException, MessagingException {
+        String email = getCurrentUserEmail();
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        LocalDateTime startCheckOutTime = currentDateTime.with(LocalTime.of(16, 55));
+        if (currentDateTime.isBefore(startCheckOutTime)) {
+            throw new RuntimeException("You cannot check out at this time. The allowed time is from 16:55 onwards.");
+        } else {
+            boolean verifyFace = faceRecognitionService.verifyEmployeeFace(email, faceImage);
+            if (verifyFace) {
+                LocalDate attendanceDate = LocalDate.now();
+
+                LocalDateTime breakTimeStart;
+                LocalDateTime breakTimeEnd;
+                LocalDateTime checkOutTime;
+
+                Attendance attendance = getAttendanceByEmployeeEmailAndDate(attendanceDate);
+                Overtime overtime = overtimeService.findByAttendanceIdAndStatus(attendance.getId(), "Approved");
+                if (overtime != null) {
+                    LocalDateTime startCheckOutWithOvertime = overtime.getCheckOutTime().minusMinutes(5);
+                    if (currentDateTime.isBefore(startCheckOutWithOvertime)) {
+                        breakTimeStart = currentDateTime.with(LocalTime.of(12, 0));
+                        breakTimeEnd = currentDateTime.with(LocalTime.of(13, 0));
+                        checkOutTime = currentDateTime;
+                    } else {
+                        breakTimeStart = currentDateTime.with(LocalTime.of(12, 0));
+                        breakTimeEnd = currentDateTime.with(LocalTime.of(13, 0));
+                        checkOutTime = overtime.getCheckOutTime();
+                    }
+                } else {
+                    breakTimeStart = currentDateTime.with(LocalTime.of(12, 0));
+                    breakTimeEnd = currentDateTime.with(LocalTime.of(13, 0));
+                    checkOutTime = currentDateTime.with(LocalTime.of(17, 0));
+                }
+
+                attendance.setBreakTimeStart(breakTimeStart);
+                attendance.setBreakTimeEnd(breakTimeEnd);
+                attendance.setCheckOutTime(checkOutTime);
+                attendance.setStatus("Present");
+
+                // Calculate the total worked time
+                LocalDateTime checkInTime = attendance.getCheckInTime();
+
+                if (checkInTime == null || checkOutTime == null) {
+                    throw new RuntimeException("Check-in or check-out time is missing.");
+                }
+
+                Duration breakDuration = Duration.ZERO;
+                if (breakTimeStart != null && breakTimeEnd != null) {
+                    breakDuration = Duration.between(breakTimeStart, breakTimeEnd);
+                }
+
+                Duration workedDuration = Duration.between(checkInTime, checkOutTime);
+                Duration actualWorkedDuration = workedDuration.minus(breakDuration);
+
+                // Set total time
+                long totalTime = workedDuration.toMinutes();
+                attendance.setTotalTime(LocalTime.of(
+                        (int) totalTime / 60,
+                        (int) totalTime % 60
+                ));
+
+                // Standard work time of 8 hours (480 minutes)
+                long standardWorkMinutes = 480;
+                attendance.setOfficeHours(LocalTime.of(
+                        (int) standardWorkMinutes / 60,
+                        (int) standardWorkMinutes % 60
+                ));
+
+                long actualWorkedMinutes = actualWorkedDuration.toMinutes();
+
+                // Set overtime
+                if (overtime != null && overtime.getType().equals("noon_overtime")) {
+                    attendance.setOvertime(LocalTime.of(1, 0));
+                } else {
+                    long overtimeMinutes = Math.max(0, actualWorkedMinutes - standardWorkMinutes);
+                    attendance.setOvertime(LocalTime.of(
+                            (int) overtimeMinutes / 60,
+                            (int) overtimeMinutes % 60
+                    ));
+                }
+
+                Attendance savedAttendance = save(attendance);
+
+                // Generate and send email content
+                String emailContent = generateEmailContent(savedAttendance);
+                mailService.sendEmail(email, "Attendance Checkout Notification", emailContent);
+
+                return savedAttendance;
+            } else {
+                throw new RuntimeException("Invalid face authentication.");
+            }
+        }
+    }
 
     public List<Attendance> markAbsentEmployees() throws MessagingException {
         LocalDate today = LocalDate.now();
@@ -209,18 +271,12 @@ public class AttendanceService {
         List<Attendance> absentAttendances = new ArrayList<>();
         for (Employee absentEmployee : absentEmployees) {
             Attendance attendance = new Attendance();
-            attendance.setCheckInTime(null);
-            attendance.setBreakTimeStart(null);
-            attendance.setBreakTimeEnd(null);
-            attendance.setCheckOutTime(null);
-            attendance.setTotalWorkTime(null);
-            attendance.setOvertime(null);
             attendance.setAttendanceDate(today);
             attendance.setStatus("Absent");
             attendance.setEmployee(absentEmployee);
             Attendance savedAttendance = save(attendance);
             absentAttendances.add(savedAttendance);
-            mailService.sendEmail(savedAttendance.getEmployee().getEmail(), "Reminder for absenteeism", sendAbsent(savedAttendance.getEmployee().getFullname(), savedAttendance.getAttendanceDate()));
+            mailService.sendEmail(savedAttendance.getEmployee().getEmail(), "Reminder for absenteeism", sendAbsent(savedAttendance.getEmployee().getEmpCode() ,savedAttendance.getEmployee().getFullname(), savedAttendance.getAttendanceDate()));
         }
         return absentAttendances;
     }
@@ -229,18 +285,23 @@ public class AttendanceService {
     public AttendanceSummaryDTO getAttendanceSummary() {
         LocalDate today = LocalDate.now();
         List<Employee> allEmployees = employeeService.findAll();
-        List<Attendance> todaysAttendances = attendanceRepository.findByAttendanceDateAndStatus(today, "Present");
+        List<Attendance> todayAttendancesPresent = attendanceRepository.findByAttendanceDateAndStatus(today, "Present");
+        List<Attendance> todayAttendancesAbsent = attendanceRepository.findByAttendanceDateAndStatus(today, "Absent");
 
         int totalEmployees = allEmployees.size();
-        List<Employee> checkedInEmployees = todaysAttendances.stream()
+        List<Employee> checkedInEmployees = todayAttendancesPresent.stream()
                 .map(Attendance::getEmployee)
                 .collect(Collectors.toList());
         int checkedInCount = checkedInEmployees.size();
-        int absentCount = (int) allEmployees.stream()
+        List<Employee> absentEmployees = todayAttendancesAbsent.stream()
+                .map(Attendance::getEmployee)
+                .collect(Collectors.toList());
+        int absentCount = absentEmployees.size();
+        int remaining = (int) allEmployees.stream()
                 .filter(employee -> !checkedInEmployees.contains(employee))
                 .count();
 
-        return new AttendanceSummaryDTO(totalEmployees, checkedInCount, absentCount);
+        return new AttendanceSummaryDTO(totalEmployees, checkedInCount, absentCount, remaining);
     }
 
     public AttendanceDTO convertToDTO(Attendance attendance) {
@@ -251,16 +312,23 @@ public class AttendanceService {
         attendanceDTO.setBreakTimeEnd(attendance.getBreakTimeEnd());
         attendanceDTO.setCheckOutTime(attendance.getCheckOutTime());
         attendanceDTO.setAttendanceDate(attendance.getAttendanceDate());
-        attendanceDTO.setTotalWorkTime(attendance.getTotalWorkTime());
+        attendanceDTO.setTotalTime(attendance.getTotalTime());
+        attendanceDTO.setOfficeHours(attendance.getOfficeHours());
         attendanceDTO.setOvertime(attendance.getOvertime());
         attendanceDTO.setStatus(attendance.getStatus());
         attendanceDTO.setEmployee(convertToEmployeeDTO(attendance.getEmployee()));
+        if (attendance.getAttendanceComplaint() == null) {
+            attendanceDTO.setAttendanceComplaintId(null);
+        } else {
+            attendanceDTO.setAttendanceComplaintId(attendance.getAttendanceComplaint().getId());
+        }
         return attendanceDTO;
     }
 
-    private EmployeeDTO convertToEmployeeDTO(Employee employee) {
-        EmployeeDTO employeeDTO = new EmployeeDTO();
+    private EmployeeResponseDTO convertToEmployeeDTO(Employee employee) {
+        EmployeeResponseDTO employeeDTO = new EmployeeResponseDTO();
         employeeDTO.setId(employee.getId());
+        employeeDTO.setEmpCode(employee.getEmpCode());
         employeeDTO.setFullname(employee.getFullname());
         employeeDTO.setDob(employee.getDob());
         employeeDTO.setAddress(employee.getAddress());
@@ -270,13 +338,8 @@ public class AttendanceService {
         employeeDTO.setAvatar(employee.getAvatar());
         employeeDTO.setEndDate(employee.getEndDate());
         employeeDTO.setStartDate(employee.getStartDate());
-        if(employee.getDepartment() != null || employee.getPosition() != null){
-            employeeDTO.setDepartment(employee.getDepartment().getName());
-            employeeDTO.setPosition(employee.getPosition().getPositionName());
-        }else{
-            employeeDTO.setDepartment(null);
-            employeeDTO.setPosition(null);
-        }
+        employeeDTO.setPosition(employee.getPosition().getPositionName());
+        employeeDTO.setDepartment(employee.getDepartment().getName());
         return employeeDTO;
     }
 
@@ -290,23 +353,28 @@ public class AttendanceService {
         LocalTime breakStartLocalTime = breakTimeStart != null ? breakTimeStart.toLocalTime() : null;
         LocalTime breakEndLocalTime = breakTimeEnd != null ? breakTimeEnd.toLocalTime() : null;
 
-        // Calculate break time duration
+        // Tính toán thời gian nghỉ giải lao
         Duration breakDuration = (breakStartLocalTime != null && breakEndLocalTime != null)
                 ? Duration.between(breakStartLocalTime, breakEndLocalTime)
                 : Duration.ZERO;
         String breakDurationStr = formatDuration(breakDuration);
 
         StringBuilder content = new StringBuilder();
-        content.append("<html><body style='font-family: Arial, sans-serif; padding: 20px; color: #333;'>");
-        content.append("<h3 style='color: #0056b3;'>Attendance Checkout Details</h3>");
-        content.append("<p>Dear ").append(attendance.getEmployee().getFullname()).append(",</p>");
+        content.append("<html><body style='font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; margin: 0;'>");
+        content.append("<div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);'>");
+        content.append("<div style='background-color: #0056b3; color: #ffffff; padding: 20px 30px; text-align: center;'>");
+        content.append("<h2 style='margin: 0; font-size: 24px;'>Attendance Checkout Details</h2>");
+        content.append("</div>");
+        content.append("<div style='padding: 30px; color: #333333;'>");
+        content.append("<p style='font-size: 18px;'>Dear ").append(attendance.getEmployee().getFullname()).append(",</p>");
         content.append("<table border='1' cellpadding='10' cellspacing='0' style='border-collapse: collapse; width: 100%;'>");
         content.append("<tr style='background-color: #f2f2f2;'><th style='text-align: left;'>Check-in Time</th><td>").append(attendance.getCheckInTime().toLocalTime().format(timeFormatterAMPM)).append("</td></tr>");
         content.append("<tr><th style='background-color: #f9f9f9; text-align: left;'>Break Time Start</th><td>").append(attendance.getBreakTimeStart().toLocalTime().format(timeFormatterAMPM)).append("</td></tr>");
         content.append("<tr style='background-color: #f9f9f9;'><th style='text-align: left;'>Break Time End</th><td>").append(attendance.getBreakTimeEnd().toLocalTime().format(timeFormatterAMPM)).append("</td></tr>");
         content.append("<tr><th style='background-color: #f9f9f9; text-align: left;'>Check-out Time</th><td>").append(attendance.getCheckOutTime().toLocalTime().format(timeFormatterAMPM)).append("</td></tr>");
         content.append("<tr style='background-color: #f2f2f2;'><th style='text-align: left;'>Break Time</th><td>").append(breakDurationStr).append("</td></tr>");
-        content.append("<tr><th style='background-color: #f2f2f2; text-align: left;'>Total Work Time</th><td>").append(attendance.getTotalWorkTime().format(timeFormatter)).append("</td></tr>");
+        content.append("<tr><th style='background-color: #f2f2f2; text-align: left;'>Total Time</th><td>").append(attendance.getTotalTime().format(timeFormatter)).append("</td></tr>");
+        content.append("<tr><th style='background-color: #f2f2f2; text-align: left;'>Total Office Time</th><td>").append(attendance.getOfficeHours().format(timeFormatter)).append("</td></tr>");
         if (overtime != null && !overtime.equals(LocalTime.of(0, 0, 0))) {
             content.append("<tr style='background-color: #f9f9f9;'>")
                     .append("<th style='text-align: left;'>Overtime</th>")
@@ -315,20 +383,36 @@ public class AttendanceService {
         }
         content.append("<tr style='background-color: #f2f2f2;'><th style='text-align: left;'>Status</th><td>").append(attendance.getStatus()).append("</td></tr>");
         content.append("</table>");
-        content.append("<p>Best regards,<br><span style='font-weight: bold;'>BizWorks</span></p>");
+        content.append("</div>");
+        content.append("<div style='background-color: #f4f4f4; padding: 20px 30px; text-align: center; color: #777777;'>");
+        content.append("<p style='margin: 0;'>Best regards,<br><span style='font-weight: bold;'>BizWorks</span></p>");
+        content.append("</div>");
+        content.append("</div>");
         content.append("</body></html>");
         return content.toString();
     }
 
-    private String sendAbsent(String fullname, LocalDate date) {
+    private String sendAbsent(String empCode, String fullname, LocalDate date) {
         StringBuilder content = new StringBuilder();
-        content.append("<html><body style='font-family: Arial, sans-serif; padding: 20px; color: #333;'>");
-        content.append("<h3 style='color: #d9534f;'>Reminder for Absenteeism</h3>");
-        content.append("<p>Dear ").append(fullname).append(",</p>");
-        content.append("<p>The management office informs you that you were absent without permission today (").append(date).append("). Please pay more attention to your work schedule and attend work regularly.</p>");
-        content.append("<p>Best regards,<br><span style='font-weight: bold;'>BizWorks</span></p>");
+        content.append("<html><body style='font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; margin: 0;'>");
+        content.append("<div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);'>");
+        content.append("<div style='background-color: #d9534f; color: #ffffff; padding: 20px 30px; text-align: center;'>");
+        content.append("<h2 style='margin: 0; font-size: 24px;'>Reminder for Absenteeism</h2>");
+        content.append("</div>");
+        content.append("<div style='padding: 30px; color: #333333;'>");
+        content.append("<p style='font-size: 18px;'>Dear ").append(empCode).append("-").append(fullname).append(",</p>");
+        content.append("<p style='font-size: 16px; line-height: 1.5;'>The management office informs you that you were absent without permission today (").append(date).append("). Please pay more attention to your work schedule and attend work regularly.</p>");
+        content.append("</div>");
+        content.append("<div style='background-color: #f4f4f4; padding: 20px 30px; text-align: center; color: #777777;'>");
+        content.append("<p style='margin: 0;'>Best regards,<br><span style='font-weight: bold;'>BizWorks</span></p>");
+        content.append("</div>");
+        content.append("</div>");
         content.append("</body></html>");
         return content.toString();
     }
 
+    private String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName();
+    }
 }

@@ -59,7 +59,7 @@ const Profile = () => {
                         <div className="col-md-5">
                           <div className="profile-info-left">
                             <h3 className="user-name m-t-0 mb-0">
-                              {employee.fullname}
+                              {employee.empCode} - {employee.fullname}
                             </h3>
                             <h6 className="text-muted">
                               {employee.department}
@@ -67,9 +67,6 @@ const Profile = () => {
                             <small className="text-muted">
                               {employee.position}
                             </small>
-                            <div className="staff-id">
-                              Employee ID : {employee.id}
-                            </div>
                             <div className="small doj text-muted">
                               Date of Join : {employee.startDate}
                             </div>

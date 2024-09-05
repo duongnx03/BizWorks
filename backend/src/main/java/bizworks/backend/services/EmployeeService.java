@@ -1,40 +1,30 @@
 package bizworks.backend.services;
 
 import bizworks.backend.dtos.EmployeeDTO;
+import bizworks.backend.dtos.EmployeeResponseDTO;
 import bizworks.backend.dtos.EmployeeUpdateDTO;
-import bizworks.backend.dtos.PositionDTO;
-import bizworks.backend.helpers.FileUpload;
 import bizworks.backend.models.Department;
 import bizworks.backend.models.Employee;
-import bizworks.backend.models.Position;
 import bizworks.backend.models.User;
 import bizworks.backend.repositories.DepartmentRepository;
 import bizworks.backend.repositories.EmployeeRepository;
-import bizworks.backend.repositories.PositionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
-
 @Service
+@RequiredArgsConstructor
 public class EmployeeService {
-    @Autowired
-    private EmployeeRepository employeeRepository;
+    private final EmployeeRepository employeeRepository;
+    private final DepartmentRepository departmentRepository;
 
-    @Autowired
-    private FileUpload fileUpload;
+    public boolean existsByEmail(String email){
+        return employeeRepository.existsByEmail(email);
+    }
 
-    private String rootUrl = "http://localhost:8080/";
-    private String subFolder = "avatars";
-    private String uploadFolder = "uploads";
-    private String urlImage = rootUrl + uploadFolder + File.separator + subFolder;
-    @Autowired
-    private PositionRepository positionRepository;
-    @Autowired
-    private DepartmentRepository departmentRepository;
     public List<Employee> findAll() {
         return employeeRepository.findAll();
     }
@@ -47,33 +37,19 @@ public class EmployeeService {
         return employeeRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("Employee not found"));
     }
 
-    public EmployeeDTO getEmployeeByEmail(String email) {
+    public EmployeeResponseDTO getEmployeeByEmail(String email) {
         Employee employee = findByEmail(email);
         return convertToDTO(employee);
     }
 
-    public EmployeeDTO getEmployeeById(Long id) {
+    public EmployeeResponseDTO getEmployeeById(Long id) {
         Employee employee = findById(id);
         return convertToDTO(employee);
     }
 
-    public Employee updateEmployee(String email, EmployeeUpdateDTO request) throws IOException {
+    public Employee updateEmployee(EmployeeUpdateDTO request) {
+        String email = getCurrentUserEmail();
         Employee employeeExisted = findByEmail(email);
-
-        if (request.getFileImage() != null && !request.getFileImage().isEmpty()) {
-            // Delete old image
-            String oldImagePath = employeeExisted.getAvatar();
-            if (oldImagePath != null) {
-                fileUpload.deleteImage(oldImagePath.substring(rootUrl.length()));
-            }
-            // Save new image
-            String imageName = fileUpload.storeImage(subFolder, request.getFileImage());
-            String exactImageUrl = urlImage + File.separator + imageName;
-            request.setAvatar(exactImageUrl.replace("\\", "/"));
-        } else {
-            request.setAvatar(employeeExisted.getAvatar());
-        }
-
         // Update employee information
         employeeExisted.setDob(request.getDob());
         employeeExisted.setGender(request.getGender());
@@ -88,8 +64,35 @@ public class EmployeeService {
         return employeeRepository.save(employee);
     }
 
+    public EmployeeResponseDTO convertToDTO(Employee employee) {
+        EmployeeResponseDTO employeeDTO = new EmployeeResponseDTO();
+        employeeDTO.setId(employee.getId());
+        employeeDTO.setEmpCode(employee.getEmpCode());
+        employeeDTO.setFullname(employee.getFullname());
+        employeeDTO.setEmail(employee.getEmail());
+        employeeDTO.setAddress(employee.getAddress());
+        employeeDTO.setPhone(employee.getPhone());
+        employeeDTO.setDob(employee.getDob());
+        employeeDTO.setAvatar(employee.getAvatar());
+        employeeDTO.setStartDate(employee.getStartDate());
+        employeeDTO.setEndDate(employee.getEndDate());
+        employeeDTO.setGender(employee.getGender());
+        if (employee.getDepartment() != null || employee.getPosition() != null) {
+            employeeDTO.setDepartment(employee.getDepartment().getName());
+            employeeDTO.setPosition(employee.getPosition().getPositionName());
+        } else {
+            employeeDTO.setDepartment(null);
+            employeeDTO.setPosition(null);
+        }
+        return employeeDTO;
+    }
 
-    public EmployeeDTO convertToDTO(Employee employee) {
+    private String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName();
+    }
+
+    public EmployeeDTO convertToEmpDTO(Employee employee) {
         EmployeeDTO employeeDTO = new EmployeeDTO();
         employeeDTO.setId(employee.getId());
         employeeDTO.setFullname(employee.getFullname());

@@ -18,8 +18,10 @@ public class AttendanceDTO {
     private LocalDateTime breakTimeEnd;
     private LocalDateTime checkOutTime;
     private LocalDate attendanceDate;
-    private LocalTime totalWorkTime ;
+    private LocalTime totalTime ;
+    private LocalTime officeHours ;
     private LocalTime overtime;
     private String status;
-    private EmployeeDTO employee;
+    private EmployeeResponseDTO employee;
+    private Long attendanceComplaintId;
 }

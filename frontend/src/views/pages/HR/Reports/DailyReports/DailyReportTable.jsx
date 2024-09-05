@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const DailyReportTable = ({ data }) => {
   const formatTimeAMPM = (timeString) => {
@@ -32,7 +33,7 @@ const DailyReportTable = ({ data }) => {
           <table className="table">
             <thead>
               <tr>
-                <th>Fullname</th>
+                <th>Employee Infomation</th>
                 <th>Department</th>
                 <th>Attendance Date</th>
                 <th>Check In Time</th>
@@ -47,7 +48,22 @@ const DailyReportTable = ({ data }) => {
             <tbody>
               {data.map((record) => (
                 <tr key={record.id}>
-                  <td>{record.employee.fullname}</td>
+                   <td>
+                    <span className="table-avatar">
+                      <Link
+                        to={`/client-profile/${record.employee.id}`}
+                        className="avatar"
+                      >
+                        <img
+                          alt=""
+                          src={record.employee.avatar || "default-avatar.png"}
+                        />
+                      </Link>
+                      <Link to={`/client-profile/${record.employee.id}`}>
+                        {record.employee.empCode} - {record.employee.fullname}
+                      </Link>
+                    </span>
+                  </td>
                   <td>
                     <div className="d-flex flex-column">
                       <span>{record.employee.department}</span>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { ToastContainer, toast } from 'react-toastify';
@@ -12,7 +12,8 @@ const VerificationPage = () => {
   const [isVerified, setIsVerified] = useState(false);
   const [resendEnabled, setResendEnabled] = useState(true);
   const [countdown, setCountdown] = useState(60);
-  const [loadingResend, setLoadingResend] = useState(false); // New loading state for resend
+  const [loadingResend, setLoadingResend] = useState(false);
+  const [inputClass, setInputClass] = useState('form-control mx-2');
   const navigate = useNavigate();
   const { verifyUser } = useContext(AuthContext);
 
@@ -22,6 +23,9 @@ const VerificationPage = () => {
       const newCodes = [...codes];
       newCodes[index] = value;
       setCodes(newCodes);
+
+      // Reset border color when user starts typing again
+      setInputClass('form-control mx-2');
 
       // Automatically focus on the next input when filled
       if (value && index < 5) {
@@ -60,8 +64,7 @@ const VerificationPage = () => {
     return () => clearInterval(timer);
   }, [resendEnabled]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(async () => {
     const enteredCode = codes.join('');
 
     try {
@@ -72,16 +75,26 @@ const VerificationPage = () => {
       });
 
       if (response.status === 200) {
+        setInputClass('form-control mx-2 border border-success'); // Change to green border
         verifyUser();
         setIsVerified(true);
-        toast.success("Your account has been verified successfully!");
-        navigate("/reset-password");
+        setTimeout(() => {
+          navigate("/reset-password");
+        }, 1000); // Redirect after 1 second
       }
     } catch (error) {
+      setInputClass('form-control mx-2 border border-danger'); // Change to red border
       toast.error(error.response?.data?.message || 'The verification code is incorrect. Please try again.');
       console.error(error);
     }
-  };
+  }, [codes, navigate, verifyUser]);
+
+  useEffect(() => {
+    // Automatically submit when all fields are filled
+    if (codes.every(code => code !== '')) {
+      handleSubmit();
+    }
+  }, [codes, handleSubmit]);
 
   const handleResend = async () => {
     if (resendEnabled) {
@@ -113,30 +126,27 @@ const VerificationPage = () => {
             {isVerified ? (
               <p className="text-success">Your account has been verified successfully!</p>
             ) : (
-              <form onSubmit={handleSubmit}>
-                <div className="form-group d-flex justify-content-center mb-4">
-                  {codes.map((code, index) => (
-                    <input
-                      key={index}
-                      id={`code-${index}`}
-                      type="text"
-                      className="form-control mx-2"
-                      value={code}
-                      onChange={(e) => handleChange(e, index)}
-                      onKeyDown={(e) => handleKeyDown(e, index)}
-                      maxLength="1"
-                      required
-                      style={{
-                        width: '50px',
-                        height: '50px',
-                        textAlign: 'center',
-                        fontSize: '24px',
-                      }}
-                    />
-                  ))}
-                </div>
-                <button type="submit" className="btn btn-primary">Verify</button>
-              </form>
+              <div className="form-group d-flex justify-content-center mb-4">
+                {codes.map((code, index) => (
+                  <input
+                    key={index}
+                    id={`code-${index}`}
+                    type="text"
+                    className={inputClass}
+                    value={code}
+                    onChange={(e) => handleChange(e, index)}
+                    onKeyDown={(e) => handleKeyDown(e, index)}
+                    maxLength="1"
+                    required
+                    style={{
+                      width: '50px',
+                      height: '50px',
+                      textAlign: 'center',
+                      fontSize: '24px',
+                    }}
+                  />
+                ))}
+              </div>
             )}
             <button className="btn btn-secondary mt-3" onClick={handleResend} disabled={!resendEnabled}>
               {loadingResend ? <ClipLoader size={20} color={"#ffffff"} loading={true} /> : `Resend Code ${resendEnabled ? '' : `(${countdown})`}`}

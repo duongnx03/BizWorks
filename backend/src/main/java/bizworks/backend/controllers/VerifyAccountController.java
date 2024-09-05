@@ -7,7 +7,7 @@ import bizworks.backend.models.VerifyAccount;
 import bizworks.backend.services.AuthenticationService;
 import bizworks.backend.services.VerifyAccountService;
 import jakarta.mail.MessagingException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,18 +16,15 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/verify")
+@RequiredArgsConstructor
 public class VerifyAccountController {
-    @Autowired
-    private AuthenticationService authenticationService;
-
-    @Autowired
-    private VerifyAccountService verifyAccountService;
+    private final AuthenticationService authenticationService;
+    private final VerifyAccountService verifyAccountService;
 
     @GetMapping("/check-verify")
     public ResponseEntity<ApiResponse<?>> checkVerify() {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String email = authentication.getName();
+            String email = getCurrentUserEmail();
             User user = authenticationService.findByEmail(email);
             boolean isVerified = verifyAccountService.isAccountVerified(user);
 
@@ -44,8 +41,7 @@ public class VerifyAccountController {
     @PostMapping("/verify")
     public ResponseEntity<ApiResponse<?>> verify(@RequestBody VerifyAccountDTO verifyAccountDTO) {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String email = authentication.getName();
+            String email = getCurrentUserEmail();
             User user = authenticationService.findByEmail(email);
             VerifyAccount verifyAccount = verifyAccountService.findByUserId(user.getId());
 
@@ -67,8 +63,7 @@ public class VerifyAccountController {
     @PostMapping("/resend")
     public ResponseEntity<ApiResponse<?>> resendVerifyCode() {
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String email = authentication.getName();
+            String email = getCurrentUserEmail();
             User user = authenticationService.findByEmail(email);
             VerifyAccount verifyAccount = verifyAccountService.findByUserId(user.getId());
 
@@ -84,5 +79,10 @@ public class VerifyAccountController {
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
         }
+    }
+
+    private String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName();
     }
 }

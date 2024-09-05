@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,6 +30,25 @@ public class FileUpload {
         return fileName;
     }
 
+    public List<String> storeMultipleImages(String subFolder, List<MultipartFile> multipartFiles) throws IOException {
+        List<String> fileNames = new ArrayList<>();
+        String exactSubFolder = uploadFolder + File.separator + subFolder;
+        File directory = new File(exactSubFolder);
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        for (MultipartFile multipartFile : multipartFiles) {
+            if (!multipartFile.isEmpty()) {
+                String fileName = UUID.randomUUID().toString() + "_" + multipartFile.getOriginalFilename();
+                Path destination = Path.of(exactSubFolder, fileName);
+                Files.copy(multipartFile.getInputStream(), destination);
+                fileNames.add(fileName);
+            }
+        }
+        return fileNames;
+    }
+
     public void deleteImage(String imageExisted){
         try{
             Path imageDelete = Paths.get(imageExisted);
@@ -36,6 +57,4 @@ public class FileUpload {
             e.printStackTrace();
         }
     }
-
-
 }

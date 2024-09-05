@@ -23,12 +23,19 @@ public class Attendance {
     private LocalDateTime breakTimeEnd;
     private LocalDateTime checkOutTime;
     private LocalDate attendanceDate;
-    private LocalTime totalWorkTime ;
+    private LocalTime totalTime;
+    private LocalTime officeHours;
     private LocalTime overtime;
     private String status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "empId")
     private Employee employee;
+
+    @OneToOne(mappedBy = "attendance", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private AttendanceComplaint attendanceComplaint;
+
+    @OneToOne(mappedBy = "attendance", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Overtime overTime;
 }
 

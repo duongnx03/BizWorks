@@ -56,6 +56,12 @@ const Login = () => {
             } else if (userRole === "EMPLOYEE") {
               navigate("/employee-dashboard");
             }
+            else if (userRole === "MANAGE") {
+              navigate("/employee-dashboard");
+            }
+            else if (userRole === "LEADER") {
+              navigate("/employee-dashboard");
+            }
           }
         } catch (verificationError) {
           // Kiểm tra lỗi trả về từ API

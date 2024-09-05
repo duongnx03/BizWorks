@@ -43,7 +43,7 @@ const EmployeeList = () => {
 
   useEffect(() => {
     const filtered = employees.filter(employee => {
-      const matchesName = employee.fullname.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesEmpCode = employee.empCode.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesDepartment = selectedDepartment
         ? employee.department === selectedDepartment.label
         : true;
@@ -53,7 +53,7 @@ const EmployeeList = () => {
       const matchesStartDate = startDate
         ? new Date(employee.startDate).toLocaleDateString() === new Date(startDate).toLocaleDateString()
         : true;
-      return matchesName && matchesDepartment && matchesPosition && matchesStartDate;
+      return matchesEmpCode && matchesDepartment && matchesPosition && matchesStartDate;
     });
     setFilteredEmployees(filtered);
     setNoData(filtered.length === 0);
@@ -125,7 +125,7 @@ const EmployeeList = () => {
             title="Dashboard"
             subtitle="Employee"
             modal="#add_employee"
-            name="Add Employee"
+            name="Add Manage"
           />
           <EmployeeListFilter
             handleSearchInputChange={handleSearchInputChange}
@@ -145,11 +145,8 @@ const EmployeeList = () => {
                     <table className="table table-striped">
                       <thead>
                         <tr>
-                          <th onClick={() => handleSort('fullname')}>
-                            Fullname {getSortIcon('fullname')}
-                          </th>
-                          <th onClick={() => handleSort('id')}>
-                            Employee ID {getSortIcon('id')}
+                          <th onClick={() => handleSort('empCode')}>
+                            Employee Infomation {getSortIcon('empCode')}
                           </th>
                           <th onClick={() => handleSort('email')}>
                             Email {getSortIcon('email')}
@@ -174,11 +171,10 @@ const EmployeeList = () => {
                                   <img alt="" src={employee.avatar || "default-avatar.png"} />
                                 </Link>
                                 <Link to={`/client-profile/${employee.id}`}>
-                                  {employee.fullname}
+                                  {employee.empCode} - {employee.fullname}
                                 </Link>
                               </span>
                             </td>
-                            <td>{employee.id}</td>
                             <td>{employee.email}</td>
                             <td>{new Date(employee.startDate).toLocaleDateString()}</td>
                             <td>{employee.department}</td>

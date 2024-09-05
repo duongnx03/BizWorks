@@ -200,6 +200,11 @@ import ViolationType from "../../views/pages/Employees/ViolationType.jsx";
 import Violation from "../../views/pages/Employees/Violation.jsx";
 import Position from "../../views/pages/Employees/Position.jsx";
 import PrivateRoute from "../PrivateRoute.jsx";
+import RequestCreateEmployee from "../../views/pages/admin/RequestCreateEmployee.jsx";
+import ManageEmployeeManagement from "../../views/pages/manage/ManageEmployeeManagement.jsx";
+import LeaderEmployeeManagement from "../../views/pages/leader/LeaderEmployeeManagement.jsx";
+import AttendanceComplaint from "../../views/pages/Employees/AttendanceComplaint.jsx";
+import RequestAttendanceComplaint from "../../views/pages/admin/RequestAttendanceComplaint.jsx";
 
 const AppContainer = () => {
   useEffect(() => {
@@ -222,7 +227,9 @@ const AppContainer = () => {
     {
       id: 2,
       path: "admin-dashboard",
-      element: <PrivateRoute element={AdminDashboard}  allowedRoles={['ADMIN']}/>,
+      element: (
+        <PrivateRoute element={AdminDashboard} allowedRoles={["ADMIN"]} />
+      ),
     },
     {
       id: 3,
@@ -297,7 +304,12 @@ const AppContainer = () => {
     {
       id: 17,
       path: "employee-dashboard",
-      element: <PrivateRoute element={EmployeeDashboard} allowedRoles={['EMPLOYEE', 'LEADER']} />,
+      element: (
+        <PrivateRoute
+          element={EmployeeDashboard}
+          allowedRoles={["EMPLOYEE", "LEADER", "MANAGE"]}
+        />
+      ),
     },
     {
       id: 18,
@@ -388,7 +400,32 @@ const AppContainer = () => {
     {
       id: 34,
       path: "employees",
-      element: <PrivateRoute element={EmployeeList} allowedRoles={['ADMIN']}/>,
+      element: <PrivateRoute element={EmployeeList} allowedRoles={["ADMIN"]} />,
+    },
+    {
+      id: 34,
+      path: "request-create-employee",
+      element: (
+        <PrivateRoute
+          element={RequestCreateEmployee}
+          allowedRoles={["ADMIN", "MANAGE"]}
+        />
+      ),
+    },
+    {
+      id: 34,
+      path: "manage-employees",
+      element: <PrivateRoute element={ManageEmployeeManagement} />,
+    },
+    {
+      id: 34,
+      path: "leader-employees",
+      element: <PrivateRoute element={LeaderEmployeeManagement} />,
+    },
+    {
+      id: 34,
+      path: "request-attendance-complaint",
+      element: <PrivateRoute element={RequestAttendanceComplaint} />,
     },
     {
       id: 35,
@@ -412,13 +449,28 @@ const AppContainer = () => {
     },
     {
       id: 39,
-      path: "adminattendance",
+      path: "attendance-data",
       element: <AttendenceAdmin />,
     },
     {
       id: 40,
       path: "attendance-employee",
-      element: <PrivateRoute element={AttendanceEmployee} allowedRoles={['EMPLOYEE', 'ADMIN', 'LEADER']}/>,
+      element: (
+        <PrivateRoute
+          element={AttendanceEmployee}
+          allowedRoles={["EMPLOYEE", "ADMIN", "LEADER", "MANAGE"]}
+        />
+      ),
+    },
+    {
+      id: 40,
+      path: "attendance-complaint",
+      element: (
+        <PrivateRoute
+          element={AttendanceComplaint}
+          allowedRoles={["EMPLOYEE", "ADMIN", "LEADER", "MANAGE"]}
+        />
+      ),
     },
     {
       id: 41,
@@ -483,12 +535,16 @@ const AppContainer = () => {
     {
       id: 52,
       path: "client-profile/:id",
-      element: <PrivateRoute element={ClientProfile} allowedRoles={['ADMIN']} />,
+      element: (
+        <PrivateRoute element={ClientProfile} allowedRoles={["ADMIN"]} />
+      ),
     },
     {
       id: 53,
       path: "profile",
-      element: <PrivateRoute element={Profile} allowedRoles={['EMPLOYEE', 'LEADER']} />,
+      element: (
+        <PrivateRoute element={Profile} allowedRoles={["EMPLOYEE", "LEADER"]} />
+      ),
     },
     {
       id: 54,
@@ -670,7 +726,7 @@ const AppContainer = () => {
     {
       id: 88,
       path: "daily-reports",
-      element: <PrivateRoute element={DailyReports} allowedRoles={['ADMIN']} />,
+      element: <PrivateRoute element={DailyReports} allowedRoles={["ADMIN"]} />,
     },
     {
       id: 89,
@@ -925,10 +981,9 @@ const AppContainer = () => {
     },
     {
       id: 134,
-      path: "positions/:departmentId",      
-      element: <Position />
+      path: "positions/:departmentId",
+      element: <Position />,
     },
-    
   ];
 
   const ChatRoutingeObjects = [
@@ -981,8 +1036,6 @@ const AppContainer = () => {
       path: "mail-view",
       element: <EmailView />,
     },
-   
-  
   ];
   const SettingsRoutingeObjects = [
     {
@@ -1171,9 +1224,8 @@ const AppContainer = () => {
       path: "users",
       element: <Users />,
     },
-    
   ];
- 
+
   const SidebarLayout = () => (
     <>
       <Header />
@@ -1182,11 +1234,7 @@ const AppContainer = () => {
       <Outlet />
     </>
   );
-  const AuthendicationLayout = () => (
-    <div>
-      
-    </div>
-  );
+  const AuthendicationLayout = () => <div></div>;
   const ChatSidebarLayout = () => (
     <>
       <Header />
@@ -1206,7 +1254,6 @@ const AppContainer = () => {
       <Header />
       <EmailSidebar />
       <Outlet />
-      
     </>
   );
   const SettingsSidebarLayout = () => (
@@ -1245,7 +1292,6 @@ const AppContainer = () => {
               <Route key={item.id} path={item.path} element={item.element} />
             ))}
           </Route>
-          
 
           <Route path={"/*"} element={<ChatSidebarLayout />}>
             {ChatRoutingeObjects.map((item) => (

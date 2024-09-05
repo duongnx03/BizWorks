@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -17,13 +16,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthenticationController {
-
-    @Autowired
-    private AuthenticationService authenticationService;
+    private final AuthenticationService authenticationService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UserDTO>> register(
-            @Valid @RequestBody UserDTO request,
+            @ModelAttribute UserDTO request,
             BindingResult bindingResult
     ) {
         if (bindingResult.hasErrors()) {
@@ -93,6 +90,26 @@ public class AuthenticationController {
             return ResponseEntity.ok().body(ApiResponse.success(null, "Reset password successfully"));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
+        }
+    }
+
+    @PostMapping("/approve/{id}")
+    public ResponseEntity<ApiResponse<?>> approve(@PathVariable("id") Long id){
+        try{
+            authenticationService.approveCreateEmp(id);
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(null, "Approved create request."));
+        }catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getLocalizedMessage(), "ERROR_SERVER"));
+        }
+    }
+
+    @PostMapping("/reject/{id}")
+    public ResponseEntity<ApiResponse<?>> reject(@PathVariable("id") Long id, @RequestParam("reason") String reason){
+        try{
+            authenticationService.rejectCreateEmp(id, reason);
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(null, "Approved create request."));
+        }catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getLocalizedMessage(), "ERROR_SERVER"));
         }
     }
 }

@@ -16,8 +16,10 @@ const Breadcrumbs = (props) => {
     location.pathname === "/performance" ||
     location.pathname === "/payments" ||
     location.pathname === "/ui/components" ||
-    location.pathname === "/adminattendance" ||
+    location.pathname === "/attendance-data" ||
+    location.pathname === "/attendance-complaint" ||
     location.pathname === "/attendance-employee" ||
+    location.pathname === "/request-attendance-complaint" ||
     location.pathname === "/task-board" ||
     location.pathname === "/leads" ||
     location.pathname === "/create-estimate" ||
@@ -63,6 +65,7 @@ const Breadcrumbs = (props) => {
     location.pathname === "/user-asset-details" ||
     location.pathname === "/leaves-setting" ||
     location.pathname === "/project-reports" ||
+    location.pathname === "/request-create-employee" ||
     location.pathname === "/client-profile/id"
   ) {
     addButton = (

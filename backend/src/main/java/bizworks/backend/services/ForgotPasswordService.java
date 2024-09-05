@@ -3,16 +3,16 @@ package bizworks.backend.services;
 import bizworks.backend.models.ForgotPassword;
 import bizworks.backend.models.User;
 import bizworks.backend.repositories.ForgotPasswordRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Random;
 
 @Service
+@RequiredArgsConstructor
 public class ForgotPasswordService {
-    @Autowired
-    private ForgotPasswordRepository forgotPasswordRepository;
+    private final ForgotPasswordRepository forgotPasswordRepository;
 
     public ForgotPassword findForgotPasswordByUserId(Long user_id){
         return forgotPasswordRepository.findForgotPasswordByUserId(user_id).orElseThrow();

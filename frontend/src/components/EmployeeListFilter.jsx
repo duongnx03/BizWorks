@@ -19,13 +19,16 @@ const EmployeeListFilter = ({
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/departments", {
-          withCredentials: true,
-        });
+        const response = await axios.get(
+          "http://localhost:8080/api/departments",
+          {
+            withCredentials: true,
+          }
+        );
 
         const departmentOptions = response.data.map((dept) => ({
           value: dept.id,
-          label: dept.departmentName,
+          label: dept.name,
           positions: dept.positions.map((pos) => ({
             value: pos.id,
             label: pos.positionName,
@@ -103,7 +106,7 @@ const EmployeeListFilter = ({
             onChange={handleInputChange}
           />
           <label className="focus-label" onClick={handleLabelClick}>
-            Fullname
+            Employee Code
           </label>
         </div>
       </div>
@@ -129,7 +132,13 @@ const EmployeeListFilter = ({
       <div className="col-sm-6 col-md-3">
         <div className="input-block form-focus select-focus">
           <Select
-            options={selectedDepartment ? departments.find(dept => dept.value === selectedDepartment.value)?.positions : []}
+            options={
+              selectedDepartment
+                ? departments.find(
+                    (dept) => dept.value === selectedDepartment.value
+                  )?.positions
+                : []
+            }
             value={selectedPosition}
             onChange={(selected) => {
               setSelectedPositionState(selected);
@@ -158,25 +167,34 @@ const EmployeeListFilter = ({
       </div>
 
       {/* Clear button aligned to the right */}
-      <div className="col-sm-12" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-        <button
-          type="button"
-          className="btn btn-clear"
-          onClick={handleClearFilters}
-          title="Clear Filters"
-          style={{
-            border: 'none',
-            background: 'none',
-            color: '#FF902F',
-            fontSize: '18px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            marginLeft: 'auto', // Align to the right
-          }}
-        >
-          <FaTimes />
-        </button>
+      <div
+        className="col-sm-12"
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+        }}
+      >
+        {inputValue || selectedDepartment || selectedPosition || startDate ? (
+          <button
+            type="button"
+            className="btn btn-clear"
+            onClick={handleClearFilters}
+            title="Clear Filters"
+            style={{
+              border: "none",
+              background: "none",
+              color: "#FF902F",
+              fontSize: "18px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              marginLeft: "auto", // Align to the right
+            }}
+          >
+            <FaTimes />
+          </button>
+        ) : null}
       </div>
     </div>
   );

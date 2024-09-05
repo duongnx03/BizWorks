@@ -101,6 +101,14 @@ export const SidebarData = [
             menuValue: "All Employees",
             route: "/employees",
           },
+          {
+            menuValue: "Request Create Employees",
+            route: "/request-create-employee",
+          },
+          {
+            menuValue: "Request Attendance Complaint",
+            route: "/request-attendance-complaint",
+          },
           // {
           //   menuValue: 'Holidays',
           //   route: "/holidays",
@@ -146,12 +154,28 @@ export const SidebarData = [
         icon: "la la-user",
         subMenus: [
           {
-            menuValue: "All Employees",
-            route: "/employees",
+            menuValue: "Add Leader",
+            route: "/manage-employees",
           },
           {
-            menuValue: 'Holidays',
-            route: "/holidays",
+            menuValue: "Request Create Employees",
+            route: "/request-create-employee",
+          },
+          {
+            menuValue: "Request Attendance Complaint",
+            route: "/request-attendance-complaint",
+          },
+          {
+            menuValue: "Attendance",
+            route: "/attendance-employee",
+          },
+          {
+            menuValue: "Attendance Data",
+            route: "/attendance-data",
+          },
+          {
+            menuValue: 'Attendance Complaint',
+            route: "/attendance-complaint",
           },
           {
             menuValue: "Leaves",
@@ -186,8 +210,24 @@ export const SidebarData = [
         icon: "la la-user",
         subMenus: [
           {
-            menuValue: "All Employees",
-            route: "/employees",
+            menuValue: "Add Employees",
+            route: "/leader-employees",
+          },
+          {
+            menuValue: "Request Attendance Complaint",
+            route: "/request-attendance-complaint",
+          },
+          {
+            menuValue: "Attendance",
+            route: "/attendance-employee",
+          },
+          {
+            menuValue: "Attendance Data",
+            route: "/attendance-data",
+          },
+          {
+            menuValue: 'Attendance Complaint',
+            route: "/attendance-complaint",
           },
           {
             menuValue: "Leaves",
@@ -227,7 +267,11 @@ export const SidebarData = [
           },
           {
             menuValue: "Attendance Data",
-            route: "/adminattendance",
+            route: "/attendance-data",
+          },
+          {
+            menuValue: 'Attendance Complaint',
+            route: "/attendance-complaint",
           },
           // {
           //   menuValue: 'Holidays',

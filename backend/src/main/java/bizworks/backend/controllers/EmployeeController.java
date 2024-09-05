@@ -1,12 +1,11 @@
 package bizworks.backend.controllers;
 
-import bizworks.backend.dtos.EmployeeDTO;
+import bizworks.backend.dtos.EmployeeResponseDTO;
 import bizworks.backend.dtos.EmployeeUpdateDTO;
 import bizworks.backend.helpers.ApiResponse;
 import bizworks.backend.models.Employee;
 import bizworks.backend.services.EmployeeService;
-import bizworks.backend.services.accountant.SalaryService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,11 +18,9 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/employee")
+@RequiredArgsConstructor
 public class EmployeeController {
-    @Autowired
-    private EmployeeService employeeService;
-    @Autowired
-    private SalaryService salaryService;
+    private final EmployeeService employeeService;
 
     @GetMapping("/getAllEmployees")
     public ResponseEntity<ApiResponse<?>> findAll() {
@@ -34,7 +31,7 @@ public class EmployeeController {
             }
 
             // Chuyển đổi danh sách Employee sang danh sách EmployeeDTO khi cần
-            List<EmployeeDTO> employeeDTOs = employees.stream().map(employeeService::convertToDTO).collect(Collectors.toList());
+            List<EmployeeResponseDTO> employeeDTOs = employees.stream().map(employeeService::convertToDTO).collect(Collectors.toList());
 
             return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(employeeDTOs, "Get All Employees successfully"));
         } catch (Exception ex) {
@@ -47,7 +44,7 @@ public class EmployeeController {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String email = authentication.getName();
-            EmployeeDTO employeeDTO = employeeService.getEmployeeByEmail(email);
+            EmployeeResponseDTO employeeDTO = employeeService.getEmployeeByEmail(email);
             return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(employeeDTO, "Get employee successfully"));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
@@ -57,9 +54,7 @@ public class EmployeeController {
     @GetMapping("/getEmployeeById/{id}")
     public ResponseEntity<ApiResponse<?>> getEmployeeById(@PathVariable Long id) {
         try {
-            EmployeeDTO employeeDTO = employeeService.getEmployeeById(id);
-            Employee employee = employeeService.findById(id);
-            salaryService.createSalaryForEmployeeIfNotExists(employee);
+            EmployeeResponseDTO employeeDTO = employeeService.getEmployeeById(id);
             return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(employeeDTO, "Get employee successfully"));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
@@ -75,9 +70,7 @@ public class EmployeeController {
                 return ResponseEntity.badRequest().body(ApiResponse.badRequest(bindingResult));
             }
 
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String email = authentication.getName();
-            employeeService.updateEmployee(email, request);
+            employeeService.updateEmployee(request);
 
             return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(null, "Update successful"));
         } catch (Exception ex) {

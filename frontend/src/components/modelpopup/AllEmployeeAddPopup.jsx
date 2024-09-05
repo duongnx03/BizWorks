@@ -1,24 +1,64 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import Select from "react-select";
 import axios from "axios";
 import ClipLoader from "react-spinners/ClipLoader";
 import "react-datepicker/dist/react-datepicker.css";
+import { toast, ToastContainer } from "react-toastify";
 
 const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [fullname, setFullname] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [selectedRole, setSelectedRole] = useState(null);
+  const [departments, setDepartments] = useState([]);
+  const [positions, setPositions] = useState([]);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [selectedPosition, setSelectedPosition] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [reviewImage, setReviewImage] = useState(null);
   const closeButtonRef = useRef(null);
 
-  const roles = [
-    { value: 'LEADER', label: 'Leader' },
-    { value: 'EMPLOYEE', label: 'Employee' }
-  ];
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8080/api/departments",
+          {
+            withCredentials: true, // Enable cookies to be sent
+          }
+        );
+        console.log(response.data);
+
+        const departmentOptions = response.data.map((dept) => ({
+          value: dept.id,
+          label: dept.name,
+          positions: dept.positions.map((pos) => ({
+            value: pos.id,
+            label: pos.positionName,
+          })),
+        }));
+        setDepartments(departmentOptions);
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
+
+  useEffect(() => {
+    if (selectedDepartment) {
+      const department = departments.find(
+        (dept) => dept.value === selectedDepartment.value
+      );
+      setPositions(department ? department.positions : []);
+    } else {
+      setPositions([]);
+    }
+  }, [selectedDepartment, departments]);
 
   const customStyles = {
     option: (provided, state) => ({
@@ -36,6 +76,19 @@ const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
     setErrors((prevErrors) => ({ ...prevErrors, startDate: "" }));
   };
 
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setErrors((prevErrors) => ({ ...prevErrors, image: "" }));
+    }
+  };
+
   const validateField = (field, value) => {
     const newErrors = { ...errors };
     switch (field) {
@@ -45,21 +98,27 @@ const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
         break;
       case "email":
         if (!value) newErrors.email = "Email is required.";
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) newErrors.email = "Email is invalid.";
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+          newErrors.email = "Email is invalid.";
         else delete newErrors.email;
-        break;
-      case "password":
-        if (!value) newErrors.password = "Password is required.";
-        else if (value.length < 6) newErrors.password = "Password must be at least 6 characters.";
-        else delete newErrors.password;
-        break;
-      case "role":
-        if (!selectedRole) newErrors.role = "Role is required.";
-        else delete newErrors.role;
         break;
       case "startDate":
         if (!value) newErrors.startDate = "Joining Date is required.";
         else delete newErrors.startDate;
+        break;
+      case "image":
+        if (!selectedImage && touched.image)
+          newErrors.image = "Profile image is required.";
+        else delete newErrors.image;
+        break;
+      case "department":
+        if (!selectedDepartment)
+          newErrors.department = "Department is required.";
+        else delete newErrors.department;
+        break;
+      case "position":
+        if (!selectedPosition) newErrors.position = "Position is required.";
+        else delete newErrors.position;
         break;
       default:
         break;
@@ -71,32 +130,46 @@ const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
     switch (field) {
       case "fullname":
         setFullname(value);
-        validateField("fullname", value);
+        if (touched.fullname) validateField("fullname", value);
         break;
       case "email":
         setEmail(value);
-        validateField("email", value);
+        if (touched.email) validateField("email", value);
         break;
-      case "password":
-        setPassword(value);
-        validateField("password", value);
+      case "department":
+        setSelectedDepartment(value);
+        setSelectedPosition(null);
+        if (touched.department) validateField("department", value);
         break;
-      case "role":
-        setSelectedRole(value);
-        validateField("role", value);
+      case "position":
+        setSelectedPosition(value);
+        if (touched.position) validateField("position", value);
         break;
       default:
         break;
     }
   };
 
+  const handleImageBlur = () => {
+    setTouched({ ...touched, image: true });
+    validateField("image", selectedImage);
+  };
+
+  const handleBlur = (field, value) => {
+    setTouched({ ...touched, [field]: true });
+    validateField(field, value);
+  };
+
   const resetForm = () => {
     setSelectedDate(null);
     setFullname("");
     setEmail("");
-    setPassword("");
-    setSelectedRole(null);
+    setSelectedDepartment(null);
+    setSelectedPosition(null);
+    setSelectedImage(null);
+    setReviewImage(null);
     setErrors({});
+    setTouched({});
   };
 
   const validateForm = () => {
@@ -106,10 +179,11 @@ const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
     if (!fullname) newErrors.fullname = "Full Name is required.";
     if (!email) newErrors.email = "Email is required.";
     else if (!emailRegex.test(email)) newErrors.email = "Email is invalid.";
-    if (!password) newErrors.password = "Password is required.";
-    else if (password.length < 6) newErrors.password = "Password must be at least 6 characters.";
-    if (!selectedRole) newErrors.role = "Role is required.";
+
     if (!selectedDate) newErrors.startDate = "Joining Date is required.";
+    if (!selectedImage) newErrors.image = "Profile image is required.";
+    if (!selectedDepartment) newErrors.department = "Department is required.";
+    if (!selectedPosition) newErrors.position = "Position is required.";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -117,23 +191,27 @@ const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
 
-    const data = {
-      fullname,
-      email,
-      password,
-      role: selectedRole ? selectedRole.value : null,
-      startDate: selectedDate ? selectedDate.toISOString().split('T')[0] : null
-    };
+    const formData = new FormData();
+    formData.append("fullname", fullname);
+    formData.append("email", email);
+    formData.append("startDate", selectedDate.toISOString().split("T")[0]);
+    formData.append("department_id", selectedDepartment.value);
+    formData.append("position_id", selectedPosition.value);
+    formData.append("fileImage", selectedImage);
 
     try {
-      const response = await axios.post("http://localhost:8080/api/auth/register", data, {
-        withCredentials: true, // Enable cookies to be sent
-      });
+      const response = await axios.post(
+        "http://localhost:8080/api/auth/register",
+        formData,
+        {
+          withCredentials: true, // Enable cookies to be sent
+        }
+      );
       console.log("Employee added:", response.data);
       await refreshEmployeeList(); // Call fetchEmployees after success
       setLoading(false);
@@ -142,7 +220,7 @@ const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
         closeButtonRef.current.click();
       }
     } catch (error) {
-      console.error("Error adding employee:", error);
+      toast.error(error.response?.data?.message || "An error occurred");
       setLoading(false);
     }
   };
@@ -166,8 +244,23 @@ const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
             </div>
             <div className="modal-body">
               <form onSubmit={handleSubmit}>
+                {reviewImage && (
+                  <div className="mb-3 text-center">
+                    <img
+                      src={reviewImage}
+                      alt="Preview"
+                      className="img-thumbnail"
+                      style={{
+                        width: "100px",
+                        height: "100px",
+                        objectFit: "cover",
+                        borderRadius: "50%",
+                      }}
+                    />
+                  </div>
+                )}
                 <div className="row">
-                  <div className="col-sm-12">
+                  <div className="col-sm-6">
                     <div className="input-block mb-3">
                       <label className="col-form-label">
                         Full Name <span className="text-danger">*</span>
@@ -176,11 +269,15 @@ const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
                         className="form-control"
                         type="text"
                         value={fullname}
-                        onChange={(e) => handleChange("fullname", e.target.value)}
-                        onBlur={() => validateField("fullname", fullname)}
+                        onChange={(e) =>
+                          handleChange("fullname", e.target.value)
+                        }
+                        onBlur={() => handleBlur("fullname", fullname)}
                         required
                       />
-                      {errors.fullname && <small className="text-danger">{errors.fullname}</small>}
+                      {errors.fullname && touched.fullname && (
+                        <small className="text-danger">{errors.fullname}</small>
+                      )}
                     </div>
                   </div>
                   <div className="col-sm-6">
@@ -193,42 +290,12 @@ const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
                         type="text"
                         value={email}
                         onChange={(e) => handleChange("email", e.target.value)}
-                        onBlur={() => validateField("email", email)}
+                        onBlur={() => handleBlur("email", email)}
                         required
                       />
-                      {errors.email && <small className="text-danger">{errors.email}</small>}
-                    </div>
-                  </div>
-                  <div className="col-sm-6">
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">
-                        Password <span className="text-danger">*</span>
-                      </label>
-                      <input
-                        className="form-control"
-                        type="password"
-                        value={password}
-                        onChange={(e) => handleChange("password", e.target.value)}
-                        onBlur={() => validateField("password", password)}
-                        required
-                      />
-                      {errors.password && <small className="text-danger">{errors.password}</small>}
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="input-block mb-3">
-                      <label className="col-form-label">
-                        Role <span className="text-danger">*</span>
-                      </label>
-                      <Select
-                        options={roles}
-                        value={selectedRole}
-                        onChange={(role) => handleChange("role", role)}
-                        onBlur={() => validateField("role", selectedRole)}
-                        placeholder="Select Role"
-                        styles={customStyles}
-                      />
-                      {errors.role && <small className="text-danger">{errors.role}</small>}
+                      {errors.email && touched.email && (
+                        <small className="text-danger">{errors.email}</small>
+                      )}
                     </div>
                   </div>
                   <div className="col-sm-6">
@@ -243,10 +310,76 @@ const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
                           className="form-control floating datetimepicker"
                           type="date"
                           dateFormat="dd-MM-yyyy"
-                          onBlur={() => validateField("startDate", selectedDate)}
+                          onBlur={() => handleBlur("startDate", selectedDate)}
                         />
                       </div>
-                      {errors.startDate && <small className="text-danger">{errors.startDate}</small>}
+                      {errors.startDate && touched.startDate && (
+                        <small className="text-danger">
+                          {errors.startDate}
+                        </small>
+                      )}
+                    </div>
+                  </div>
+                  <div className="col-sm-6">
+                    <div className="input-block mb-3">
+                      <label className="col-form-label">
+                        Upload Image <span className="text-danger">*</span>
+                      </label>
+                      <input
+                        type="file"
+                        className="form-control"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        onBlur={handleImageBlur}
+                      />
+                      {errors.image && touched.image && (
+                        <small className="text-danger">{errors.image}</small>
+                      )}
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="input-block mb-3">
+                      <label className="col-form-label">
+                        Department <span className="text-danger">*</span>
+                      </label>
+                      <Select
+                        options={departments}
+                        value={selectedDepartment}
+                        onChange={(department) =>
+                          handleChange("department", department)
+                        }
+                        onBlur={() =>
+                          handleBlur("department", selectedDepartment)
+                        }
+                        placeholder="Select"
+                        styles={customStyles}
+                      />
+                      {errors.department && touched.department && (
+                        <small className="text-danger">
+                          {errors.department}
+                        </small>
+                      )}
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="input-block mb-3">
+                      <label className="col-form-label">
+                        Position <span className="text-danger">*</span>
+                      </label>
+                      <Select
+                        options={positions}
+                        value={selectedPosition}
+                        onChange={(position) =>
+                          handleChange("position", position)
+                        }
+                        onBlur={() => handleBlur("position", selectedPosition)}
+                        placeholder="Select"
+                        styles={customStyles}
+                        isDisabled={!selectedDepartment} // Disable if no department is selected
+                      />
+                      {errors.position && touched.position && (
+                        <small className="text-danger">{errors.position}</small>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -263,6 +396,17 @@ const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
             </div>
           </div>
         </div>
+        <ToastContainer
+          position="top-center"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
       </div>
     </>
   );

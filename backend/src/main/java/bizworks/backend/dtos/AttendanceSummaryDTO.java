@@ -11,4 +11,5 @@ public class AttendanceSummaryDTO {
     private int totalEmployees;
     private int checkedInEmployees;
     private int absentEmployees;
+    private int remaining;
 }
