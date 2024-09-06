@@ -10,6 +10,8 @@ import bizworks.backend.repositories.EmployeeRepository;
 import bizworks.backend.repositories.SalaryRepository;
 import bizworks.backend.repositories.ViolationRepository;
 import bizworks.backend.services.EmployeeService;
+import bizworks.backend.services.MailService;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,13 +31,16 @@ public class SalaryService {
     private final EmployeeService employeeService;
     private final EmployeeRepository employeeRepository;
     private final ViolationRepository violationRepository;
+    private final MailService mailService;
 
-    @Autowired
-    public SalaryService(SalaryRepository salaryRepository, EmployeeService employeeService, EmployeeRepository employeeRepository, ViolationRepository violationRepository) {
+    public SalaryService(SalaryRepository salaryRepository, EmployeeService employeeService,
+                         EmployeeRepository employeeRepository, ViolationRepository violationRepository,
+                         MailService mailService) { // Inject MailService qua constructor
         this.salaryRepository = salaryRepository;
         this.employeeRepository = employeeRepository;
         this.violationRepository = violationRepository;
         this.employeeService = employeeService;
+        this.mailService = mailService;
     }
 
     @Scheduled(cron = "0 0 0 1 * ?")  // Chạy vào đầu mỗi tháng lúc 00:00
@@ -184,6 +189,8 @@ public class SalaryService {
 
         Salary saved = salaryRepository.save(salary);
         ApiResponse<SalaryDTO> successResponse = ApiResponse.success(convertToDTO(saved), "Salary created successfully");
+        sendSalaryEmail(saved, "created");
+
         return new ResponseEntity<>(successResponse, HttpStatus.OK);
     }
 
@@ -219,6 +226,8 @@ public class SalaryService {
 
             Salary updated = salaryRepository.save(salary);
             ApiResponse<SalaryDTO> successResponse = ApiResponse.success(convertToDTO(updated), "Salary updated successfully");
+            sendSalaryEmail(updated, "updated");
+
             return new ResponseEntity<>(successResponse, HttpStatus.OK);
         }
         ApiResponse<SalaryDTO> notFoundResponse = ApiResponse.notfound(null, "Salary not found");
@@ -331,4 +340,87 @@ public class SalaryService {
         return salary.map(s -> new ResponseEntity<>(ApiResponse.success(convertToDTO(s), "Salary fetched successfully"), HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(ApiResponse.notfound(null, "Salary not found"), HttpStatus.NOT_FOUND));
     }
+
+    private void sendSalaryEmail(Salary salary, String action) {
+        // Calculate total earnings
+        double totalEarnings = salary.getBasicSalary() + salary.getBonusSalary()
+                + salary.getOvertimeSalary() + salary.getAdvanceSalary()
+                + salary.getAllowances();
+        String netSalaryColor;
+
+        // Calculate percentage of Net Salary compared to Basic Salary
+        double basicSalary = salary.getBasicSalary();
+        double netSalary = salary.getTotalSalary();
+        double percentage = (netSalary / basicSalary) * 100;
+        // Determine the color based on the comparison
+        if (netSalary > basicSalary) {
+            netSalaryColor = "#800080"; // Purple
+        } else if (netSalary == basicSalary) {
+            netSalaryColor = "#4CAF50"; // Green
+        } else if (percentage == 80.0) {
+            netSalaryColor = "#FFA500"; // Orange
+        } else if (percentage < 80.0) {
+            netSalaryColor = "#FF0000"; // Red
+        } else {
+            netSalaryColor = "#000000"; // Default to black if none of the conditions match
+        }
+
+        // Calculate total deductions
+        double totalDeductions = salary.getDeductions() + salary.getAdvanceSalary(); // Add other deductions if needed
+
+        String to = salary.getEmployee().getEmail();
+        String subject = "Salary " + action;
+        String content = "<div style=\"font-family: Arial, sans-serif; color: #333; line-height: 1.6;\">"
+                + "<h2 style=\"color: #4CAF50;\">Dear " + salary.getEmployee().getFullname() + ",</h2>"
+                + "<p>Your salary has been <strong>" + action + "</strong>.</p>"
+                + "<h3 style=\"color: #2196F3;\">Salary Details:</h3>"
+
+                // Earnings Table
+                + "<div style=\"display: inline-block; width: 48%; vertical-align: top;\">"
+                + "<h3 style=\"color: #4CAF50;\">Earnings</h3>"
+                + "<table style=\"width: 100%; border-collapse: collapse;\">"
+                + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Basic Salary:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getBasicSalary()+"$" + "</td></tr>"
+                + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Bonus:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getBonusSalary()+"$" + "</td></tr>"
+                + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Overtime:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getOvertimeSalary()+"$" + "</td></tr>"
+                + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Allowances:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getAllowances()+"$" + "</td></tr>"
+                + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Total Earnings:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + totalEarnings+"$" + "</td></tr>"
+                + "</table></div>"
+
+                // Deductions Table
+                + "<div style=\"display: inline-block; width: 48%; vertical-align: top; margin-left: 4%;\">"
+                + "<h3 style=\"color: #F44336;\">Deductions</h3>"
+                + "<table style=\"width: 100%; border-collapse: collapse;\">"
+                + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Tax Deducted at Source (T.D.S.):</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getDeductions()+"$" + "</td></tr>"
+                + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Violations:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getDeductions()+"$" + "</td></tr>"
+                + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Advance Salary:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getAdvanceSalary()+"$" + "</td></tr>"
+                + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Total Deductions:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + totalDeductions+"$" + "</td></tr>"
+                + "</table></div>"
+
+                // Net Salary
+                + "<div style=\"clear: both; margin-top: 20px;\">"
+                + "<h3 style=\"color: " + netSalaryColor + ";\">Net Salary: " + salary.getTotalSalary()+"$" + "</h3>"
+                + "</div>"
+
+                + "<p style=\"margin-top: 20px;\">Please contact the HR department for any questions.</p>"
+                + "<p>Best regards,</p>"
+                + "<h3 style=\"color: #999;\">Bizworks Team</h3>"
+                + "</div>";
+
+        try {
+            mailService.sendEmail(to, subject, content);
+        } catch (MessagingException e) {
+            e.printStackTrace(); // You can handle the email sending error differently if needed
+        }
+    }
+
+
 }
