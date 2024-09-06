@@ -36,7 +36,7 @@ const LeaderAddEmployeeModelPopup = ({ refreshEmployeeList }) => {
 
         setDepartment({
           value: response.data.id,
-          label: response.data.departmentName,
+          label: response.data.name,
         }); // Đặt department chỉ đọc với tên hiển thị
         setPositions(formattedPositions);
       } catch (error) {
