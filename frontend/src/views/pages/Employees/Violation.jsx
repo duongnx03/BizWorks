@@ -25,8 +25,8 @@ const Violation = () => {
       const response = await axios.get(`${base_url}/api/violations`, {
         withCredentials: true,
       });
-      setViolations(response.data);
-      await updateStats(response.data);
+      setViolations(response.data.data);
+      await updateStats(response.data.data);
     } catch (error) {
       console.error(
         "Error fetching violations:",
@@ -57,10 +57,10 @@ const Violation = () => {
       const totalEmployeesWithViolations = uniqueEmployeeIds.length;
       const totalViolations = violationsData.length;
       const pendingViolations = violationsData.filter(
-        (v) => v.status === "New"
+        (v) => v.status === "Pending"
       ).length;
-      const cancelViolations = violationsData.filter(
-        (v) => v.status === "Cancel"
+      const rejectedViolations = violationsData.filter(
+        (v) => v.status === "Rejected"
       ).length;
       setStatsData([
         {
@@ -74,12 +74,12 @@ const Violation = () => {
           month: "this month",
         },
         {
-          title: "New",
+          title: "Pending",
           value: pendingViolations,
         },
         {
-          title: "Cancel",
-          value: cancelViolations,
+          title: "Rejected",
+          value: rejectedViolations,
         },
       ]);
     } catch (error) {
@@ -153,13 +153,13 @@ const Violation = () => {
     index: index + 1,
     employeeId: item.employeeId,
     employee: item.employee?.fullname || "Loading...",
+    empcode: item.employee?.empCode || "Loading...",
     role: item.role,
     reason: item.reason,
     violationTypeId: item.violationTypeId,
     violationType: item.violationType?.type || "Loading...",
     date: item.violationDate,
-    image: item.employee?.image || Avatar_02,
-    apimage: item.employee?.apimage || Avatar_09,
+    avatar: item.employee?.avatar || Avatar_02,
     status: item.status,
   }));
 
@@ -191,10 +191,10 @@ const Violation = () => {
       dataIndex: "employee",
       render: (text, record) => (
         <span className="table-avatar">
-          <Link to="/profile" className="avatar">
-            <img alt="" src={record.image} />
+          <Link to="/client-profile" className="avatar">
+            <img alt="" src={record.avatar} />
           </Link>
-          <Link to="/profile">{text}</Link>
+          <Link to="/client-profile">{text} - {record.empcode}</Link>
         </span>
       ),
     },
@@ -244,14 +244,6 @@ const Violation = () => {
             <li>
               <button
                 className="dropdown-item"
-                onClick={() => handleStatusChange(record.id, "New")}
-              >
-                <i className="far fa-dot-circle text-danger" /> New
-              </button>
-            </li>
-            <li>
-              <button
-                className="dropdown-item"
                 onClick={() => handleStatusChange(record.id, "Approved")}
               >
                 <i className="far fa-dot-circle text-success" /> Approved
@@ -260,9 +252,9 @@ const Violation = () => {
             <li>
               <button
                 className="dropdown-item"
-                onClick={() => handleStatusChange(record.id, "Cancel")}
+                onClick={() => handleStatusChange(record.id, "Rejected")}
               >
-                <i className="far fa-dot-circle text-secondary" /> Cancel
+                <i className="far fa-dot-circle text-secondary" /> Rejected
               </button>
             </li>
           </ul>

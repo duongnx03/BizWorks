@@ -39,12 +39,12 @@ const SalaryTable = ({ data, loading }) => {
     {
       title: "Department",
       dataIndex: "employee",
-      render: (employee) => employee.department, // Assuming department is part of employee
+      render: (employee) => employee.departmentName, // Assuming department is part of employee
     },
     {
       title: "Position",
       dataIndex: "employee",
-      render: (employee) => employee.position, // Assuming position is part of employee
+      render: (employee) => employee.positionName, // Assuming position is part of employee
     },
     {
       title: "Salary Date",

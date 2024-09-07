@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class EmployeeDTO {
     private Long id;
+    private String empCode;
     private String fullname;
     private LocalDate dob;
     private String address;
@@ -34,14 +35,16 @@ public class EmployeeDTO {
     private List<Long> operationalActivityIds; // List of operational activity IDs
     private List<Long> strategicPlanIds; // List of strategic plan IDs
 
-    public EmployeeDTO(Long id, String fullname, String email, String phone, String avatar, LocalDate startDate, String department, String position) {
+    public EmployeeDTO(Long id,String empCode, String fullname, String email, String phone, String avatar, LocalDate startDate, String departmentName, String positionName) {
         this.id = id;
+        this.empCode = empCode;
         this.fullname = fullname;
         this.email = email;
         this.phone = phone;
         this.avatar = avatar;
         this.startDate = startDate;
-
+        this.departmentName = departmentName;
+        this.positionName = positionName;
     }
 
     public EmployeeDTO(Long id) {

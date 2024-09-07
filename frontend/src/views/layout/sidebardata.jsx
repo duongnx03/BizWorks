@@ -121,14 +121,14 @@ export const SidebarData = [
             menuValue: "Departments",
             route: "/departments",
           },
-          {
-            menuValue: "ViolationType",
-            route: "/violation-types",
-          },
-          {
-            menuValue: "Violation",
-            route: "/violations",
-          },
+          // {
+          //   menuValue: "ViolationType",
+          //   route: "/violation-types",
+          // },
+          // {
+          //   menuValue: "Violation",
+          //   route: "/violations",
+          // },
           // {
           //   menuValue: 'Shift & Schedule',
           //   route: "/shift-scheduling",
@@ -237,10 +237,10 @@ export const SidebarData = [
             menuValue: "Departments",
             route: "/departments",
           },
-          {
-            menuValue: "ViolationType",
-            route: "/violation-types",
-          },
+          // {
+          //   menuValue: "ViolationType",
+          //   route: "/violation-types",
+          // },
           {
             menuValue: "Violation",
             route: "/violations",

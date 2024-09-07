@@ -305,7 +305,7 @@ public class SalaryService {
     private SalaryDTO convertToDTO(Salary salary) {
         Employee employee = salary.getEmployee();
         EmployeeDTO employeeDTO = (employee != null)
-                ? new EmployeeDTO(employee.getId(), employee.getFullname(), employee.getEmail(), employee.getPhone(),
+                ? new EmployeeDTO(employee.getId(),employee.getEmpCode(), employee.getFullname(), employee.getEmail(), employee.getPhone(),
                 employee.getAvatar(),
                 employee.getStartDate(),
                 (employee.getDepartment() != null) ? employee.getDepartment().getName() : null, // Adjust if Department is not a String
