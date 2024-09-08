@@ -200,11 +200,15 @@ import ViolationType from "../../views/pages/Employees/ViolationType.jsx";
 import Violation from "../../views/pages/Employees/Violation.jsx";
 import Position from "../../views/pages/Employees/Position.jsx";
 import PrivateRoute from "../PrivateRoute.jsx";
-import RequestCreateEmployee from "../../views/pages/admin/RequestCreateEmployee.jsx";
-import ManageEmployeeManagement from "../../views/pages/manage/ManageEmployeeManagement.jsx";
-import LeaderEmployeeManagement from "../../views/pages/leader/LeaderEmployeeManagement.jsx";
 import AttendanceComplaint from "../../views/pages/Employees/AttendanceComplaint.jsx";
-import RequestAttendanceComplaint from "../../views/pages/admin/RequestAttendanceComplaint.jsx";
+import ViewEmployeeRequest from "../../views/pages/admin/ViewEmployeeRequest.jsx";
+import LeaderEmployees from "../../views/pages/leader/LeaderEmployees.jsx";
+import ManageEmployees from "../../views/pages/manage/ManageEmployees.jsx";
+import ViewAttendanceComplaintRequests from "../../views/pages/admin/ViewAttendanceComplaintRequests.jsx";
+import ViewOvertimeRequests from "../../views/pages/admin/ViewOvertimeRequests.jsx";
+import ApproveAttendanceComplaint from "../../views/pages/admin/ApproveAttendanceComplaint.jsx";
+import ApproveOvertimeRequests from "../../views/pages/admin/ApproveOvertimeRequests.jsx";
+import ApproveEmployeeRequests from "../../views/pages/manage/ApproveEmployeeRequests.jsx";
 
 const AppContainer = () => {
   useEffect(() => {
@@ -404,28 +408,43 @@ const AppContainer = () => {
     },
     {
       id: 34,
-      path: "request-create-employee",
-      element: (
-        <PrivateRoute
-          element={RequestCreateEmployee}
-          allowedRoles={["ADMIN", "MANAGE"]}
-        />
-      ),
+      path: "view-employee-requests",
+      element: <PrivateRoute element={ViewEmployeeRequest}/>,
     },
     {
       id: 34,
       path: "manage-employees",
-      element: <PrivateRoute element={ManageEmployeeManagement} />,
+      element: <PrivateRoute element={ManageEmployees} />,
     },
     {
       id: 34,
       path: "leader-employees",
-      element: <PrivateRoute element={LeaderEmployeeManagement} />,
+      element: <PrivateRoute element={LeaderEmployees} />,
     },
     {
       id: 34,
-      path: "request-attendance-complaint",
-      element: <PrivateRoute element={RequestAttendanceComplaint} />,
+      path: "view-attendance-complaint-requests",
+      element: <PrivateRoute element={ViewAttendanceComplaintRequests} />,
+    },
+    {
+      id: 34,
+      path: "view-overtime-requests",
+      element: <PrivateRoute element={ViewOvertimeRequests} />,
+    },
+    {
+      id: 34,
+      path: "approve-attendance-complaint",
+      element: <PrivateRoute element={ApproveAttendanceComplaint} />,
+    },
+    {
+      id: 34,
+      path: "approve-overtime-requests",
+      element: <PrivateRoute element={ApproveOvertimeRequests} />,
+    },
+    {
+      id: 34,
+      path: "approve-employee-requests",
+      element: <PrivateRoute element={ApproveEmployeeRequests} />,
     },
     {
       id: 35,

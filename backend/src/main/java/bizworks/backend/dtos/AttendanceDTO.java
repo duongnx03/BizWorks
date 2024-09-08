@@ -23,5 +23,6 @@ public class AttendanceDTO {
     private LocalTime overtime;
     private String status;
     private EmployeeResponseDTO employee;
+    private OvertimeResponseDTO overtimeDTO;
     private Long attendanceComplaintId;
 }

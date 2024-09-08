@@ -35,7 +35,24 @@ const getStatusStyle = (status) => {
   }
 };
 
-const RequestAttendanceComplaint = () => {
+const getType = (type) => {
+  switch (type) {
+    case "noon_overtime":
+      return "Overtime noon from 12:00 to 13:00";
+    case "30m_overtime":
+      return "Overtime after work 30 minutes";
+    case "1h_overtime":
+      return "Overtime after work 1 hour";
+    case "1h30":
+      return "Overtime after work 1 hour 30 minutes";
+    case "2h_overtime":
+      return "Overtime after work 2 hours";
+    default:
+      return "bg-secondary";
+  }
+};
+
+const ViewAttendanceComplaintRequests = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [filters, setFilters] = useState({
@@ -50,7 +67,6 @@ const RequestAttendanceComplaint = () => {
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [focused, setFocused] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const [info, setInfo] = useState(false);
 
   useEffect(() => {
     fetchAttendanceData();
@@ -61,28 +77,15 @@ const RequestAttendanceComplaint = () => {
   const fetchAttendanceData = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:8080/api/complaint/getByCensor",
+        "http://localhost:8080/api/complaint/getAll",
         { withCredentials: true }
       );
       const data = response.data.data;
 
       if (data) {
         // Lọc dữ liệu để chỉ hiển thị các record với status là "Pending"
-        const pendingData = data
-          .filter((complaint) => {
-            const status = complaint.status
-              ? complaint.status.trim().toLowerCase()
-              : "";
-            return status === "pending";
-          })
-          .sort(
-            (a, b) => new Date(b.attendanceDate) - new Date(a.attendanceDate)
-          );
-
-        // Cập nhật state
-        setInfo(true);
-        setData(data); // Lưu trữ tất cả các record
-        setFilteredData(pendingData); // Cập nhật dữ liệu đã lọc để hiển thị
+        setData(data);
+        setFilteredData(data);
       }
     } catch (e) {
       console.log("Error fetching attendance complaint: ", e);
@@ -114,7 +117,6 @@ const RequestAttendanceComplaint = () => {
           complaint.status.toLowerCase() === status.label.toLowerCase()
       );
     }
-    setInfo(false);
     setFilteredData(tempData);
   }, [filters]);
 
@@ -126,7 +128,6 @@ const RequestAttendanceComplaint = () => {
     });
     setInputValue("");
     setFocused(false);
-    setInfo(true);
     fetchAttendanceData();
   };
 
@@ -313,11 +314,6 @@ const RequestAttendanceComplaint = () => {
               ) : null}
             </div>
           </div>
-          {info && (
-            <p className="alert alert-info">
-              The data has been filtered by status "Pending", if you want to search for data, please operate on the input boxes.
-            </p>
-          )}
           <div className="row">
             <div className="col-md-12 table-responsive">
               {filteredData.length ? (
@@ -325,14 +321,15 @@ const RequestAttendanceComplaint = () => {
                   <thead>
                     <tr>
                       <th>Employee Infomation</th>
-                      <th>Department</th>
                       <th>Attendance Date</th>
                       <th>Check In Time</th>
                       <th>Break Start</th>
                       <th>Break End</th>
                       <th>Check Out Time</th>
-                      <th>Total Work Time</th>
+                      <th>Total Time</th>
+                      <th>Office Hours</th>
                       <th>Overtime</th>
+                      <th>Note</th>
                       <th>Complaint Reason</th>
                       <th>Proof Images</th>
                       <th>Status</th>
@@ -343,43 +340,83 @@ const RequestAttendanceComplaint = () => {
                     {filteredData.map((complaint) => (
                       <tr key={complaint.id}>
                         <td>
-                          <span className="table-avatar">
+                          <div className="d-flex align-items-center">
                             <Link
                               to={`/client-profile/${complaint.employee.id}`}
-                              className="avatar"
+                              className="me-3"
                             >
-                              <img
-                                alt=""
-                                src={
-                                  complaint.employee.avatar ||
-                                  "default-avatar.png"
-                                }
-                              />
+                              <div
+                                style={{
+                                  width: "50px",
+                                  height: "50px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                <img
+                                  alt="Employee Avatar"
+                                  src={
+                                    complaint.employee.avatar ||
+                                    "default-avatar.png"
+                                  }
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                    borderRadius: "50%",
+                                  }}
+                                />
+                              </div>
                             </Link>
-                            <Link
-                              to={`/client-profile/${complaint.employee.id}`}
-                            >
-                              {complaint.employee.empCode} - {complaint.employee.fullname}
-                            </Link>
-                          </span>
-                        </td>
-                        <td>
-                          <div className="d-flex flex-column">
-                            <span>{complaint.employee.department}</span>
-                            <span className="text-muted">
-                              {complaint.employee.position}
-                            </span>
+                            <div>
+                              <Link
+                                to={`/client-profile/${complaint.employee.id}`}
+                                className="text-decoration-none fw-bold text-dark"
+                              >
+                                {complaint.employee.empCode} -{" "}
+                                {complaint.employee.fullname}
+                              </Link>
+                              <div className="mt-1">
+                                <span className="d-block fw-semibold">
+                                  {complaint.employee.department}
+                                </span>
+                                <span className="d-block text-muted">
+                                  {complaint.employee.position}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </td>
                         <td>
                           {new Date(complaint.attendanceDate).toDateString()}
                         </td>
                         <td>{formatTimeAMPM(complaint.checkInTime)}</td>
-                        <td>{formatTimeAMPM(complaint.breakTimeStart)}</td>
-                        <td>{formatTimeAMPM(complaint.breakTimeEnd)}</td>
+                        <td>
+                          {complaint.overTimes &&
+                          complaint.overTimes.type === "noon_overtime"
+                            ? "N/A"
+                            : formatTimeAMPM(complaint.breakTimeStart)}
+                        </td>
+                        <td>
+                          {complaint.overTimes &&
+                          complaint.overTimes.type === "noon_overtime"
+                            ? "N/A"
+                            : formatTimeAMPM(complaint.breakTimeEnd)}
+                        </td>
                         <td>{formatTimeAMPM(complaint.checkOutTime)}</td>
-                        <td>{formatTime(complaint.totalWorkTime)}</td>
-                        <td>{formatTime(complaint.overtime)}</td>
+                        <td>{formatTime(complaint.totalTime)}</td>
+                        <td>{formatTime(complaint.officeHours)}</td>
+                        <td>
+                          {complaint.overtime
+                            ? formatTime(complaint.overtime)
+                            : "N/A"}
+                        </td>
+                        <td>
+                          {complaint.overTimes
+                            ? getType(complaint.overTimes.type)
+                            : "N/A"}
+                        </td>
                         <td>{complaint.complaintReason}</td>
                         <td>
                           <button
@@ -498,4 +535,4 @@ const RequestAttendanceComplaint = () => {
   );
 };
 
-export default RequestAttendanceComplaint;
+export default ViewAttendanceComplaintRequests;

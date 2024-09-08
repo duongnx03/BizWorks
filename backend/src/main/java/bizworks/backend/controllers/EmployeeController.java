@@ -29,7 +29,6 @@ public class EmployeeController {
             if (employees == null || employees.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.notfound(null, "Empty Employee"));
             }
-
             // Chuyển đổi danh sách Employee sang danh sách EmployeeDTO khi cần
             List<EmployeeResponseDTO> employeeDTOs = employees.stream().map(employeeService::convertToDTO).collect(Collectors.toList());
 

@@ -9,8 +9,7 @@ import java.util.List;
 @Repository
 public interface EmployeeApprovalQueueRepository extends JpaRepository<EmployeeApprovalQueue, Long> {
     boolean existsByEmail(String email);
-    List<EmployeeApprovalQueue> findEmployeeApprovalQueueByCensor(Long censor);
-    List<EmployeeApprovalQueue> findEmployeeApprovalQueueBySender(Long sender);
-    List<EmployeeApprovalQueue> findEmployeeApprovalQueueByIsManageShow(Long id);
+    List<EmployeeApprovalQueue> findEmployeeApprovalQueueByCensorId(Long id);
+    List<EmployeeApprovalQueue> findEmployeeApprovalQueueBySenderId(Long id);
 }
 

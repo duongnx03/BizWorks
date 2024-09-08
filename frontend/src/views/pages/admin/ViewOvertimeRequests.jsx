@@ -17,8 +17,40 @@ const getStatusStyle = (status) => {
   }
 };
 
-const RequestCreateEmployee = () => {
-  const [employees, setEmployees] = useState([]);
+const getType = (type) => {
+  switch (type) {
+    case "noon_overtime":
+      return "Overtime noon from 12h to 13h";
+    case "30m_overtime":
+      return "Overtime after work 30 minutes";
+    case "1h_overtime":
+      return "Overtime after work 1 hour";
+    case "1h30_overtime":
+      return "Overtime after work 1 hour 30 minutes";
+    case "2h_overtime":
+      return "Overtime after work 2 hours";
+    default:
+      return "Invalid type";
+  }
+};
+
+const formatTime = (timeString) => {
+  if (!timeString) return "00:00";
+  const [hours, minutes] = timeString.split(":");
+  return `${hours}:${minutes}`;
+};
+
+const formatTimeAMPM = (timeString) => {
+  if (!timeString) return "00:00 AM";
+  return new Date(timeString).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
+const ViewOvertimeRequests = () => {
+  const [overtimes, setOvertimes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
@@ -26,11 +58,11 @@ const RequestCreateEmployee = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 9;
 
-  const fetchEmployees = async () => {
+  const fetchOvertimes = async () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        "http://localhost:8080/api/emp-queue/getByCensor",
+        "http://localhost:8080/api/overtime/getAll",
         {
           withCredentials: true,
         }
@@ -38,7 +70,7 @@ const RequestCreateEmployee = () => {
       if (response.data.data) {
         // Sắp xếp nhân viên theo ID từ mới đến cũ
         const sortedEmployees = response.data.data.sort((a, b) => b.id - a.id);
-        setEmployees(sortedEmployees);
+        setOvertimes(sortedEmployees);
       }
       setLoading(false);
     } catch (error) {
@@ -48,46 +80,46 @@ const RequestCreateEmployee = () => {
   };
 
   useEffect(() => {
-    fetchEmployees();
+    fetchOvertimes();
   }, []);
 
-  const sortedEmployees = React.useMemo(() => {
-    return employees;
-  }, [employees]);
+  const sortedOvetimes = React.useMemo(() => {
+    return overtimes;
+  }, [overtimes]);
 
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentEmployees = sortedEmployees.slice(
+  const currentOvetimes = sortedOvetimes.slice(
     indexOfFirstRecord,
     indexOfLastRecord
   );
 
-  const totalPages = Math.ceil(sortedEmployees.length / recordsPerPage);
+  const totalPages = Math.ceil(sortedOvetimes.length / recordsPerPage);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  const handleApproveClick = async (complaint) => {
+  const handleApproveClick = async (overtime) => {
     const confirmed = window.confirm(
-      "Are you sure you want to approve this complaint?"
+      "Are you sure you want to approve the request to create a new employee?"
     );
     if (confirmed) {
       try {
         await axios.post(
-          `http://localhost:8080/api/auth/approve/${complaint.id}`,
+          `http://localhost:8080/api/overtime/approveRequest/${overtime.id}`,
           null,
           { withCredentials: true }
         );
-        await fetchEmployees(); // Fetch data again after approval
+        await fetchOvertimes(); // Fetch data again after approval
       } catch (error) {
         console.error("Error approving complaint:", error);
       }
     }
   };
 
-  const handleRejectClick = (employee) => {
-    setSelectedReject(employee);
+  const handleRejectClick = (overtime) => {
+    setSelectedReject(overtime);
     setShowRejectModal(true);
   };
 
@@ -99,20 +131,19 @@ const RequestCreateEmployee = () => {
 
     try {
       await axios.post(
-        `http://localhost:8080/api/auth/reject/${selectedReject.id}`,
+        `http://localhost:8080/api/overtime/rejectRequest/${selectedReject.id}`,
         null,
         {
           params: {
-            reason: rejectReason,
+            description: rejectReason,
           },
           withCredentials: true,
         }
       );
-      await fetchEmployees(); 
+      await fetchOvertimes();
       setRejectReason("");
-      handleCloseRejectModal(); 
+      handleCloseRejectModal();
     } catch (error) {
-      console.error("Error rejecting complaint:", error);
       alert("There was an error rejecting the complaint. Please try again.");
     }
   };
@@ -139,83 +170,122 @@ const RequestCreateEmployee = () => {
                     <div className="alert alert-info">Loading...</div>
                   ) : (
                     <>
-                      <table className="table table-striped">
+                      <table className="table table-striped table-hover align-middle">
                         <thead>
                           <tr>
-                            <th>Employee Infomation</th>
+                            <th>Employee Information</th>
                             <th>Email</th>
-                            <th>Start Date</th>
-                            <th>Department</th>
-                            <th>Position</th>
+                            <th>Attendance Date</th>
+                            <th>Overtime Start</th>
+                            <th>Overtime End</th>
+                            <th>Check Out Time</th>
+                            <th>Note</th>
+                            <th>Reason for Overtime</th>
                             <th>Description</th>
                             <th>Status</th>
                             <th>Action</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {currentEmployees.map((employee) => (
-                            <tr key={employee.id}>
+                          {currentOvetimes.map((overtime) => (
+                            <tr key={overtime.id}>
                               <td>
-                                <span className="table-avatar">
+                                <div className="d-flex align-items-center">
                                   <Link
-                                    to={`/client-profile/${employee.id}`}
-                                    className="avatar"
+                                    to={`/client-profile/${overtime.attendanceDTO.employee.id}`}
+                                    className="me-3"
                                   >
-                                    <img
-                                      alt=""
-                                      src={
-                                        employee.avatar || "default-avatar.png"
-                                      }
-                                    />
+                                    <div
+                                      style={{
+                                        width: "50px",
+                                        height: "50px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <img
+                                        alt="Employee Avatar"
+                                        src={
+                                          overtime.attendanceDTO.employee
+                                            .avatar || "default-avatar.png"
+                                        }
+                                        style={{
+                                          width: "100%",
+                                          height: "100%",
+                                          objectFit: "cover",
+                                          borderRadius: "50%",
+                                        }}
+                                      />
+                                    </div>
                                   </Link>
-                                  <Link to={`/client-profile/${employee.id}`}>
-                                    {employee.empCode} - {employee.fullname}
-                                  </Link>
-                                </span>
+                                  <div>
+                                    <Link
+                                      to={`/client-profile/${overtime.attendanceDTO.employee.id}`}
+                                      className="text-decoration-none fw-bold text-dark"
+                                    >
+                                      {overtime.attendanceDTO.employee.empCode}{" "}
+                                      -{" "}
+                                      {overtime.attendanceDTO.employee.fullname}
+                                    </Link>
+                                    <div className="mt-1">
+                                      <span className="d-block fw-semibold">
+                                        {
+                                          overtime.attendanceDTO.employee
+                                            .department
+                                        }
+                                      </span>
+                                      <span className="d-block text-muted">
+                                        {
+                                          overtime.attendanceDTO.employee
+                                            .position
+                                        }
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
                               </td>
-                              <td>{employee.email}</td>
-                              <td>
-                                {new Date(
-                                  employee.startDate
-                                ).toLocaleDateString()}
-                              </td>
-                              <td>{employee.departmentName}</td>
-                              <td>{employee.positionName}</td>
-                              <td>{employee.description}</td>
+                              <td>{overtime.attendanceDTO.employee.email}</td>
+                              <td>{overtime.attendanceDTO.attendanceDate}</td>
+                              <td>{formatTime(overtime.overtimeStart)}</td>
+                              <td>{formatTime(overtime.overtimeEnd)}</td>
+                              <td>{formatTimeAMPM(overtime.checkOutTime)}</td>
+                              <td>{getType(overtime.type)}</td>
+                              <td>{overtime.reason}</td>
+                              <td>{overtime.description}</td>
                               <td
                                 className={`text-center ${getStatusStyle(
-                                  employee.status
+                                  overtime.status
                                 )}`}
                               >
-                                {employee.status}
+                                {overtime.status}
                               </td>
                               <td>
-                                <div className="dropdown dropdown-action text-end">
-                                  <Link
-                                    to="#"
-                                    className="action-icon dropdown-toggle"
+                                <div className="dropdown text-end">
+                                  <button
+                                    className="btn btn-link p-0 border-0 text-dark"
                                     data-bs-toggle="dropdown"
                                     aria-expanded="false"
                                   >
                                     <i className="material-icons">more_vert</i>
-                                  </Link>
-                                  <div className="dropdown-menu dropdown-menu-right">
-                                    <p
+                                  </button>
+                                  <div className="dropdown-menu dropdown-menu-end">
+                                    <button
                                       className="dropdown-item text-success"
                                       onClick={() =>
-                                        handleApproveClick(employee)
+                                        handleApproveClick(overtime)
                                       }
                                     >
                                       Approve
-                                    </p>
-                                    <p
+                                    </button>
+                                    <button
                                       className="dropdown-item text-danger"
                                       onClick={() =>
-                                        handleRejectClick(employee)
+                                        handleRejectClick(overtime)
                                       }
                                     >
                                       Reject
-                                    </p>
+                                    </button>
                                   </div>
                                 </div>
                               </td>
@@ -223,6 +293,7 @@ const RequestCreateEmployee = () => {
                           ))}
                         </tbody>
                       </table>
+
                       <div
                         style={{
                           display: "flex",
@@ -305,4 +376,4 @@ const RequestCreateEmployee = () => {
   );
 };
 
-export default RequestCreateEmployee;
+export default ViewOvertimeRequests;

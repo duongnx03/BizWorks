@@ -36,6 +36,6 @@ public class Attendance {
     private AttendanceComplaint attendanceComplaint;
 
     @OneToOne(mappedBy = "attendance", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Overtime overTime;
+    private Overtime overTimes;
 }
 

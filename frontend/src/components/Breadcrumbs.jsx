@@ -5,6 +5,13 @@ const Breadcrumbs = (props) => {
   const location = useLocation();
   let addButton = null;
   if (
+    location.pathname === "/approve-overtime-requests" ||
+    location.pathname === "/approve-overtime-requests" ||
+    location.pathname === "/approve-employee-requests" ||  
+    location.pathname === "/approve-attendance-complaint" || 
+    location.pathname === "/view-employee-requests" || 
+    location.pathname === "/view-attendance-complaint-requests" || 
+    location.pathname === "/view-overtime-requests" || 
     location.pathname === "/form-basic-inputs" ||
     location.pathname === "/form-input-groups" ||
     location.pathname === "/form-horizontal" ||
@@ -16,8 +23,11 @@ const Breadcrumbs = (props) => {
     location.pathname === "/performance" ||
     location.pathname === "/payments" ||
     location.pathname === "/ui/components" ||
+    location.pathname === "/list-requirements-create-employee" ||
     location.pathname === "/attendance-data" ||
     location.pathname === "/attendance-complaint" ||
+    location.pathname === "/request-overtime" ||
+    location.pathname === "/overtime" ||
     location.pathname === "/attendance-employee" ||
     location.pathname === "/request-attendance-complaint" ||
     location.pathname === "/task-board" ||

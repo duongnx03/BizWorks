@@ -40,12 +40,12 @@ public class FaceRecognitionService {
 
         // Chuyển đổi URL thành đường dẫn hệ thống
         String storedImagePath = storedImageUrl
-                .replace("http://localhost:8080/uploads/avatars/", "D:\\FPT Aptech\\project\\project\\uploads\\avatars\\")
+                .replace("http://localhost:8080/uploads/avatars/", "\\Bizworks\\backend\\uploads\\avatars\\")
                 .replace("/", File.separator);
 
         // Lưu ảnh mới tạm thời để so sánh
         String uploadedImageFileName = fileUpload.storeImage(subFolder, faceImage);
-        String uploadedImagePath = "D:\\FPT Aptech\\project\\project\\uploads\\" + subFolder + File.separator + uploadedImageFileName;
+        String uploadedImagePath = "\\Bizworks\\backend\\uploads\\" + subFolder + File.separator + uploadedImageFileName;
 
         // So sánh ảnh đã lưu với ảnh mới tải lên
         boolean isMatch = compareFacesWithFacepp(storedImagePath, uploadedImagePath);

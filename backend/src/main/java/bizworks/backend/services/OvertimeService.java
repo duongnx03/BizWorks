@@ -1,14 +1,8 @@
 package bizworks.backend.services;
 
 import bizworks.backend.dtos.*;
-import bizworks.backend.models.Attendance;
-import bizworks.backend.models.Employee;
-import bizworks.backend.models.Overtime;
-import bizworks.backend.models.User;
-import bizworks.backend.repositories.AttendanceRepository;
-import bizworks.backend.repositories.EmployeeRepository;
-import bizworks.backend.repositories.OvertimeRepository;
-import bizworks.backend.repositories.UserRepository;
+import bizworks.backend.models.*;
+import bizworks.backend.repositories.*;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -19,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +22,7 @@ public class OvertimeService {
     private final UserRepository userRepository;
     private final AttendanceRepository attendanceRepository;
     private final MailService mailService;
-    private final EmployeeRepository employeeRepository;
+    private final NotificationRepository notificationRepository;
 
     public void createOvertime(OvertimeRequestDTO overtimeRequestDTO) {
         String email = getCurrentUserEmail();
@@ -38,66 +33,77 @@ public class OvertimeService {
         LocalTime overtimeEnd;
         LocalTime totalTime;
         LocalDateTime checkOutTime;
-        Long censor;
+        User censor;
         String description;
         LocalDateTime currentDateTime = LocalDateTime.now();
+        Notification notification = new Notification();
 
         switch (user.getRole()) {
-            case "EMPLOYEE":
+            case "EMPLOYEE" -> {
                 User leader =  userRepository.findUserByRoleAndEmployeeDepartmentName( "LEADER", user.getEmployee().getDepartment().getName());
-                censor = leader.getId();
+                censor = leader;
                 description = "Sent, waiting for Leader approval.";
-                break;
-            case "LEADER":
-                censor = userRepository.findUserByRole("MANAGE").getId();
+                notification.setMessage("Register for overtime");
+                notification.setCreatedAt(LocalDateTime.now());
+                notification.setUser(leader);
+                notification.setRead(false);
+                notificationRepository.save(notification);
+            }
+            case "LEADER" -> {
+                User manage = userRepository.findUserByRole("ADMIN");
+                censor = manage;
                 description = "Sent, waiting for Manage approval.";
-                break;
-            case "MANAGE":
-                censor = userRepository.findUserByRole("ADMIN").getId();
+                notification.setMessage("Register for overtime");
+                notification.setCreatedAt(LocalDateTime.now());
+                notification.setUser(manage);
+                notification.setRead(false);
+                notificationRepository.save(notification);
+            }
+            case "MANAGE" -> {
+                User admin = userRepository.findUserByRole("ADMIN");
+                censor = admin;
                 description = "Sent, waiting for Admin approval.";
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + user.getRole());
+                notification.setMessage("Register for overtime");
+                notification.setCreatedAt(LocalDateTime.now());
+                notification.setUser(admin);
+                notification.setRead(false);
+                notificationRepository.save(notification);
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + user.getRole());
         }
 
         switch (overtimeRequestDTO.getType()) {
-            case "noon_overtime":
+            case "noon_overtime" -> {
                 overtimeStart = LocalTime.of(12, 0);
                 overtimeEnd = LocalTime.of(13, 0);
                 totalTime = LocalTime.of(1, 0);
                 checkOutTime = currentDateTime.with(LocalTime.of(17, 0));
-                break;
-
-            case "30m_overtime":
+            }
+            case "30m_overtime" -> {
                 overtimeStart = LocalTime.of(17, 0);
                 overtimeEnd = LocalTime.of(17, 30);
                 totalTime = LocalTime.of(0, 30);
                 checkOutTime = currentDateTime.with(LocalTime.of(17, 30));
-                break;
-
-            case "1h_overtime":
+            }
+            case "1h_overtime" -> {
                 overtimeStart = LocalTime.of(17, 0);
                 overtimeEnd = LocalTime.of(18, 0);
                 totalTime = LocalTime.of(1, 0);
                 checkOutTime = currentDateTime.with(LocalTime.of(18, 0));
-                break;
-
-            case "1h30_overtime":
+            }
+            case "1h30_overtime" -> {
                 overtimeStart = LocalTime.of(17, 0);
                 overtimeEnd = LocalTime.of(18, 30);
                 totalTime = LocalTime.of(1, 30);
                 checkOutTime = currentDateTime.with(LocalTime.of(18, 30));
-                break;
-
-            case "2h_overtime":
+            }
+            case "2h_overtime" -> {
                 overtimeStart = LocalTime.of(17, 0);
                 overtimeEnd = LocalTime.of(19, 0);
                 totalTime = LocalTime.of(2, 0);
                 checkOutTime = currentDateTime.with(LocalTime.of(19, 0));
-                break;
-
-            default:
-                throw new IllegalArgumentException("Invalid overtime type: " + overtimeRequestDTO.getType());
+            }
+            default -> throw new IllegalArgumentException("Invalid overtime type: " + overtimeRequestDTO.getType());
         }
         overtime.setOvertimeStart(overtimeStart);
         overtime.setOvertimeEnd(overtimeEnd);
@@ -110,6 +116,7 @@ public class OvertimeService {
         overtime.setCensor(censor);
         overtime.setAttendance(attendance);
         overtime.setEmployee(attendance.getEmployee());
+        overtime.setCreatedAt(LocalDateTime.now());
 
         overtimeRepository.save(overtime);
     }
@@ -118,34 +125,66 @@ public class OvertimeService {
         String email = getCurrentUserEmail();
         User user = userRepository.findByEmail(email).orElseThrow();
         Overtime overtime = overtimeRepository.findById(id).orElseThrow();
-        Long censor;
+        User censor;
         String description;
-        String status;
+        Notification notification = new Notification();
+        User manage = userRepository.findUserByRole("MANAGE");
+        User admin = userRepository.findUserByRole("ADMIN");
+        User sender = userRepository.findById(overtime.getEmployee().getUser().getId()).orElseThrow();
         switch (user.getRole()) {
-            case "LEADER":
-                censor = userRepository.findUserByRole("MANAGE").getId();
+            case "LEADER" -> {
+                censor = userRepository.findUserByRole("MANAGE");
                 description = "Leader approved, waiting for Manager approval.";
                 overtime.setIsLeaderShow(user.getId());
-                break;
-            case "MANAGE":
-                censor = userRepository.findUserByRole("ADMIN").getId();
-                description = "Manage approved, waiting for Admin approval.";
+                notification.setMessage("Leader just approved overtime request.");
+                notification.setCreatedAt(LocalDateTime.now());
+                notification.setUser(admin);
+                notification.setRead(false);
+                notificationRepository.save(notification);
+
+                notification.setMessage("Leader has approved your overtime request.");
+                notification.setCreatedAt(LocalDateTime.now());
+                notification.setUser(sender);
+                notification.setRead(false);
+                notificationRepository.save(notification);
+            }
+            case "MANAGE" -> {
+                censor = user;
+                description = "Approved";
                 overtime.setIsManageShow(user.getId());
-                break;
-            case "ADMIN":
-                censor = userRepository.findUserByRole("ADMIN").getId();
-                description = "Admin approved";
-                status = "Approved";
+                overtime.setStatus("Approved");
+
+                notification.setMessage("Manager just approved overtime request.");
+                notification.setCreatedAt(LocalDateTime.now());
+                notification.setUser(admin);
+                notification.setRead(false);
+                notificationRepository.save(notification);
+
+                notification.setMessage("Manager has approved your overtime request.");
+                notification.setCreatedAt(LocalDateTime.now());
+                notification.setUser(sender);
+                notification.setRead(false);
+                notificationRepository.save(notification);
+            }
+            case "ADMIN" -> {
+                censor = user;
+                description = "Approved";
                 overtime.setIsAdminShow(user.getId());
-                overtime.setStatus(status);
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + user.getRole());
+                overtime.setStatus("Approved");
+
+                notification.setMessage("Admin has approved your overtime request.");
+                notification.setCreatedAt(LocalDateTime.now());
+                notification.setUser(sender);
+                notification.setRead(false);
+                notificationRepository.save(notification);
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + user.getRole());
         }
         overtime.setCensor(censor);
         overtime.setDescription(description);
+        overtime.setUpdatedAt(LocalDateTime.now());
         overtimeRepository.save(overtime);
-        if(user.getRole().equals("ADMIN")){
+        if(user.getRole().equals("ADMIN") || user.getRole().equals("MANAGE")){
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm ");
             String checkOutTime =  overtime.getCheckOutTime().format(formatter);
             sendEmailApproved(overtime.getEmployee().getEmail(), overtime.getEmployee().getEmpCode(), overtime.getEmployee().getFullname(), checkOutTime);
@@ -156,22 +195,28 @@ public class OvertimeService {
         String email = getCurrentUserEmail();
         User user = userRepository.findByEmail(email).orElseThrow();
         Overtime overtime = overtimeRepository.findById(id).orElseThrow();
-        switch (user.getRole()){
+        switch (user.getRole()) {
             case "LEADER" -> {
-                overtime.setIsLeaderShow(overtime.getCensor());
+                overtime.setIsLeaderShow(overtime.getCensor().getId());
             }
             case "MANAGE" -> {
-                overtime.setIsManageShow(overtime.getCensor());
+                overtime.setIsManageShow(overtime.getCensor().getId());
             }
             case "ADMIN" -> {
-                overtime.setIsAdminShow(overtime.getCensor());
+                overtime.setIsAdminShow(overtime.getCensor().getId());
             }
             default -> throw new IllegalStateException("Unexpected value: ");
         }
         overtime.setDescription(description);
         overtime.setStatus("Rejected");
+        overtime.setUpdatedAt(LocalDateTime.now());
         overtimeRepository.save(overtime);
-        sendEmailRejeted(overtime.getEmployee().getEmail(), overtime.getEmployee().getEmpCode(), overtime.getEmployee().getFullname());
+        sendEmailRejected(overtime.getEmployee().getEmail(), overtime.getEmployee().getEmpCode(), overtime.getEmployee().getFullname());
+    }
+
+    public List<OvertimeDTO> findAll(){
+        List<Overtime> overtimes = overtimeRepository.findAll();
+        return overtimes.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     public Overtime findByAttendanceIdAndStatus(Long id, String status) {
@@ -186,39 +231,23 @@ public class OvertimeService {
     public List<Overtime> findByCensor() {
         String email = getCurrentUserEmail();
         User user = userRepository.findByEmail(email).orElseThrow();
-        Long censor;
-        switch (user.getRole()) {
-            case "LEADER":
-                censor = user.getId();
-                break;
-            case "MANAGE":
-                censor = user.getId();
-                break;
-            case "ADMIN":
-                censor = user.getId();
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + user.getRole());
-        }
-        return overtimeRepository.findOvertimeByCensor(censor);
+        Long censor = user.getId();
+        return overtimeRepository.findOvertimeByCensorId(censor);
     }
 
     public List<Overtime> findByIsShow() {
         String email = getCurrentUserEmail();
         User user = userRepository.findByEmail(email).orElseThrow();
-        Long id;
+        Long id = user.getId();
         List<Overtime> overtimes;
         switch (user.getRole()) {
             case "LEADER":
-                id = user.getId();
                 overtimes = overtimeRepository.findOvertimeByIsLeaderShow(id);
                 break;
             case "MANAGE":
-                id = user.getId();
                 overtimes = overtimeRepository.findOvertimeByIsManageShow(id);
                 break;
             case "ADMIN":
-                id = user.getId();
                 overtimes = overtimeRepository.findOvertimeByIsAdminShow(id);
                 break;
             default:
@@ -242,8 +271,14 @@ public class OvertimeService {
         overtimeDTO.setStatus(overtime.getStatus());
         overtimeDTO.setReason(overtime.getReason());
         overtimeDTO.setDescription(overtime.getDescription());
-        overtimeDTO.setCensor(overtime.getCensor());
+        overtimeDTO.setCensor(convertToUserDTO(overtime.getCensor()));
         overtimeDTO.setAttendanceDTO(convertToAttendanceDTO(overtime.getAttendance()));
+        overtimeDTO.setCreatedAt(overtime.getCreatedAt());
+        if(overtime.getUpdatedAt() == null){
+            overtimeDTO.setUpdatedAt(null);
+        }else{
+            overtimeDTO.setUpdatedAt(overtime.getUpdatedAt());
+        }
         return overtimeDTO;
     }
 
@@ -268,21 +303,28 @@ public class OvertimeService {
         return attendanceDTO;
     }
 
+    private UserResponseDTO convertToUserDTO(User user){
+        UserResponseDTO userResponseDTO = new UserResponseDTO();
+        userResponseDTO.setId(user.getId());
+        userResponseDTO.setEmployee(convertToEmployeeDTO(user.getEmployee()));
+        return userResponseDTO;
+    }
+
     private EmployeeResponseDTO convertToEmployeeDTO(Employee employee) {
         EmployeeResponseDTO employeeDTO = new EmployeeResponseDTO();
         employeeDTO.setId(employee.getId());
         employeeDTO.setEmpCode(employee.getEmpCode());
         employeeDTO.setFullname(employee.getFullname());
-        employeeDTO.setDob(employee.getDob());
-        employeeDTO.setAddress(employee.getAddress());
-        employeeDTO.setGender(employee.getGender());
         employeeDTO.setEmail(employee.getEmail());
+        employeeDTO.setAddress(employee.getAddress());
         employeeDTO.setPhone(employee.getPhone());
+        employeeDTO.setDob(employee.getDob());
         employeeDTO.setAvatar(employee.getAvatar());
-        employeeDTO.setEndDate(employee.getEndDate());
         employeeDTO.setStartDate(employee.getStartDate());
-        employeeDTO.setPosition(employee.getPosition().getPositionName());
+        employeeDTO.setEndDate(employee.getEndDate());
+        employeeDTO.setGender(employee.getGender());
         employeeDTO.setDepartment(employee.getDepartment().getName());
+        employeeDTO.setPosition(employee.getPosition().getPositionName());
         return employeeDTO;
     }
 
@@ -291,7 +333,7 @@ public class OvertimeService {
         return authentication.getName();
     }
 
-    public void sendEmailApproved(String email, String empCode, String fullname, String checkOutTime) throws MessagingException {
+    private void sendEmailApproved(String email, String empCode, String fullname, String checkOutTime) throws MessagingException {
         String subject = "Approve overtime";
         String content = "<html>"
                 + "<body style='font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0;'>"
@@ -314,7 +356,7 @@ public class OvertimeService {
         mailService.sendEmail(email, subject, content);
     }
 
-    public void sendEmailRejeted(String email, String empCode, String fullname) throws MessagingException {
+    private void sendEmailRejected(String email, String empCode, String fullname) throws MessagingException {
         String subject = "Overtime Request - Denied";
         String content = "<html>"
                 + "<body style='font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; margin: 0;'>"

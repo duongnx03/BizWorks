@@ -31,6 +31,16 @@ public class AttendanceComplaintController {
         }
     }
 
+    @GetMapping("/getAll")
+    public ResponseEntity<ApiResponse<?>> getAll(){
+        try{
+            List<AttendanceComplaintDTO> attendanceComplaintDTOs = attendanceComplaintService.findAll();
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(attendanceComplaintDTOs, "Complaint get all successfully"));
+        }catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getLocalizedMessage(), "ERROR_SERVER"));
+        }
+    }
+
     @GetMapping("/getByCensor")
     public ResponseEntity<ApiResponse<?>> getByCensor(){
         try{

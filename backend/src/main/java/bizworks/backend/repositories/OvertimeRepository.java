@@ -11,7 +11,7 @@ public interface OvertimeRepository extends JpaRepository<Overtime, Long> {
     Overtime findOvertimeByAttendanceIdAndStatus(Long id, String status);
     List<Overtime> findOvertimeByEmployeeEmail(String email);
     Overtime findOvertimeByAttendanceId(Long id);
-    List<Overtime> findOvertimeByCensor(Long censor);
+    List<Overtime> findOvertimeByCensorId(Long id);
     List<Overtime> findOvertimeByIsAdminShow(Long id);
     List<Overtime> findOvertimeByIsManageShow(Long id);
     List<Overtime> findOvertimeByIsLeaderShow(Long id);

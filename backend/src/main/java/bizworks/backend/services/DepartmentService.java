@@ -4,8 +4,11 @@ import bizworks.backend.dtos.DepartmentDTO;
 import bizworks.backend.models.Department;
 import bizworks.backend.models.User;
 import bizworks.backend.repositories.DepartmentRepository;
+import bizworks.backend.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -19,6 +22,16 @@ public class DepartmentService {
 
     @Autowired
     private AuthenticationService authenticationService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    public Department findByName(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email).orElseThrow();
+        return departmentRepository.findByName(user.getEmployee().getDepartment().getName()).orElseThrow();
+    }
 
     public Department findById(Long id) {
         return departmentRepository.findById(id)

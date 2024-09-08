@@ -36,6 +36,17 @@ public class DepartmentController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // Hoặc xử lý lỗi chi tiết hơn
         }
     }
+
+    @GetMapping("/getByName")
+    public ResponseEntity<Department> getDepartmentByName() {
+        try {
+            Department department = departmentService.findByName();
+            return ResponseEntity.ok(department);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // Hoặc xử lý lỗi chi tiết hơn
+        }
+    }
+
     @PostMapping
     public ResponseEntity<Department> createDepartment(@RequestBody DepartmentDTO departmentDTO) {
         try {

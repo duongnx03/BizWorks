@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import Breadcrumbs from "../../../components/Breadcrumbs";
-import EmployeeListFilter from "../../../components/EmployeeListFilter";
-import AllEmployeeAddPopup from "../../../components/modelpopup/AllEmployeeAddPopup";
+import LeaderAddEmployeeModelPopup from "../../../components/modelpopup/LeaderAddEmployeeModelPopop";
 
 const getStatusStyle = (status) => {
   switch (status) {
@@ -18,16 +17,10 @@ const getStatusStyle = (status) => {
   }
 };
 
-const ManageEmployeeManagement = () => {
+const LeaderEmployees = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredEmployees, setFilteredEmployees] = useState([]);
-  const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [selectedPosition, setSelectedPosition] = useState(null);
-  const [startDate, setStartDate] = useState(null);
-  const [noData, setNoData] = useState(false);
   const recordsPerPage = 9;
 
   const fetchEmployees = async () => {
@@ -43,7 +36,6 @@ const ManageEmployeeManagement = () => {
         // Sắp xếp nhân viên theo ID từ mới đến cũ
         const sortedEmployees = response.data.data.sort((a, b) => b.id - a.id);
         setEmployees(sortedEmployees);
-        setFilteredEmployees(sortedEmployees);
       }
       setLoading(false);
     } catch (error) {
@@ -56,35 +48,9 @@ const ManageEmployeeManagement = () => {
     fetchEmployees();
   }, []);
 
-  useEffect(() => {
-    const filtered = employees.filter((employee) => {
-      const matchesEmpCode = employee.empCode
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const matchesDepartment = selectedDepartment
-        ? employee.department === selectedDepartment.label
-        : true;
-      const matchesPosition = selectedPosition
-        ? employee.position === selectedPosition.label
-        : true;
-      const matchesStartDate = startDate
-        ? new Date(employee.startDate).toLocaleDateString() ===
-          new Date(startDate).toLocaleDateString()
-        : true;
-      return (
-        matchesEmpCode &&
-        matchesDepartment &&
-        matchesPosition &&
-        matchesStartDate
-      );
-    });
-    setFilteredEmployees(filtered);
-    setNoData(filtered.length === 0);
-  }, [searchTerm, selectedDepartment, selectedPosition, startDate, employees]);
-
   const sortedEmployees = React.useMemo(() => {
-    return filteredEmployees;
-  }, [filteredEmployees]);
+    return employees;
+  }, [employees]);
 
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
@@ -99,22 +65,6 @@ const ManageEmployeeManagement = () => {
     setCurrentPage(pageNumber);
   };
 
-  const handleSearchInputChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleSelectedDepartment = (department) => {
-    setSelectedDepartment(department);
-  };
-
-  const handleSelectedPosition = (position) => {
-    setSelectedPosition(position);
-  };
-
-  const handleStartDate = (date) => {
-    setStartDate(date);
-  };
-
   return (
     <div>
       <div className="page-wrapper">
@@ -123,42 +73,22 @@ const ManageEmployeeManagement = () => {
             maintitle="Employee"
             title="Dashboard"
             subtitle="Employee"
-            modal="#add_employee"
-            name="Add Leader"
-          />
-          <EmployeeListFilter
-            handleSearchInputChange={handleSearchInputChange}
-            setSelectedDepartment={handleSelectedDepartment}
-            setSelectedPosition={handleSelectedPosition}
-            setStartDate={handleStartDate}
+            modal="#leader_add_employee"
+            name="Add Employee to Department"
           />
           <div className="row">
             <div className="col-md-12">
               <div className="table-responsive">
                 {loading ? (
                   <div className="alert alert-info">Loading...</div>
-                ) : noData ? (
-                  <div className="alert alert-warning">No data found</div>
                 ) : (
                   <>
                     <table className="table table-striped">
                       <thead>
                         <tr>
-                          <th>
-                            Employee Infomation
-                          </th>
-                          <th>
-                            Email 
-                          </th>
-                          <th>
-                            Start Date
-                          </th>
-                          <th>
-                            Department
-                          </th>
-                          <th>
-                            Position
-                          </th>
+                          <th>Employee Infomation</th>
+                          <th>Email</th>
+                          <th>Start Date</th>
                           <th>Description</th>
                           <th>Status</th>
                         </tr>
@@ -167,22 +97,51 @@ const ManageEmployeeManagement = () => {
                         {currentEmployees.map((employee) => (
                           <tr key={employee.id}>
                             <td>
-                              <span className="table-avatar">
+                              <div className="d-flex align-items-center">
                                 <Link
                                   to={`/client-profile/${employee.id}`}
-                                  className="avatar"
+                                  className="me-3"
                                 >
-                                  <img
-                                    alt=""
-                                    src={
-                                      employee.avatar || "default-avatar.png"
-                                    }
-                                  />
-                                </Link>5
-                                <Link to={`/client-profile/${employee.id}`}>
-                                  {employee.empCode} - {employee.fullname}
+                                  <div
+                                    style={{
+                                      width: "50px",
+                                      height: "50px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <img
+                                      alt="Employee Avatar"
+                                      src={
+                                        employee.avatar || "default-avatar.png"
+                                      }
+                                      style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                        borderRadius: "50%",
+                                      }}
+                                    />
+                                  </div>
                                 </Link>
-                              </span>
+                                <div>
+                                  <Link
+                                    to={`/client-profile/${employee.id}`}
+                                    className="text-decoration-none fw-bold text-dark"
+                                  >
+                                    {employee.empCode} - {employee.fullname}
+                                  </Link>
+                                  <div className="mt-1">
+                                    <span className="d-block fw-semibold">
+                                      {employee.departmentName}
+                                    </span>
+                                    <span className="d-block text-muted">
+                                      {employee.positionName}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
                             </td>
                             <td>{employee.email}</td>
                             <td>
@@ -190,8 +149,6 @@ const ManageEmployeeManagement = () => {
                                 employee.startDate
                               ).toLocaleDateString()}
                             </td>
-                            <td>{employee.departmentName}</td>
-                            <td>{employee.positionName}</td>
                             <td>{employee.description}</td>
                             <td
                               className={`text-center ${getStatusStyle(
@@ -252,10 +209,10 @@ const ManageEmployeeManagement = () => {
             </div>
           </div>
         </div>
-        <AllEmployeeAddPopup refreshEmployeeList={fetchEmployees} />
+        <LeaderAddEmployeeModelPopup refreshEmployeeList={fetchEmployees} />
       </div>
     </div>
   );
 };
 
-export default ManageEmployeeManagement;
+export default LeaderEmployees;

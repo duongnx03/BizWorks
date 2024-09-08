@@ -2,10 +2,7 @@ package bizworks.backend.services;
 import bizworks.backend.dtos.*;
 import bizworks.backend.helpers.FileUpload;
 import bizworks.backend.models.*;
-import bizworks.backend.repositories.DepartmentRepository;
-import bizworks.backend.repositories.ForgotPasswordRepository;
-import bizworks.backend.repositories.PositionRepository;
-import bizworks.backend.repositories.UserRepository;
+import bizworks.backend.repositories.*;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -59,6 +56,7 @@ public class AuthenticationService {
     private final DepartmentRepository departmentRepository;
     private final EmployeeApprovalQueueService employeeApprovalQueueService;
     private final FileUpload fileUpload;
+    private final NotificationRepository notificationRepository;
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
@@ -68,9 +66,20 @@ public class AuthenticationService {
         String email = getCurrentUserEmail();
         User userExisted = userRepository.findByEmail(email).orElseThrow();
 
-        if(userExisted.getRole().equals("ADMIN")){
+        if(userExisted.getRole().equals("ADMIN") || userExisted.getRole().equals("MANAGE")){
             if (employeeService.existsByEmail(request.getEmail())) {
                 throw new IllegalArgumentException("Email already in use");
+            }
+
+            String role;
+            switch (userExisted.getRole()){
+                case "ADMIN" -> {
+                    role = "MANAGE";
+                }
+                case "MANAGE" -> {
+                    role = "LEADER";
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + userExisted.getRole());
             }
 
             String password = generateRandomPassword();
@@ -78,7 +87,7 @@ public class AuthenticationService {
             User user = new User();
             user.setEmail(request.getEmail());
             user.setPassword(passwordEncoder.encode(password));
-            user.setRole("MANAGE");
+            user.setRole(role);
             userRepository.save(user);
 
             String imageName = fileUpload.storeImage(subFolder, request.getFileImage());
@@ -101,9 +110,6 @@ public class AuthenticationService {
             VerifyAccount verifyAccount = verifyAccountService.createVerifyAccount(user);
             sendVerificationEmail(request.getEmail(), request.getFullname(), verifyAccount.getVerificationCode(), password);
         }else{
-            Long censor;
-            String description;
-            Long sender;
             if (employeeApprovalQueueService.existsByEmail(request.getEmail())) {
                 throw new IllegalArgumentException("Email already in use");
             }
@@ -111,19 +117,15 @@ public class AuthenticationService {
                 throw new IllegalArgumentException("Email already in use");
             }
 
-            switch (userExisted.getRole()) {
-                case "LEADER" -> {
-                    censor = userRepository.findUserByRole("MANAGE").getId();
-                    description = "Request to create employee";
-                    sender = userExisted.getId();
-                }
-                case "MANAGE" -> {
-                    censor = userRepository.findUserByRole("ADMIN").getId();
-                    description = "Request to create leader";
-                    sender = userExisted.getId();
-                }
-                default -> throw new IllegalStateException("Unexpected value: " + userExisted.getRole());
-            }
+            User manage = userRepository.findUserByRole("MANAGE");
+            String description = "Request to create employee";
+
+            Notification notification = new Notification();
+            notification.setMessage("Request to create employee");
+            notification.setCreatedAt(LocalDateTime.now());
+            notification.setUser(manage);
+            notification.setRead(false);
+            notificationRepository.save(notification);
 
             String imageName = fileUpload.storeImage(subFolder, request.getFileImage());
             String exactImageUrl = urlImage + File.separator + imageName;
@@ -143,75 +145,84 @@ public class AuthenticationService {
             employeeApprovalQueue.setPositionName(position.getPositionName());
             employeeApprovalQueue.setStatus("Pending");
             employeeApprovalQueue.setDescription(description);
-            employeeApprovalQueue.setCensor(censor);
-            employeeApprovalQueue.setSender(sender);
+            employeeApprovalQueue.setCensor(manage);
+            employeeApprovalQueue.setSender(userExisted);
+            employeeApprovalQueue.setCreatedAt(LocalDateTime.now());
 
             employeeApprovalQueueService.save(employeeApprovalQueue);
         }
     }
 
     public void approveCreateEmp(Long id){
-        String email = getCurrentUserEmail();
-        User userExisted = userRepository.findByEmail(email).orElseThrow();
-        if(userExisted.getRole().equals("MANAGE")) {
-            EmployeeApprovalQueue employeeApprovalQueue = employeeApprovalQueueService.findById(id);
-            Long censor = userRepository.findUserByRole("ADMIN").getId();
-            employeeApprovalQueue.setCensor(censor);
-            employeeApprovalQueue.setIsManageShow(userExisted.getEmployee().getId());
-            employeeApprovalQueue.setDescription("Waiting for admin approval.");
-            employeeApprovalQueueService.save(employeeApprovalQueue);
-        }else{
-            EmployeeApprovalQueue employeeApprovalQueue = employeeApprovalQueueService.findById(id);
-            String role;
-            User userGetRole = userRepository.findById(employeeApprovalQueue.getSender()).orElseThrow();
-            switch (userGetRole.getRole()){
-                case "LEADER" -> {
-                    role = "EMPLOYEE";
-                }
-                case "MANAGE" -> {
-                    role = "LEADER";
-                }
-                default -> throw new IllegalStateException("Unexpected value: ");
-            }
-            employeeApprovalQueue.setStatus("Approved");
-            employeeApprovalQueue.setDescription("Approve request.");
-            String password = generateRandomPassword();
+        EmployeeApprovalQueue employeeApprovalQueue = employeeApprovalQueueService.findById(id);
+        employeeApprovalQueue.setStatus("Approved");
+        employeeApprovalQueue.setDescription("Approve request.");
+        employeeApprovalQueue.setUpdatedAt(LocalDateTime.now());
+        String password = generateRandomPassword();
 
-            User user = new User();
-            user.setEmail(employeeApprovalQueue.getEmail());
-            user.setPassword(passwordEncoder.encode(password));
-            user.setRole(role);
-            userRepository.save(user);
+        User admin = userRepository.findUserByRole("ADMIN");
+        Notification notification = new Notification();
+        notification.setMessage("The manager has just approved the request to create a new employee.");
+        notification.setCreatedAt(LocalDateTime.now());
+        notification.setUser(admin);
+        notification.setRead(false);
+        notificationRepository.save(notification);
 
-            Department department = departmentRepository.findById(employeeApprovalQueue.getDepartmentId()).orElseThrow();
-            Position position = positionRepository.findById(employeeApprovalQueue.getPositionId()).orElseThrow();
+        Notification notification1 = new Notification();
+        User leader = userRepository.findById(employeeApprovalQueue.getSender().getId()).orElseThrow();
+        notification1.setMessage("The manager has approved your request to create a new employee.");
+        notification1.setCreatedAt(LocalDateTime.now());
+        notification1.setUser(leader);
+        notification1.setRead(false);
+        notificationRepository.save(notification1);
 
-            Employee employee = new Employee();
-            employee.setFullname(employeeApprovalQueue.getFullname());
-            employee.setEmpCode(employeeApprovalQueue.getEmpCode());
-            employee.setEmail(employeeApprovalQueue.getEmail());
-            employee.setAvatar(employeeApprovalQueue.getAvatar());
-            employee.setStartDate(employeeApprovalQueue.getStartDate());
-            employee.setUser(user);
-            employee.setDepartment(department);
-            employee.setPosition(position);
-            employeeService.save(employee);
+        User user = new User();
+        user.setEmail(employeeApprovalQueue.getEmail());
+        user.setPassword(passwordEncoder.encode(password));
+        user.setRole("EMPLOYEE");
+        userRepository.save(user);
 
-            VerifyAccount verifyAccount = verifyAccountService.createVerifyAccount(user);
-            sendVerificationEmail(employeeApprovalQueue.getEmail(), employeeApprovalQueue.getFullname(), verifyAccount.getVerificationCode(), password);
-        }
+        Department department = departmentRepository.findById(employeeApprovalQueue.getDepartmentId()).orElseThrow();
+        Position position = positionRepository.findById(employeeApprovalQueue.getPositionId()).orElseThrow();
+
+        Employee employee = new Employee();
+        employee.setFullname(employeeApprovalQueue.getFullname());
+        employee.setEmpCode(employeeApprovalQueue.getEmpCode());
+        employee.setEmail(employeeApprovalQueue.getEmail());
+        employee.setAvatar(employeeApprovalQueue.getAvatar());
+        employee.setStartDate(employeeApprovalQueue.getStartDate());
+        employee.setUser(user);
+        employee.setDepartment(department);
+        employee.setPosition(position);
+        employeeService.save(employee);
+
+        VerifyAccount verifyAccount = verifyAccountService.createVerifyAccount(user);
+        sendVerificationEmail(employeeApprovalQueue.getEmail(), employeeApprovalQueue.getFullname(), verifyAccount.getVerificationCode(), password);
     }
 
     public void rejectCreateEmp(Long id, String reason) throws MessagingException {
-        String email = getCurrentUserEmail();
-        User userExisted = userRepository.findByEmail(email).orElseThrow();
         EmployeeApprovalQueue employeeApprovalQueue = employeeApprovalQueueService.findById(id);
-        if(userExisted.getRole().equals("MANAGE")){
-            employeeApprovalQueue.setIsManageShow(userExisted.getEmployee().getId());
-        }
         employeeApprovalQueue.setStatus("Rejected");
         employeeApprovalQueue.setDescription(reason);
+        employeeApprovalQueue.setUpdatedAt(LocalDateTime.now());
         employeeApprovalQueueService.save(employeeApprovalQueue);
+
+        User admin = userRepository.findUserByRole("ADMIN");
+        Notification notification = new Notification();
+        notification.setMessage("The manager has just approved the request to create a new employee.");
+        notification.setCreatedAt(LocalDateTime.now());
+        notification.setUser(admin);
+        notification.setRead(false);
+        notificationRepository.save(notification);
+
+        User leader = userRepository.findById(employeeApprovalQueue.getSender().getId()).orElseThrow();
+        Notification notification1 = new Notification();
+        notification1.setMessage("Your request to create a new employee has been approved.");
+        notification1.setCreatedAt(LocalDateTime.now());
+        notification1.setUser(leader);
+        notification1.setRead(false);
+        notificationRepository.save(notification1);
+
         sendEmailRejected(employeeApprovalQueue.getEmail(), employeeApprovalQueue.getEmpCode(), employeeApprovalQueue.getFullname());
     }
 

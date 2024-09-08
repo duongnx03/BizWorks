@@ -25,10 +25,11 @@ public class Overtime {
     private String status;
     private String reason;
     private String description;
-    private Long censor;
     private Long isAdminShow;
     private Long isManageShow;
     private Long isLeaderShow;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attendanceId")
@@ -37,5 +38,9 @@ public class Overtime {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "empId")
     private Employee employee;
+
+    @ManyToOne
+    @JoinColumn(name = "censor_id")
+    private User censor;
 }
 

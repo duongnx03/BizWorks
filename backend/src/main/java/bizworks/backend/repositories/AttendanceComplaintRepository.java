@@ -10,9 +10,8 @@ import java.util.List;
 public interface AttendanceComplaintRepository extends JpaRepository<AttendanceComplaint, Long> {
     AttendanceComplaint findAttendanceComplaintByAttendanceId(Long attendanceId);
     List<AttendanceComplaint> findAttendanceComplaintByEmployeeEmail(String email);
-    List<AttendanceComplaint> findAttendanceComplaintByCensor(Long id);
+    List<AttendanceComplaint> findAttendanceComplaintByCensorId(Long id);
     List<AttendanceComplaint> findAttendanceComplaintByIsLeaderShow(Long id);
     List<AttendanceComplaint> findAttendanceComplaintByIsManageShow(Long id);
-    List<AttendanceComplaint> findAttendanceComplaintByIsAdminShow(Long id);
 }
 

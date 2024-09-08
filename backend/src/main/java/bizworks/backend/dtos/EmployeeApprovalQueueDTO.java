@@ -4,24 +4,27 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OvertimeDTO {
+public class EmployeeApprovalQueueDTO {
     private Long id;
-    private LocalTime overtimeStart;
-    private LocalTime overtimeEnd;
-    private LocalTime totalTime;
-    private LocalDateTime checkOutTime;
-    private String type;
+    private String empCode;
+    private String fullname;
+    private String email;
+    private String avatar;
+    private LocalDate startDate;
+    private Long departmentId;
+    private String departmentName;
+    private Long positionId;
+    private String positionName;
     private String status;
-    private String reason;
     private String description;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private AttendanceDTO attendanceDTO;
+    private UserResponseDTO sender;
     private UserResponseDTO censor;
 }

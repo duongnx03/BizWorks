@@ -2,23 +2,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import Breadcrumbs from "../../../components/Breadcrumbs";
-import LeaderAddEmployeeModelPopup from "../../../components/modelpopup/LeaderAddEmployeeModelPopop";
 import EmployeeListFilter from "../../../components/EmployeeListFilter";
+import AllEmployeeAddPopup from "../../../components/modelpopup/AllEmployeeAddPopup";
 
-const getStatusStyle = (status) => {
-  switch (status) {
-    case "Pending":
-      return "bg-info text-white";
-    case "Approved":
-      return "bg-success text-white";
-    case "Rejected":
-      return "bg-danger text-white";
-    default:
-      return "bg-secondary";
-  }
-};
-
-const LeaderEmployeeManagement = () => {
+const ManageEmployees = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,7 +21,7 @@ const LeaderEmployeeManagement = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        "http://localhost:8080/api/emp-queue/getBySender",
+        "http://localhost:8080/api/employee/getAllEmployees",
         {
           withCredentials: true,
         }
@@ -123,8 +110,8 @@ const LeaderEmployeeManagement = () => {
             maintitle="Employee"
             title="Dashboard"
             subtitle="Employee"
-            modal="#leader_add_employee"
-            name="Add Employee to Department"
+            modal="#add_employee"
+            name="Add Leader"
           />
           <EmployeeListFilter
             handleSearchInputChange={handleSearchInputChange}
@@ -147,48 +134,63 @@ const LeaderEmployeeManagement = () => {
                           <th>Employee Infomation</th>
                           <th>Email</th>
                           <th>Start Date</th>
-                          <th>Department</th>
-                          <th>Position</th>
-                          <th>Description</th>
-                          <th>Status</th>
                         </tr>
                       </thead>
                       <tbody>
                         {currentEmployees.map((employee) => (
                           <tr key={employee.id}>
                             <td>
-                              <span className="table-avatar">
+                              <div className="d-flex align-items-center">
                                 <Link
                                   to={`/client-profile/${employee.id}`}
-                                  className="avatar"
+                                  className="me-3"
                                 >
-                                  <img
-                                    alt=""
-                                    src={
-                                      employee.avatar || "default-avatar.png"
-                                    }
-                                  />
+                                  <div
+                                    style={{
+                                      width: "50px",
+                                      height: "50px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <img
+                                      alt="Employee Avatar"
+                                      src={
+                                        employee.avatar || "default-avatar.png"
+                                      }
+                                      style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                        borderRadius: "50%",
+                                      }}
+                                    />
+                                  </div>
                                 </Link>
-                                <Link to={`/client-profile/${employee.id}`}>
-                                  {employee.empCode} - {employee.fullname}
-                                </Link>
-                              </span>
+                                <div>
+                                  <Link
+                                    to={`/client-profile/${employee.id}`}
+                                    className="text-decoration-none fw-bold text-dark"
+                                  >
+                                    {employee.empCode} - {employee.fullname}
+                                  </Link>
+                                  <div className="mt-1">
+                                    <span className="d-block fw-semibold">
+                                      {employee.department}
+                                    </span>
+                                    <span className="d-block text-muted">
+                                      {employee.position}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
                             </td>
                             <td>{employee.email}</td>
                             <td>
                               {new Date(
                                 employee.startDate
                               ).toLocaleDateString()}
-                            </td>
-                            <td>{employee.departmentName}</td>
-                            <td>{employee.positionName}</td>
-                            <td>{employee.description}</td>
-                            <td
-                              className={`text-center ${getStatusStyle(
-                                employee.status
-                              )}`}
-                            >
-                              {employee.status}
                             </td>
                           </tr>
                         ))}
@@ -242,10 +244,10 @@ const LeaderEmployeeManagement = () => {
             </div>
           </div>
         </div>
-        <LeaderAddEmployeeModelPopup refreshEmployeeList={fetchEmployees} />
+        <AllEmployeeAddPopup refreshEmployeeList={fetchEmployees} />
       </div>
     </div>
   );
 };
 
-export default LeaderEmployeeManagement;
+export default ManageEmployees;

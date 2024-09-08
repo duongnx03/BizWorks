@@ -23,17 +23,17 @@ public class AttendanceComplaint {
     private LocalDateTime breakTimeEnd;
     private LocalDateTime checkOutTime;
     private LocalDate attendanceDate;
-    private LocalTime totalWorkTime;
+    private LocalTime totalTime;
+    private LocalTime officeHours;
     private LocalTime overtime;
     private String complaintReason;
     private String status;
     private String imagePaths;
     private String description;
-    private Long censor;
-    private Long isAdminShow;
     private Long isManageShow;
     private Long isLeaderShow;
-
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attendance_id")
@@ -42,4 +42,8 @@ public class AttendanceComplaint {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "empId")
     private Employee employee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User censor;
 }

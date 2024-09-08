@@ -142,19 +142,6 @@ public class AttendanceController {
         }
     }
 
-    @PostMapping("/markAbsent")
-    public ResponseEntity<ApiResponse<?>> markAbsentEmployees() {
-        try {
-            List<Attendance> absentAttendances = attendanceService.markAbsentEmployees();
-            List<AttendanceDTO> attendanceDTOs = absentAttendances.stream()
-                    .map(attendanceService::convertToDTO)
-                    .collect(Collectors.toList());
-            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(attendanceDTOs, "Marked absent employees successfully"));
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
-        }
-    }
-
     @GetMapping("/summary")
     public ResponseEntity<ApiResponse<?>> getAttendanceSummary() {
         try {

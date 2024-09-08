@@ -20,12 +20,17 @@ public class AttendanceComplaintDTO {
     private LocalDateTime breakTimeEnd;
     private LocalDateTime checkOutTime;
     private LocalDate attendanceDate;
-    private LocalTime totalWorkTime;
+    private LocalTime totalTime;
+    private LocalTime officeHours;
     private LocalTime overtime;
     private String complaintReason;
     private String status;
     private Long attendanceId;
     private String imagePaths;
     private String description;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private EmployeeResponseDTO employee;
+    private UserResponseDTO censor;
+    private OvertimeNotAttendanceDTO overTimes;
 }

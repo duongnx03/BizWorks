@@ -8,7 +8,9 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
   const [breakTimeStart, setBreakTimeStart] = useState(null);
   const [breakTimeEnd, setBreakTimeEnd] = useState(null);
   const [checkOutTime, setCheckOutTime] = useState(null);
-  const [totalWorkTime, setTotalWorkTime] = useState(null);
+  const [officeHours, setOfficeHours] = useState(null);
+  const [totalTime, setTotalTime] = useState(null);
+  const [type, setType] = useState(null);
   const [overtime, setOvertime] = useState(null);
   const [status, setStatus] = useState(null);
   const [complaintDate, setComplaintDate] = useState(null);
@@ -24,7 +26,7 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
     setBreakTimeStart(null);
     setBreakTimeEnd(null);
     setCheckOutTime(null);
-    setTotalWorkTime(null);
+    setOfficeHours(null);
     setOvertime(null);
     setStatus(null);
     setComplaintDate(null);
@@ -37,16 +39,20 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
   };
 
   const formatTime = (timeString) => {
-    if (!timeString) return '00:00';
-    const [hours, minutes] = timeString.split(':');
+    if (!timeString) return "00:00";
+    const [hours, minutes] = timeString.split(":");
     return `${hours}:${minutes}`;
   };
 
   useEffect(() => {
     if (attendanceId) {
       // Step 1: Check if complaint data exists
-      axios.get(`http://localhost:8080/api/complaint/getByAttendanceId/${attendanceId}`, { withCredentials: true })
-        .then(response => {
+      axios
+        .get(
+          `http://localhost:8080/api/complaint/getByAttendanceId/${attendanceId}`,
+          { withCredentials: true }
+        )
+        .then((response) => {
           const data = response.data.data;
           if (data) {
             setCheckInTime(new Date(data.checkInTime));
@@ -54,35 +60,47 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
             setBreakTimeEnd(new Date(data.breakTimeEnd));
             setCheckOutTime(new Date(data.checkOutTime));
             setComplaintDate(new Date(data.attendanceDate));
-            setTotalWorkTime(data.totalWorkTime);
+            setTotalTime(data.totalTime);
+            setType(data.overtimeDTO.type);
+            setOfficeHours(data.officeHours);
             setOvertime(data.overtime);
             setComplaintReason(data.complaintReason);
             setStatus(data.status);
-            const imageUrls = data.imagePaths.split(',');
+            const imageUrls = data.imagePaths.split(",");
             setProofImages(imageUrls);
             setIsReadOnly(true);
           }
         })
-        .catch(error => {
-          axios.get(`http://localhost:8080/api/attendance/getById/${attendanceId}`, { withCredentials: true })
-            .then(response => {
+        .catch((error) => {
+          axios
+            .get(
+              `http://localhost:8080/api/attendance/getById/${attendanceId}`,
+              { withCredentials: true }
+            )
+            .then((response) => {
               const data = response.data.data;
               setCheckInTime(new Date(data.checkInTime));
               setBreakTimeStart(new Date(data.breakTimeStart));
               setBreakTimeEnd(new Date(data.breakTimeEnd));
               setCheckOutTime(new Date(data.checkOutTime));
               setComplaintDate(new Date(data.attendanceDate));
-              setTotalWorkTime(data.totalWorkTime);
+              setOfficeHours(data.officeHours);
               setOvertime(data.overtime);
+              setTotalTime(data.totalTime);
+              setType(data.overtimeDTO.type);
               const currentDate = new Date();
-              const dateDifference = (currentDate - new Date(data.attendanceDate)) / (1000 * 60 * 60 * 24);
+              const dateDifference =
+                (currentDate - new Date(data.attendanceDate)) /
+                (1000 * 60 * 60 * 24);
               if (dateDifference > 3) {
                 setIsReadOnly(true);
                 setCanSubmit(false);
-                setErrorMessage("You cannot file a complaint because it has been more than 3 days.");
+                setErrorMessage(
+                  "You cannot file a complaint because it has been more than 3 days."
+                );
               }
             })
-            .catch(e => {
+            .catch((e) => {
               console.error("Error fetching attendance data:", e);
             });
           console.error("Error fetching complaint data:", error);
@@ -117,11 +135,11 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
 
   const formatDate = (date) => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
 
     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   };
@@ -141,58 +159,92 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
     formData.append("breakTimeStart", formatDate(breakTimeStart));
     formData.append("breakTimeEnd", formatDate(breakTimeEnd));
     formData.append("checkOutTime", formatDate(checkOutTime));
-    formData.append("attendanceDate", complaintDate.toISOString().split("T")[0]);
+    formData.append(
+      "attendanceDate",
+      complaintDate.toISOString().split("T")[0]
+    );
     formData.append("complaintReason", complaintReason);
     formData.append("attendanceId", attendanceId);
     proofImages.forEach((file, index) => {
       formData.append(`image[${index}]`, file);
     });
 
-    axios.post("http://localhost:8080/api/complaint/submit", formData, {
-      withCredentials: true,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    })
-      .then(response => {
+    axios
+      .post("http://localhost:8080/api/complaint/submit", formData, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then((response) => {
         console.log("Complaint submitted successfully:", response.data);
         onClose();
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error submitting complaint:", error);
       });
   };
 
   const getStatusButtonStyle = (status) => {
     switch (status) {
-      case 'Pending':
-        return 'btn btn-info';
-      case 'Approved':
-        return 'btn btn-success';
-      case 'Rejected':
-        return 'btn btn-danger';
+      case "Pending":
+        return "btn btn-info";
+      case "Approved":
+        return "btn btn-success";
+      case "Rejected":
+        return "btn btn-danger";
       default:
-        return 'btn btn-secondary';
+        return "btn btn-secondary";
+    }
+  };
+
+  const getType = (type) => {
+    switch (type) {
+      case "noon_overtime":
+        return "Overtime noon from 12:00 to 13:00";
+      case "30m_overtime":
+        return "Overtime after work 30 minutes";
+      case "1h_overtime":
+        return "Overtime after work 1 hour";
+      case "1h30":
+        return "Overtime after work 1 hour 30 minutes";
+      case "2h_overtime":
+        return "Overtime after work 2 hours";
+      default:
+        return "bg-secondary";
     }
   };
 
   return (
-    <div className={`modal fade ${show ? "show d-block" : ""}`} tabIndex="-1" role="dialog">
+    <div
+      className={`modal fade ${show ? "show d-block" : ""}`}
+      tabIndex="-1"
+      role="dialog"
+    >
       <div className="modal-dialog modal-dialog-centered modal-lg">
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">Attendance Complaint</h5>
-            <button type="button" className="btn-close" aria-label="Close" onClick={onClose}>
+            <button
+              type="button"
+              className="btn-close"
+              aria-label="Close"
+              onClick={onClose}
+            >
               <span aria-hidden="true">×</span>
             </button>
           </div>
           <div className="modal-body">
-            {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
+            {errorMessage && (
+              <div className="alert alert-danger">{errorMessage}</div>
+            )}
             <form onSubmit={handleSubmit}>
               <div className="row">
                 <div className="col-sm-12 mb-3 d-flex justify-content-end">
                   {status && (
-                    <div className={`btn btn-sm ${getStatusButtonStyle(status)}`}>
+                    <div
+                      className={`btn btn-sm ${getStatusButtonStyle(status)}`}
+                    >
                       {status}
                     </div>
                   )}
@@ -215,29 +267,43 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
                     showTimeSelectOnly
                     timeFormat="HH:mm"
                     timeIntervals={1}
-                    dateFormat="HH:mm a"
+                    dateFormat="HH:mm"
                     className="form-control"
                     placeholderText="Select check-in time"
                     readOnly={isReadOnly}
-                    minTime={new Date(new Date(checkInTime).setHours(new Date(checkInTime).getHours() - 1))}
-                    maxTime={new Date(new Date(checkInTime).setHours(new Date(checkInTime).getHours() + 1))}
+                    // minTime={new Date(new Date(checkInTime).setHours(new Date(checkInTime).getHours() - 1))}
+                    // maxTime={new Date(new Date(checkInTime).setHours(new Date(checkInTime).getHours() + 1))}
                   />
                 </div>
                 <div className="col-sm-6 mb-3">
                   <label className="col-form-label">Break Time Start</label>
                   <DatePicker
                     selected={breakTimeStart}
-                    onChange={(date) => handleDateChange("breakTimeStart", date)}
+                    onChange={(date) =>
+                      handleDateChange("breakTimeStart", date)
+                    }
                     showTimeSelect
                     showTimeSelectOnly
                     timeFormat="HH:mm"
                     timeIntervals={1}
-                    dateFormat="HH:mm a"
+                    dateFormat="HH:mm"
                     className="form-control"
                     placeholderText="Select break time start"
                     readOnly={isReadOnly}
-                    minTime={new Date(new Date(breakTimeStart).setHours(new Date(breakTimeStart).getHours() - 1))}
-                    maxTime={new Date(new Date(breakTimeStart).setHours(new Date(breakTimeStart).getHours() + 1))}
+                    // minTime={
+                    //   new Date(
+                    //     new Date(breakTimeStart).setHours(
+                    //       new Date(breakTimeStart).getHours() - 1
+                    //     )
+                    //   )
+                    // }
+                    // maxTime={
+                    //   new Date(
+                    //     new Date(breakTimeStart).setHours(
+                    //       new Date(breakTimeStart).getHours() + 1
+                    //     )
+                    //   )
+                    // }
                   />
                 </div>
                 <div className="col-sm-6 mb-3">
@@ -249,12 +315,24 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
                     showTimeSelectOnly
                     timeFormat="HH:mm"
                     timeIntervals={1}
-                    dateFormat="HH:mm a"
+                    dateFormat="HH:mm"
                     className="form-control"
                     placeholderText="Select break time end"
                     readOnly={isReadOnly}
-                    minTime={new Date(new Date(breakTimeEnd).setHours(new Date(breakTimeEnd).getHours() - 1))}
-                    maxTime={new Date(new Date(breakTimeEnd).setHours(new Date(breakTimeEnd).getHours() + 1))}
+                    // minTime={
+                    //   new Date(
+                    //     new Date(breakTimeEnd).setHours(
+                    //       new Date(breakTimeEnd).getHours() - 1
+                    //     )
+                    //   )
+                    // }
+                    // maxTime={
+                    //   new Date(
+                    //     new Date(breakTimeEnd).setHours(
+                    //       new Date(breakTimeEnd).getHours() + 1
+                    //     )
+                    //   )
+                    // }
                   />
                 </div>
                 <div className="col-sm-6 mb-3">
@@ -266,32 +344,66 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
                     showTimeSelectOnly
                     timeFormat="HH:mm"
                     timeIntervals={1}
-                    dateFormat="HH:mm a"
+                    dateFormat="HH:mm"
                     className="form-control"
                     placeholderText="Select check-out time"
                     readOnly={isReadOnly}
-                    minTime={new Date(new Date(checkOutTime).setHours(new Date(checkOutTime).getHours() - 1))}
-                    maxTime={new Date(new Date(checkOutTime).setHours(new Date(checkOutTime).getHours() + 1))}
+                    // minTime={
+                    //   new Date(
+                    //     new Date(checkOutTime).setHours(
+                    //       new Date(checkOutTime).getHours() - 1
+                    //     )
+                    //   )
+                    // }
+                    // maxTime={
+                    //   new Date(
+                    //     new Date(checkOutTime).setHours(
+                    //       new Date(checkOutTime).getHours() + 1
+                    //     )
+                    //   )
+                    // }
                   />
                 </div>
                 <div className="col-sm-6 mb-3">
-                  <label className="col-form-label">Total Work Time</label>
+                  <label className="col-form-label">Total time</label>
                   <input
                     type="text"
                     className="form-control"
-                    value={formatTime(totalWorkTime)}
+                    value={formatTime(totalTime)}
                     readOnly
                   />
                 </div>
                 <div className="col-sm-6 mb-3">
-                  <label className="col-form-label">Overtime</label>
+                  <label className="col-form-label">Office Hours</label>
                   <input
                     type="text"
                     className="form-control"
-                    value={formatTime(overtime)}
+                    value={formatTime(officeHours)}
                     readOnly
                   />
                 </div>
+                {overtime && (
+                  <div className="col-sm-6 mb-3">
+                    <label className="col-form-label">Overtime</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={formatTime(overtime)}
+                      readOnly
+                    />
+                  </div>
+                )}
+                {type && (
+                  <div className="col-sm-6 mb-3">
+                    <label className="col-form-label">Note</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={getType(type)}
+                      readOnly
+                    />
+                  </div>
+                )}
                 <div className="col-sm-12 mb-3">
                   <label className="col-form-label">Complaint Reason</label>
                   <textarea
@@ -351,7 +463,11 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
               </div>
               {!isReadOnly && (
                 <div className="modal-footer">
-                  <button type="submit" className="btn btn-primary" disabled={!canSubmit}>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={!canSubmit}
+                  >
                     Submit Complaint
                   </button>
                 </div>

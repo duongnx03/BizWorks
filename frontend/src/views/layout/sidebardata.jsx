@@ -102,12 +102,24 @@ export const SidebarData = [
             route: "/employees",
           },
           {
-            menuValue: "Request Create Employees",
-            route: "/request-create-employee",
+            menuValue: "View Employee Requests",
+            route: "/view-employee-requests",
           },
           {
-            menuValue: "Request Attendance Complaint",
-            route: "/request-attendance-complaint",
+            menuValue: "View Attendance Complaint Requests",
+            route: "/view-attendance-complaint-requests",
+          },
+          {
+            menuValue: "View Overtime Requests",
+            route: "/view-overtime-requests",
+          },
+          {
+            menuValue: "Approve Attendance Complaint",
+            route: "/approve-attendance-complaint",
+          },
+          {
+            menuValue: "Approve Overtime Requests",
+            route: "/approve-overtime-requests",
           },
           // {
           //   menuValue: 'Holidays',
@@ -121,22 +133,18 @@ export const SidebarData = [
             menuValue: "Departments",
             route: "/departments",
           },
-          // {
-          //   menuValue: "ViolationType",
-          //   route: "/violation-types",
-          // },
-          // {
-          //   menuValue: "Violation",
-          //   route: "/violations",
-          // },
+          {
+            menuValue: "ViolationType",
+            route: "/violation-types",
+          },
+          {
+            menuValue: "Violation",
+            route: "/violations",
+          },
           // {
           //   menuValue: 'Shift & Schedule',
           //   route: "/shift-scheduling",
           // },
-          {
-            menuValue: "Overtime",
-            route: "/overtime",
-          },
         ],
       },
     ],
@@ -154,16 +162,20 @@ export const SidebarData = [
         icon: "la la-user",
         subMenus: [
           {
-            menuValue: "Add Leader",
+            menuValue: "All Employees",
             route: "/manage-employees",
           },
           {
-            menuValue: "Request Create Employees",
-            route: "/request-create-employee",
+            menuValue: "Approve Employee Requests",
+            route: "/approve-employee-requests",
           },
           {
-            menuValue: "Request Attendance Complaint",
-            route: "/request-attendance-complaint",
+            menuValue: "Approve Attendance Complaint",
+            route: "/approve-attendance-complaint",
+          },
+          {
+            menuValue: "Approve Overtime Requests",
+            route: "/approve-overtime-requests",
           },
           {
             menuValue: "Attendance",
@@ -176,6 +188,10 @@ export const SidebarData = [
           {
             menuValue: 'Attendance Complaint',
             route: "/attendance-complaint",
+          },
+          {
+            menuValue: "Overtime",
+            route: "/overtime",
           },
           {
             menuValue: "Leaves",
@@ -210,12 +226,16 @@ export const SidebarData = [
         icon: "la la-user",
         subMenus: [
           {
-            menuValue: "Add Employees",
+            menuValue: "Manage Team Employees",
             route: "/leader-employees",
           },
           {
-            menuValue: "Request Attendance Complaint",
-            route: "/request-attendance-complaint",
+            menuValue: "Approve Attendance Complaint",
+            route: "/approve-attendance-complaint",
+          },
+          {
+            menuValue: "Approve Overtime Requests",
+            route: "/approve-overtime-requests",
           },
           {
             menuValue: "Attendance",
@@ -230,6 +250,10 @@ export const SidebarData = [
             route: "/attendance-complaint",
           },
           {
+            menuValue: "Overtime",
+            route: "/overtime",
+          },
+          {
             menuValue: "Leaves",
             route: "/adminleaves",
           },
@@ -237,10 +261,10 @@ export const SidebarData = [
             menuValue: "Departments",
             route: "/departments",
           },
-          // {
-          //   menuValue: "ViolationType",
-          //   route: "/violation-types",
-          // },
+          {
+            menuValue: "ViolationType",
+            route: "/violation-types",
+          },
           {
             menuValue: "Violation",
             route: "/violations",
@@ -272,6 +296,10 @@ export const SidebarData = [
           {
             menuValue: 'Attendance Complaint',
             route: "/attendance-complaint",
+          },
+          {
+            menuValue: "Overtime",
+            route: "/overtime",
           },
           // {
           //   menuValue: 'Holidays',

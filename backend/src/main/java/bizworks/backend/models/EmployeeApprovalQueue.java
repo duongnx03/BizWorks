@@ -1,11 +1,13 @@
 package bizworks.backend.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "employees_approval_queue")
@@ -25,10 +27,18 @@ public class EmployeeApprovalQueue {
     private String departmentName;
     private Long positionId;
     private String positionName;
-    private Long censor;
     private String status;
     private String description;
-    private Long sender;
-    private Long isManageShow;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "sender_id")
+    @JsonManagedReference
+    private User sender;
+
+    @ManyToOne
+    @JoinColumn(name = "censor_id")
+    private User censor;
 }
 

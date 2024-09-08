@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from 'axios';
+import axios from "axios";
 import { Link } from "react-router-dom";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import EmployeeListFilter from "../../../components/EmployeeListFilter";
@@ -8,7 +8,7 @@ import AllEmployeeAddPopup from "../../../components/modelpopup/AllEmployeeAddPo
 const EmployeeList = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredEmployees, setFilteredEmployees] = useState([]);
@@ -21,9 +21,12 @@ const EmployeeList = () => {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8080/api/employee/getAllEmployees', {
-        withCredentials: true,
-      });
+      const response = await axios.get(
+        "http://localhost:8080/api/employee/getAllEmployees",
+        {
+          withCredentials: true,
+        }
+      );
       if (response.data.data) {
         // Sắp xếp nhân viên theo ID từ mới đến cũ
         const sortedEmployees = response.data.data.sort((a, b) => b.id - a.id);
@@ -32,7 +35,7 @@ const EmployeeList = () => {
       }
       setLoading(false);
     } catch (error) {
-      console.error('Có lỗi xảy ra khi lấy dữ liệu nhân viên:', error);
+      console.error("Có lỗi xảy ra khi lấy dữ liệu nhân viên:", error);
       setLoading(false);
     }
   };
@@ -42,8 +45,10 @@ const EmployeeList = () => {
   }, []);
 
   useEffect(() => {
-    const filtered = employees.filter(employee => {
-      const matchesEmpCode = employee.empCode.toLowerCase().includes(searchTerm.toLowerCase());
+    const filtered = employees.filter((employee) => {
+      const matchesEmpCode = employee.empCode
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
       const matchesDepartment = selectedDepartment
         ? employee.department === selectedDepartment.label
         : true;
@@ -51,18 +56,24 @@ const EmployeeList = () => {
         ? employee.position === selectedPosition.label
         : true;
       const matchesStartDate = startDate
-        ? new Date(employee.startDate).toLocaleDateString() === new Date(startDate).toLocaleDateString()
+        ? new Date(employee.startDate).toLocaleDateString() ===
+          new Date(startDate).toLocaleDateString()
         : true;
-      return matchesEmpCode && matchesDepartment && matchesPosition && matchesStartDate;
+      return (
+        matchesEmpCode &&
+        matchesDepartment &&
+        matchesPosition &&
+        matchesStartDate
+      );
     });
     setFilteredEmployees(filtered);
     setNoData(filtered.length === 0);
   }, [searchTerm, selectedDepartment, selectedPosition, startDate, employees]);
 
   const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
     }
     setSortConfig({ key, direction });
   };
@@ -71,10 +82,10 @@ const EmployeeList = () => {
     if (sortConfig.key) {
       const sortedData = [...filteredEmployees].sort((a, b) => {
         if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
+          return sortConfig.direction === "asc" ? -1 : 1;
         }
         if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
+          return sortConfig.direction === "asc" ? 1 : -1;
         }
         return 0;
       });
@@ -85,14 +96,17 @@ const EmployeeList = () => {
 
   const getSortIcon = (key) => {
     if (sortConfig.key === key) {
-      return sortConfig.direction === 'asc' ? '↑' : '↓';
+      return sortConfig.direction === "asc" ? "↑" : "↓";
     }
-    return '';
+    return "";
   };
 
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentEmployees = sortedEmployees.slice(indexOfFirstRecord, indexOfLastRecord);
+  const currentEmployees = sortedEmployees.slice(
+    indexOfFirstRecord,
+    indexOfLastRecord
+  );
 
   const totalPages = Math.ceil(sortedEmployees.length / recordsPerPage);
 
@@ -145,60 +159,110 @@ const EmployeeList = () => {
                     <table className="table table-striped">
                       <thead>
                         <tr>
-                          <th onClick={() => handleSort('empCode')}>
-                            Employee Infomation {getSortIcon('empCode')}
+                          <th onClick={() => handleSort("empCode")}>
+                            Employee Infomation {getSortIcon("empCode")}
                           </th>
-                          <th onClick={() => handleSort('email')}>
-                            Email {getSortIcon('email')}
+                          <th onClick={() => handleSort("email")}>
+                            Email {getSortIcon("email")}
                           </th>
-                          <th onClick={() => handleSort('startDate')}>
-                            Start Date {getSortIcon('startDate')}
-                          </th>
-                          <th onClick={() => handleSort('department')}>
-                            Department {getSortIcon('department')}
-                          </th>
-                          <th onClick={() => handleSort('position')}>
-                            Position {getSortIcon('position')}
+                          <th onClick={() => handleSort("startDate")}>
+                            Start Date {getSortIcon("startDate")}
                           </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {currentEmployees.map(employee => (
+                        {currentEmployees.map((employee) => (
                           <tr key={employee.id}>
                             <td>
-                              <span className="table-avatar">
-                                <Link to={`/client-profile/${employee.id}`} className="avatar">
-                                  <img alt="" src={employee.avatar || "default-avatar.png"} />
+                              <div className="d-flex align-items-center">
+                                <Link
+                                  to={`/client-profile/${employee.id}`}
+                                  className="me-3"
+                                >
+                                  <div
+                                    style={{
+                                      width: "50px",
+                                      height: "50px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <img
+                                      alt="Employee Avatar"
+                                      src={
+                                        employee.avatar || "default-avatar.png"
+                                      }
+                                      style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                        borderRadius: "50%",
+                                      }}
+                                    />
+                                  </div>
                                 </Link>
-                                <Link to={`/client-profile/${employee.id}`}>
-                                  {employee.empCode} - {employee.fullname}
-                                </Link>
-                              </span>
+                                <div>
+                                  <Link
+                                    to={`/client-profile/${employee.id}`}
+                                    className="text-decoration-none fw-bold text-dark"
+                                  >
+                                    {employee.empCode} - {employee.fullname}
+                                  </Link>
+                                  <div className="mt-1">
+                                    <span className="d-block fw-semibold">
+                                      {employee.department}
+                                    </span>
+                                    <span className="d-block text-muted">
+                                      {employee.position}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
                             </td>
                             <td>{employee.email}</td>
-                            <td>{new Date(employee.startDate).toLocaleDateString()}</td>
-                            <td>{employee.department}</td>
-                            <td>{employee.position}</td>
+                            <td>
+                              {new Date(
+                                employee.startDate
+                              ).toLocaleDateString()}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px 0' }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        padding: "10px 0",
+                      }}
+                    >
                       <nav>
                         <ul className="pagination" style={{ margin: 0 }}>
                           {Array.from({ length: totalPages }, (_, index) => (
                             <li
                               key={index + 1}
-                              className={`page-item ${index + 1 === currentPage ? 'active' : ''}`}
-                              style={{ margin: '0 2px' }}
+                              className={`page-item ${
+                                index + 1 === currentPage ? "active" : ""
+                              }`}
+                              style={{ margin: "0 2px" }}
                             >
                               <button
                                 onClick={() => handlePageChange(index + 1)}
                                 className="page-link"
                                 style={{
-                                  backgroundColor: index + 1 === currentPage ? '#FF902F' : '#fff',
-                                  borderColor: index + 1 === currentPage ? '#FF902F' : '#dee2e6',
-                                  color: index + 1 === currentPage ? '#fff' : '#373B3E',
+                                  backgroundColor:
+                                    index + 1 === currentPage
+                                      ? "#FF902F"
+                                      : "#fff",
+                                  borderColor:
+                                    index + 1 === currentPage
+                                      ? "#FF902F"
+                                      : "#dee2e6",
+                                  color:
+                                    index + 1 === currentPage
+                                      ? "#fff"
+                                      : "#373B3E",
                                 }}
                               >
                                 {index + 1}

@@ -20,7 +20,7 @@ public class OvertimeController {
     private final OvertimeService overtimeService;
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<?>> createOvertime(@ModelAttribute OvertimeRequestDTO overtimeRequestDTO){
+    public ResponseEntity<ApiResponse<?>> createOvertime(@RequestBody OvertimeRequestDTO overtimeRequestDTO){
         try{
             overtimeService.createOvertime(overtimeRequestDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(null, "Overtime registered successfully"));
@@ -45,6 +45,16 @@ public class OvertimeController {
         try {
             List<Overtime> overtimes = overtimeService.findByCensor();
             List<OvertimeDTO> overtimeDTOS = overtimes.stream().map(overtimeService::convertToDTO).collect(Collectors.toList());
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(overtimeDTOS, "Get overtime successfully"));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
+        }
+    }
+
+    @GetMapping("/getAll")
+    public ResponseEntity<ApiResponse<?>> getAll() {
+        try {
+            List<OvertimeDTO> overtimeDTOS = overtimeService.findAll();
             return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(overtimeDTOS, "Get overtime successfully"));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));

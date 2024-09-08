@@ -4,12 +4,15 @@ import bizworks.backend.dtos.*;
 import bizworks.backend.models.Attendance;
 import bizworks.backend.models.Employee;
 import bizworks.backend.models.Overtime;
+import bizworks.backend.models.User;
 import bizworks.backend.repositories.AttendanceRepository;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -46,7 +49,7 @@ public class AttendanceService {
 
     public List<Attendance> getAttendancesByAttendanceDate() {
         LocalDate today = LocalDate.now();
-        return attendanceRepository.findByAttendanceDate(today);
+        return attendanceRepository.findByAttendanceDateWithEmployee(today);
     }
 
     public Attendance findById(Long id) {
@@ -201,7 +204,7 @@ public class AttendanceService {
                 attendance.setCheckOutTime(checkOutTime);
                 attendance.setStatus("Present");
 
-                // Calculate the total worked time
+                // Tính tổng thời gian làm việc
                 LocalDateTime checkInTime = attendance.getCheckInTime();
 
                 if (checkInTime == null || checkOutTime == null) {
@@ -216,36 +219,44 @@ public class AttendanceService {
                 Duration workedDuration = Duration.between(checkInTime, checkOutTime);
                 Duration actualWorkedDuration = workedDuration.minus(breakDuration);
 
-                // Set total time
-                long totalTime = workedDuration.toMinutes();
-                attendance.setTotalTime(LocalTime.of(
-                        (int) totalTime / 60,
-                        (int) totalTime % 60
-                ));
-
-                // Standard work time of 8 hours (480 minutes)
-                long standardWorkMinutes = 480;
-                attendance.setOfficeHours(LocalTime.of(
-                        (int) standardWorkMinutes / 60,
-                        (int) standardWorkMinutes % 60
-                ));
-
-                long actualWorkedMinutes = actualWorkedDuration.toMinutes();
-
-                // Set overtime
+                // Tính thời gian overtime
+                long overtimeMinutes = 0;
                 if (overtime != null && overtime.getType().equals("noon_overtime")) {
-                    attendance.setOvertime(LocalTime.of(1, 0));
+                    attendance.setOvertime(LocalTime.of(1, 0));  // 1 giờ làm thêm vào buổi trưa
+                    overtimeMinutes = 60; // 1 giờ = 60 phút
                 } else {
-                    long overtimeMinutes = Math.max(0, actualWorkedMinutes - standardWorkMinutes);
+                    overtimeMinutes = Math.max(0, actualWorkedDuration.toMinutes() - 480); // Trừ đi 8 giờ chuẩn
                     attendance.setOvertime(LocalTime.of(
                             (int) overtimeMinutes / 60,
                             (int) overtimeMinutes % 60
                     ));
                 }
 
+                // Tính office hours
+                long actualWorkedMinutes = actualWorkedDuration.toMinutes();
+                if(overtime != null &&overtime.getType().equals("noon_overtime")){
+                    attendance.setOfficeHours(LocalTime.of(
+                            (int) actualWorkedMinutes / 60,
+                            (int) actualWorkedMinutes % 60
+                    ));
+                }else{
+                    long officeHoursMinutes = actualWorkedMinutes - overtimeMinutes;
+                    attendance.setOfficeHours(LocalTime.of(
+                            (int) officeHoursMinutes / 60,
+                            (int) officeHoursMinutes % 60
+                    ));
+                }
+
+                // Set tổng thời gian
+                long totalTime = workedDuration.toMinutes();
+                attendance.setTotalTime(LocalTime.of(
+                        (int) totalTime / 60,
+                        (int) totalTime % 60
+                ));
+
                 Attendance savedAttendance = save(attendance);
 
-                // Generate and send email content
+                // Tạo và gửi nội dung email
                 String emailContent = generateEmailContent(savedAttendance);
                 mailService.sendEmail(email, "Attendance Checkout Notification", emailContent);
 
@@ -256,10 +267,21 @@ public class AttendanceService {
         }
     }
 
+    @Transactional
+    @Scheduled(cron = "0 0 21 * * ?")
     public List<Attendance> markAbsentEmployees() throws MessagingException {
         LocalDate today = LocalDate.now();
         List<Employee> allEmployees = employeeService.findAll();
-        List<Attendance> todaysAttendances = attendanceRepository.findByAttendanceDate(today);
+        List<Attendance> todaysAttendances = attendanceRepository.findByAttendanceDateWithEmployee(today);
+
+        List<Employee> employeesCheckedInButNotOut = todaysAttendances.stream()
+                .filter(attendance -> attendance.getCheckInTime() != null && attendance.getCheckOutTime() == null)
+                .map(Attendance::getEmployee)
+                .collect(Collectors.toList());
+
+        for (Employee employee : employeesCheckedInButNotOut) {
+            mailService.sendEmail(employee.getEmail(), "Reminder: Please Check-Out", sendForgotCheckOutReminder(employee.getEmpCode(), employee.getFullname()));
+        }
 
         List<Employee> checkedInEmployees = todaysAttendances.stream()
                 .map(Attendance::getEmployee)
@@ -322,7 +344,40 @@ public class AttendanceService {
         } else {
             attendanceDTO.setAttendanceComplaintId(attendance.getAttendanceComplaint().getId());
         }
+        if(attendance.getOvertime() == null){
+            attendanceDTO.setOvertimeDTO(null);
+        }else{
+            attendanceDTO.setOvertimeDTO(convertToOvertimeDTO(attendance.getOverTimes()));
+        }
         return attendanceDTO;
+    }
+
+    private OvertimeResponseDTO convertToOvertimeDTO(Overtime overtime) {
+        OvertimeResponseDTO overtimeDTO = new OvertimeResponseDTO();
+        overtimeDTO.setId(overtime.getId());
+        overtimeDTO.setOvertimeStart(overtime.getOvertimeStart());
+        overtimeDTO.setOvertimeEnd(overtime.getOvertimeEnd());
+        overtimeDTO.setTotalTime(overtime.getTotalTime());
+        overtimeDTO.setCheckOutTime(overtime.getCheckOutTime());
+        overtimeDTO.setType(overtime.getType());
+        overtimeDTO.setStatus(overtime.getStatus());
+        overtimeDTO.setReason(overtime.getReason());
+        overtimeDTO.setDescription(overtime.getDescription());
+        overtimeDTO.setCensor(convertToUserDTO(overtime.getCensor()));
+        overtimeDTO.setCreatedAt(overtime.getCreatedAt());
+        if(overtime.getUpdatedAt() == null){
+            overtimeDTO.setUpdatedAt(null);
+        }else{
+            overtimeDTO.setUpdatedAt(overtime.getUpdatedAt());
+        }
+        return overtimeDTO;
+    }
+
+    private UserResponseDTO convertToUserDTO(User user){
+        UserResponseDTO userResponseDTO = new UserResponseDTO();
+        userResponseDTO.setId(user.getId());
+        userResponseDTO.setEmployee(convertToEmployeeDTO(user.getEmployee()));
+        return userResponseDTO;
     }
 
     private EmployeeResponseDTO convertToEmployeeDTO(Employee employee) {
@@ -402,6 +457,26 @@ public class AttendanceService {
         content.append("<div style='padding: 30px; color: #333333;'>");
         content.append("<p style='font-size: 18px;'>Dear ").append(empCode).append("-").append(fullname).append(",</p>");
         content.append("<p style='font-size: 16px; line-height: 1.5;'>The management office informs you that you were absent without permission today (").append(date).append("). Please pay more attention to your work schedule and attend work regularly.</p>");
+        content.append("</div>");
+        content.append("<div style='background-color: #f4f4f4; padding: 20px 30px; text-align: center; color: #777777;'>");
+        content.append("<p style='margin: 0;'>Best regards,<br><span style='font-weight: bold;'>BizWorks</span></p>");
+        content.append("</div>");
+        content.append("</div>");
+        content.append("</body></html>");
+        return content.toString();
+    }
+
+    private String sendForgotCheckOutReminder(String empCode, String fullname) {
+        StringBuilder content = new StringBuilder();
+        content.append("<html><body style='font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; margin: 0;'>");
+        content.append("<div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);'>");
+        content.append("<div style='background-color: #5bc0de; color: #ffffff; padding: 20px 30px; text-align: center;'>");
+        content.append("<h2 style='margin: 0; font-size: 24px;'>Reminder: Please Check-Out</h2>");
+        content.append("</div>");
+        content.append("<div style='padding: 30px; color: #333333;'>");
+        content.append("<p style='font-size: 18px;'>Dear ").append(empCode).append(" - ").append(fullname).append(",</p>");
+        content.append("<p style='font-size: 16px; line-height: 1.5;'>We noticed that you have not checked out today (").append(LocalDate.now()).append("). Please remember to check out before leaving to ensure that your work hours are accurately recorded.</p>");
+        content.append("<p style='font-size: 16px; line-height: 1.5;'>If you have already left, please contact the HR department to resolve this issue.</p>");
         content.append("</div>");
         content.append("<div style='background-color: #f4f4f4; padding: 20px 30px; text-align: center; color: #777777;'>");
         content.append("<p style='margin: 0;'>Best regards,<br><span style='font-weight: bold;'>BizWorks</span></p>");

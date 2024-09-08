@@ -10,7 +10,7 @@ import java.time.LocalTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OvertimeDTO {
+public class OvertimeNotAttendanceDTO {
     private Long id;
     private LocalTime overtimeStart;
     private LocalTime overtimeEnd;
@@ -22,6 +22,5 @@ public class OvertimeDTO {
     private String description;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private AttendanceDTO attendanceDTO;
     private UserResponseDTO censor;
 }

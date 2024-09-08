@@ -77,13 +77,8 @@ public class EmployeeService {
         employeeDTO.setStartDate(employee.getStartDate());
         employeeDTO.setEndDate(employee.getEndDate());
         employeeDTO.setGender(employee.getGender());
-        if (employee.getDepartment() != null || employee.getPosition() != null) {
-            employeeDTO.setDepartment(employee.getDepartment().getName());
-            employeeDTO.setPosition(employee.getPosition().getPositionName());
-        } else {
-            employeeDTO.setDepartment(null);
-            employeeDTO.setPosition(null);
-        }
+        employeeDTO.setDepartment(employee.getDepartment().getName());
+        employeeDTO.setPosition(employee.getPosition().getPositionName());
         return employeeDTO;
     }
 
