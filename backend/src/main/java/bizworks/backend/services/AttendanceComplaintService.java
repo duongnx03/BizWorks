@@ -102,16 +102,7 @@ public class AttendanceComplaintService {
         Attendance attendance = attendanceRepository.findById(complaintRequestDTO.getAttendanceId()).orElseThrow(() -> new RuntimeException("Attendance not found"));
         Notification notification = new Notification();
         switch (user.getRole()){
-            case "EMPLOYEE" -> {
-                User leader = userRepository.findUserByRoleAndEmployeeDepartmentName("LEADER", user.getEmployee().getDepartment().getName());
-                censor = leader;
-                notification.setMessage("Request for attendance complaint");
-                notification.setCreatedAt(LocalDateTime.now());
-                notification.setUser(leader);
-                notification.setRead(false);
-                notificationRepository.save(notification);
-            }
-            case "LEADER" -> {
+            case "EMPLOYEE", "LEADER" -> {
                 User manage = userRepository.findUserByRole("MANAGE");
                 censor = manage;
                 notification.setMessage("Request for attendance complaint");
@@ -135,7 +126,6 @@ public class AttendanceComplaintService {
         LocalDateTime breakTimeEnd = complaintRequestDTO.getBreakTimeEnd();
         LocalDateTime checkInTime = complaintRequestDTO.getCheckInTime();
         LocalDateTime checkOutTime = complaintRequestDTO.getCheckOutTime();
-        Overtime overtime = attendance.getOverTimes();
 
         complaint.setAttendance(attendance);
         complaint.setAttendanceDate(complaintRequestDTO.getAttendanceDate());
@@ -143,55 +133,13 @@ public class AttendanceComplaintService {
         complaint.setBreakTimeStart(breakTimeStart);
         complaint.setBreakTimeEnd(breakTimeEnd);
         complaint.setCheckOutTime(checkOutTime);
+        complaint.setOvertime(complaintRequestDTO.getOvertime());
+        complaint.setOfficeHours(complaintRequestDTO.getOfficeHours());
+        complaint.setTotalTime(complaintRequestDTO.getTotalTime());
         complaint.setComplaintReason(complaintRequestDTO.getComplaintReason());
         complaint.setEmployee(employee);
         complaint.setCensor(censor);
         complaint.setCreatedAt(LocalDateTime.now());
-
-        // Calculate total work time and overtime
-        if (complaintRequestDTO.getCheckInTime() != null && complaintRequestDTO.getCheckOutTime() != null) {
-            Duration breakDuration = Duration.ZERO;
-            if (breakTimeStart != null && breakTimeEnd != null) {
-                breakDuration = Duration.between(breakTimeStart, breakTimeEnd);
-            }
-
-            Duration workedDuration = Duration.between(checkInTime, checkOutTime);
-            Duration actualWorkedDuration = workedDuration.minus(breakDuration);
-
-            // Tính thời gian overtime
-            long overtimeMinutes = 0;
-            if (overtime != null && overtime.getType().equals("noon_overtime")) {
-                complaint.setOvertime(LocalTime.of(1, 0));  // 1 giờ làm thêm vào buổi trưa
-                overtimeMinutes = 60; // 1 giờ = 60 phút
-            } else {
-                overtimeMinutes = Math.max(0, actualWorkedDuration.toMinutes() - 480); // Trừ đi 8 giờ chuẩn
-                complaint.setOvertime(LocalTime.of(
-                        (int) overtimeMinutes / 60,
-                        (int) overtimeMinutes % 60
-                ));
-            }
-
-            long actualWorkedMinutes = actualWorkedDuration.toMinutes();
-            if(overtime != null &&overtime.getType().equals("noon_overtime")){
-                complaint.setOfficeHours(LocalTime.of(
-                        (int) actualWorkedMinutes / 60,
-                        (int) actualWorkedMinutes % 60
-                ));
-            }else{
-                long officeHoursMinutes = actualWorkedMinutes - overtimeMinutes;
-                complaint.setOfficeHours(LocalTime.of(
-                        (int) officeHoursMinutes / 60,
-                        (int) officeHoursMinutes % 60
-                ));
-            }
-
-            // Set tổng thời gian
-            long totalTime = workedDuration.toMinutes();
-            complaint.setTotalTime(LocalTime.of(
-                    (int) totalTime / 60,
-                    (int) totalTime % 60
-            ));
-        }
         complaint.setStatus("Pending");
         if (images != null && !images.isEmpty()) {
             List<String> imageNames = fileUpload.storeMultipleImages(subFolder, images);
@@ -205,112 +153,104 @@ public class AttendanceComplaintService {
         return convertToDTO(save(complaint));
     }
 
-    public AttendanceComplaintDTO approveComplaint(Long complaintId) throws MessagingException {
-        String email = getCurrentUserEmail();
-        User user = userRepository.findByEmail(email).orElseThrow();
-        String description;
-        User censor;
-        AttendanceComplaint complaint = attendanceComplaintRepository.findById(complaintId)
+    public AttendanceComplaintDTO approveComplaint(AttendanceComplaintUpdateDTO attendanceComplaintUpdateDTO) throws MessagingException {
+        String description = "We accept your attendance complaint request.";
+        AttendanceComplaint complaint = attendanceComplaintRepository.findById(attendanceComplaintUpdateDTO.getId())
                 .orElseThrow(() -> new RuntimeException("Complaint not found."));
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        LocalDateTime checkInTime = attendanceComplaintUpdateDTO.getCheckInTime();
+        LocalDateTime checkOutTime = attendanceComplaintUpdateDTO.getCheckOutTime();
+        LocalDateTime breakTimeStart = currentDateTime.with(LocalTime.of(12, 0));
+        LocalDateTime breakTimeEnd = currentDateTime.with(LocalTime.of(13, 0));
+        Overtime overtime = complaint.getAttendance().getOverTimes();
         Notification notification = new Notification();
         User admin = userRepository.findUserByRole("ADMIN");
-        User manage = userRepository.findUserByRole("MANAGE");
         User sender = userRepository.findById(complaint.getEmployee().getUser().getId()).orElseThrow();
-        switch (user.getRole()){
-            case "LEADER" -> {
-                censor = manage;
-                description = "Leader approved, waiting for Manager approval.";
-                complaint.setIsLeaderShow(complaint.getCensor().getId());
-                notification.setMessage("Leader just approved the attendance complaint request.");
-                notification.setCreatedAt(LocalDateTime.now());
-                notification.setUser(admin);
-                notification.setRead(false);
-                notificationRepository.save(notification);
 
-                notification.setMessage("Leader has approved your attendance request.");
-                notification.setCreatedAt(LocalDateTime.now());
-                notification.setUser(sender);
-                notification.setRead(false);
-                notificationRepository.save(notification);
-            }
-            case "MANAGE" -> {
-                censor = manage;
-                description = "We accept your attendance complaint request.";
-                complaint.setIsManageShow(complaint.getCensor().getId());
-                complaint.setStatus("Approved");
-                // Update Attendance with complaint details
-                Attendance attendance = complaint.getAttendance();
-                attendance.setCheckInTime(complaint.getCheckInTime());
-                attendance.setCheckOutTime(complaint.getCheckOutTime());
-                attendance.setBreakTimeStart(complaint.getBreakTimeStart());
-                attendance.setBreakTimeEnd(complaint.getBreakTimeEnd());
-                attendance.setTotalTime(complaint.getTotalTime());
-                attendance.setOfficeHours(complaint.getOfficeHours());
-                attendance.setOvertime(complaint.getOvertime());
+        complaint.setCheckInTime(checkInTime);
+        complaint.setBreakTimeStart(breakTimeStart);
+        complaint.setBreakTimeEnd(breakTimeEnd);
+        complaint.setCheckOutTime(checkOutTime);
 
-                // Save updated Attendance
-                attendanceRepository.save(attendance);
-
-                notification.setMessage("Manager just approved the attendance complaint request.");
-                notification.setCreatedAt(LocalDateTime.now());
-                notification.setUser(admin);
-                notification.setRead(false);
-                notificationRepository.save(notification);
-
-                notification.setMessage("Manager has approved your attendance request.");
-                notification.setCreatedAt(LocalDateTime.now());
-                notification.setUser(sender);
-                notification.setRead(false);
-                notificationRepository.save(notification);
-            }
-            case "ADMIN" -> {
-                censor = admin;
-                description = "We accept your attendance complaint request.";
-                complaint.setStatus("Approved");
-                // Update Attendance with complaint details
-                Attendance attendance = complaint.getAttendance();
-                attendance.setCheckInTime(complaint.getCheckInTime());
-                attendance.setCheckOutTime(complaint.getCheckOutTime());
-                attendance.setBreakTimeStart(complaint.getBreakTimeStart());
-                attendance.setBreakTimeEnd(complaint.getBreakTimeEnd());
-                attendance.setTotalTime(complaint.getTotalTime());
-                attendance.setOfficeHours(complaint.getOfficeHours());
-                attendance.setOvertime(complaint.getOvertime());
-
-                // Save updated Attendance
-                attendanceRepository.save(attendance);
-
-                notification.setMessage("Admin just approved the attendance complaint request.");
-                notification.setCreatedAt(LocalDateTime.now());
-                notification.setUser(manage);
-                notification.setRead(false);
-                notificationRepository.save(notification);
-            }
-            default -> throw new IllegalStateException("Unexpected value: ");
+        Duration breakDuration = Duration.ZERO;
+        if (breakTimeStart != null && breakTimeEnd != null) {
+            breakDuration = Duration.between(breakTimeStart, breakTimeEnd);
         }
+
+        Duration workedDuration = Duration.between(checkInTime, checkOutTime);
+        Duration actualWorkedDuration = workedDuration.minus(breakDuration);
+
+        // Tính thời gian overtime
+        long overtimeMinutes = 0;
+        if (overtime != null && overtime.getType().equals("noon_overtime")) {
+            complaint.setOvertime(LocalTime.of(1, 0));  // 1 giờ làm thêm vào buổi trưa
+            overtimeMinutes = 60; // 1 giờ = 60 phút
+        } else {
+            overtimeMinutes = Math.max(0, actualWorkedDuration.toMinutes() - 480); // Trừ đi 8 giờ chuẩn
+            complaint.setOvertime(LocalTime.of(
+                    (int) overtimeMinutes / 60,
+                    (int) overtimeMinutes % 60
+            ));
+        }
+
+        // Tính office hours
+        long actualWorkedMinutes = actualWorkedDuration.toMinutes();
+        if(overtime != null &&overtime.getType().equals("noon_overtime")){
+            complaint.setOfficeHours(LocalTime.of(
+                    (int) actualWorkedMinutes / 60,
+                    (int) actualWorkedMinutes % 60
+            ));
+        }else{
+            long officeHoursMinutes = actualWorkedMinutes - overtimeMinutes;
+            complaint.setOfficeHours(LocalTime.of(
+                    (int) officeHoursMinutes / 60,
+                    (int) officeHoursMinutes % 60
+            ));
+        }
+
+        // Set tổng thời gian
+        long totalTime = workedDuration.toMinutes();
+        complaint.setTotalTime(LocalTime.of(
+                (int) totalTime / 60,
+                (int) totalTime % 60
+        ));
+
         complaint.setUpdatedAt(LocalDateTime.now());
-        complaint.setCensor(censor);
         complaint.setDescription(description);
-        if(user.getRole().equals("ADMIN") || user.getRole().equals("MANAGE")){
-            sendEmailApproved(complaint.getEmployee().getEmail(), complaint.getEmployee().getEmpCode(), complaint.getEmployee().getFullname());
-        }
+        complaint.setStatus("Approved");
+
+        AttendanceComplaint saveComplaint = attendanceComplaintRepository.save(complaint);
+
+        Attendance attendance = saveComplaint.getAttendance();
+        attendance.setCheckInTime(complaint.getCheckInTime());
+        attendance.setCheckOutTime(complaint.getCheckOutTime());
+        attendance.setBreakTimeStart(complaint.getBreakTimeStart());
+        attendance.setBreakTimeEnd(complaint.getBreakTimeEnd());
+        attendance.setTotalTime(complaint.getTotalTime());
+        attendance.setOfficeHours(complaint.getOfficeHours());
+        attendance.setOvertime(complaint.getOvertime());
+
+        // Save updated Attendance
+        attendanceRepository.save(attendance);
+
+        notification.setMessage("Manager just approved the attendance complaint request.");
+        notification.setCreatedAt(LocalDateTime.now());
+        notification.setUser(admin);
+        notification.setRead(false);
+        notificationRepository.save(notification);
+
+        notification.setMessage("Manager has approved your attendance request.");
+        notification.setCreatedAt(LocalDateTime.now());
+        notification.setUser(sender);
+        notification.setRead(false);
+        notificationRepository.save(notification);
+        sendEmailApproved(complaint.getEmployee().getEmail(), complaint.getEmployee().getEmpCode(), complaint.getEmployee().getFullname());
         return convertToDTO(save(complaint));
     }
 
     public AttendanceComplaintDTO rejectComplaint(Long complaintId, String description) throws MessagingException {
-        String email = getCurrentUserEmail();
-        User user = userRepository.findByEmail(email).orElseThrow();
         AttendanceComplaint complaint = attendanceComplaintRepository.findById(complaintId)
                 .orElseThrow(() -> new RuntimeException("Complaint not found"));
-        switch (user.getRole()){
-            case "LEADER" -> {
-                complaint.setIsLeaderShow(complaint.getCensor().getId());
-            }
-            case "MANAGE" -> {
-                complaint.setIsManageShow(complaint.getCensor().getId());
-            }
-            default -> throw new IllegalStateException("Unexpected value: ");
-        }
         // Update complaint status
         complaint.setUpdatedAt(LocalDateTime.now());
         complaint.setDescription(description);

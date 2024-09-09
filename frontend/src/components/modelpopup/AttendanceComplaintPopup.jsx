@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
+import { toast, ToastContainer } from "react-toastify";
 
 const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
   const [checkInTime, setCheckInTime] = useState(null);
@@ -178,6 +179,7 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
       })
       .then((response) => {
         console.log("Complaint submitted successfully:", response.data);
+        toast.success("Complaint submitted successfully");
         onClose();
       })
       .catch((error) => {
@@ -262,7 +264,6 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
                   <label className="col-form-label">Check-In Time</label>
                   <DatePicker
                     selected={checkInTime}
-                    onChange={(date) => handleDateChange("checkInTime", date)}
                     showTimeSelect
                     showTimeSelectOnly
                     timeFormat="HH:mm"
@@ -270,18 +271,13 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
                     dateFormat="HH:mm"
                     className="form-control"
                     placeholderText="Select check-in time"
-                    readOnly={isReadOnly}
-                    // minTime={new Date(new Date(checkInTime).setHours(new Date(checkInTime).getHours() - 1))}
-                    // maxTime={new Date(new Date(checkInTime).setHours(new Date(checkInTime).getHours() + 1))}
+                    readOnly
                   />
                 </div>
                 <div className="col-sm-6 mb-3">
                   <label className="col-form-label">Break Time Start</label>
                   <DatePicker
                     selected={breakTimeStart}
-                    onChange={(date) =>
-                      handleDateChange("breakTimeStart", date)
-                    }
                     showTimeSelect
                     showTimeSelectOnly
                     timeFormat="HH:mm"
@@ -289,28 +285,13 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
                     dateFormat="HH:mm"
                     className="form-control"
                     placeholderText="Select break time start"
-                    readOnly={isReadOnly}
-                    // minTime={
-                    //   new Date(
-                    //     new Date(breakTimeStart).setHours(
-                    //       new Date(breakTimeStart).getHours() - 1
-                    //     )
-                    //   )
-                    // }
-                    // maxTime={
-                    //   new Date(
-                    //     new Date(breakTimeStart).setHours(
-                    //       new Date(breakTimeStart).getHours() + 1
-                    //     )
-                    //   )
-                    // }
+                    readOnly
                   />
                 </div>
                 <div className="col-sm-6 mb-3">
                   <label className="col-form-label">Break Time End</label>
                   <DatePicker
                     selected={breakTimeEnd}
-                    onChange={(date) => handleDateChange("breakTimeEnd", date)}
                     showTimeSelect
                     showTimeSelectOnly
                     timeFormat="HH:mm"
@@ -318,21 +299,7 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
                     dateFormat="HH:mm"
                     className="form-control"
                     placeholderText="Select break time end"
-                    readOnly={isReadOnly}
-                    // minTime={
-                    //   new Date(
-                    //     new Date(breakTimeEnd).setHours(
-                    //       new Date(breakTimeEnd).getHours() - 1
-                    //     )
-                    //   )
-                    // }
-                    // maxTime={
-                    //   new Date(
-                    //     new Date(breakTimeEnd).setHours(
-                    //       new Date(breakTimeEnd).getHours() + 1
-                    //     )
-                    //   )
-                    // }
+                    readOnly
                   />
                 </div>
                 <div className="col-sm-6 mb-3">
@@ -347,21 +314,7 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
                     dateFormat="HH:mm"
                     className="form-control"
                     placeholderText="Select check-out time"
-                    readOnly={isReadOnly}
-                    // minTime={
-                    //   new Date(
-                    //     new Date(checkOutTime).setHours(
-                    //       new Date(checkOutTime).getHours() - 1
-                    //     )
-                    //   )
-                    // }
-                    // maxTime={
-                    //   new Date(
-                    //     new Date(checkOutTime).setHours(
-                    //       new Date(checkOutTime).getHours() + 1
-                    //     )
-                    //   )
-                    // }
+                    readOnly
                   />
                 </div>
                 <div className="col-sm-6 mb-3">
@@ -476,6 +429,17 @@ const AttendanceComplaintPopup = ({ show, onClose, attendanceId }) => {
           </div>
         </div>
       </div>
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 };

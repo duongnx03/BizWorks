@@ -33,6 +33,7 @@ public class AttendanceService {
     private final OvertimeService overtimeService;
     private final MailService mailService;
     private final FaceRecognitionService faceRecognitionService;
+    private final MissedCheckOutHandlingService missedCheckOutHandlingService;
 
     public Attendance save(Attendance attendance) {
         return attendanceRepository.save(attendance);
@@ -268,7 +269,7 @@ public class AttendanceService {
     }
 
     @Transactional
-    @Scheduled(cron = "0 0 21 * * ?")
+    @Scheduled(cron = "0 0 20 * * ?")
     public List<Attendance> markAbsentEmployees() throws MessagingException {
         LocalDate today = LocalDate.now();
         List<Employee> allEmployees = employeeService.findAll();
@@ -280,7 +281,8 @@ public class AttendanceService {
                 .collect(Collectors.toList());
 
         for (Employee employee : employeesCheckedInButNotOut) {
-            mailService.sendEmail(employee.getEmail(), "Reminder: Please Check-Out", sendForgotCheckOutReminder(employee.getEmpCode(), employee.getFullname()));
+            missedCheckOutHandlingService.createRequest(employee.getEmail());
+            mailService.sendEmail(employee.getEmail(), "Reminder: Not checked out", sendForgotCheckOutReminder(employee.getEmpCode(), employee.getFullname()));
         }
 
         List<Employee> checkedInEmployees = todaysAttendances.stream()
@@ -344,7 +346,7 @@ public class AttendanceService {
         } else {
             attendanceDTO.setAttendanceComplaintId(attendance.getAttendanceComplaint().getId());
         }
-        if(attendance.getOvertime() == null){
+        if(attendance.getOverTimes() == null){
             attendanceDTO.setOvertimeDTO(null);
         }else{
             attendanceDTO.setOvertimeDTO(convertToOvertimeDTO(attendance.getOverTimes()));

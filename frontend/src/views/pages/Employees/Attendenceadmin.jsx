@@ -5,6 +5,7 @@ import { format, getDaysInMonth } from "date-fns";
 import axios from "axios";
 import AttendanceComplaintPopup from "../../../components/modelpopup/AttendanceComplaintPopup";
 import { Button, Modal } from "react-bootstrap";
+import { toast, ToastContainer } from "react-toastify";
 
 const formatTime = (timeString) => {
   if (!timeString) return "00:00";
@@ -119,8 +120,9 @@ const AttendenceAdmin = () => {
         }
       )
       .then((response) => {
-        console.log("Complaint submitted successfully:", response.data);
+        console.log("Overtime submitted successfully:", response.data);
         handleCloseOvertimeModal();
+        toast.success("Overtime submitted successfully")
       })
       .catch((error) => {
         console.error("Error submitting complaint:", error);
@@ -521,6 +523,17 @@ const AttendenceAdmin = () => {
             </Button>
           </Modal.Footer>
         </Modal>
+        <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       </div>
     </>
   );

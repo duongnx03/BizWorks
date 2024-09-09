@@ -3,6 +3,8 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import { Button, Modal, Form } from "react-bootstrap";
+import ClipLoader from "react-spinners/ClipLoader";
+import { toast, ToastContainer } from "react-toastify";
 
 const getStatusStyle = (status) => {
   switch (status) {
@@ -23,6 +25,7 @@ const ApproveEmployeeRequests = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [selectedReject, setSelectedReject] = useState(null);
+  const [loadingSend, setLoadingSend] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 9;
 
@@ -74,14 +77,18 @@ const ApproveEmployeeRequests = () => {
     );
     if (confirmed) {
       try {
+        setLoadingSend(true);
         await axios.post(
           `http://localhost:8080/api/auth/approve/${complaint.id}`,
           null,
           { withCredentials: true }
         );
+        toast.success("Successfully");
         await fetchEmployees(); // Fetch data again after approval
       } catch (error) {
-        console.error("Error approving complaint:", error);
+        toast.error("Something wrong");
+      } finally {
+        setLoadingSend(false);
       }
     }
   };
@@ -98,6 +105,7 @@ const ApproveEmployeeRequests = () => {
     }
 
     try {
+      setLoadingSend(true);
       await axios.post(
         `http://localhost:8080/api/auth/reject/${selectedReject.id}`,
         null,
@@ -109,10 +117,13 @@ const ApproveEmployeeRequests = () => {
         }
       );
       await fetchEmployees();
-      setRejectReason("");
       handleCloseRejectModal();
+      setRejectReason("");
+      toast.success("Successfully");
     } catch (error) {
-      alert("There was an error rejecting the complaint. Please try again.");
+      toast.error("Something wrong!");
+    } finally {
+      setLoadingSend(false);
     }
   };
 
@@ -154,52 +165,53 @@ const ApproveEmployeeRequests = () => {
                           {currentEmployees.map((employee) => (
                             <tr key={employee.id}>
                               <td>
-                              <div className="d-flex align-items-center">
-                                <Link
-                                  to={`/client-profile/${employee.id}`}
-                                  className="me-3"
-                                >
-                                  <div
-                                    style={{
-                                      width: "50px",
-                                      height: "50px",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                    }}
-                                  >
-                                    <img
-                                      alt="Employee Avatar"
-                                      src={
-                                        employee.avatar || "default-avatar.png"
-                                      }
-                                      style={{
-                                        width: "100%",
-                                        height: "100%",
-                                        objectFit: "cover",
-                                        borderRadius: "50%",
-                                      }}
-                                    />
-                                  </div>
-                                </Link>
-                                <div>
+                                <div className="d-flex align-items-center">
                                   <Link
                                     to={`/client-profile/${employee.id}`}
-                                    className="text-decoration-none fw-bold text-dark"
+                                    className="me-3"
                                   >
-                                    {employee.empCode} - {employee.fullname}
+                                    <div
+                                      style={{
+                                        width: "50px",
+                                        height: "50px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <img
+                                        alt="Employee Avatar"
+                                        src={
+                                          employee.avatar ||
+                                          "default-avatar.png"
+                                        }
+                                        style={{
+                                          width: "100%",
+                                          height: "100%",
+                                          objectFit: "cover",
+                                          borderRadius: "50%",
+                                        }}
+                                      />
+                                    </div>
                                   </Link>
-                                  <div className="mt-1">
-                                    <span className="d-block fw-semibold">
-                                      {employee.departmentName}
-                                    </span>
-                                    <span className="d-block text-muted">
-                                      {employee.positionName}
-                                    </span>
+                                  <div>
+                                    <Link
+                                      to={`/client-profile/${employee.id}`}
+                                      className="text-decoration-none fw-bold text-dark"
+                                    >
+                                      {employee.empCode} - {employee.fullname}
+                                    </Link>
+                                    <div className="mt-1">
+                                      <span className="d-block fw-semibold">
+                                        {employee.departmentName}
+                                      </span>
+                                      <span className="d-block text-muted">
+                                        {employee.positionName}
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            </td>
+                              </td>
                               <td>{employee.email}</td>
                               <td>
                                 {new Date(
@@ -215,52 +227,54 @@ const ApproveEmployeeRequests = () => {
                                 {employee.status}
                               </td>
                               <td>
-                              <div className="d-flex align-items-center">
-                                <Link
-                                  to={`/client-profile/${employee.sender.employee.id}`}
-                                  className="me-3"
-                                >
-                                  <div
-                                    style={{
-                                      width: "50px",
-                                      height: "50px",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                    }}
-                                  >
-                                    <img
-                                      alt="Employee Avatar"
-                                      src={
-                                        employee.avatar || "default-avatar.png"
-                                      }
-                                      style={{
-                                        width: "100%",
-                                        height: "100%",
-                                        objectFit: "cover",
-                                        borderRadius: "50%",
-                                      }}
-                                    />
-                                  </div>
-                                </Link>
-                                <div>
+                                <div className="d-flex align-items-center">
                                   <Link
                                     to={`/client-profile/${employee.sender.employee.id}`}
-                                    className="text-decoration-none fw-bold text-dark"
+                                    className="me-3"
                                   >
-                                    {employee.sender.employee.empCode} - {employee.sender.employee.fullname}
+                                    <div
+                                      style={{
+                                        width: "50px",
+                                        height: "50px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      <img
+                                        alt="Employee Avatar"
+                                        src={
+                                          employee.avatar ||
+                                          "default-avatar.png"
+                                        }
+                                        style={{
+                                          width: "100%",
+                                          height: "100%",
+                                          objectFit: "cover",
+                                          borderRadius: "50%",
+                                        }}
+                                      />
+                                    </div>
                                   </Link>
-                                  <div className="mt-1">
-                                    <span className="d-block fw-semibold">
-                                      {employee.sender.employee.department}
-                                    </span>
-                                    <span className="d-block text-muted">
-                                      {employee.sender.employee.position}
-                                    </span>
+                                  <div>
+                                    <Link
+                                      to={`/client-profile/${employee.sender.employee.id}`}
+                                      className="text-decoration-none fw-bold text-dark"
+                                    >
+                                      {employee.sender.employee.empCode} -{" "}
+                                      {employee.sender.employee.fullname}
+                                    </Link>
+                                    <div className="mt-1">
+                                      <span className="d-block fw-semibold">
+                                        {employee.sender.employee.department}
+                                      </span>
+                                      <span className="d-block text-muted">
+                                        {employee.sender.employee.position}
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            </td>
+                              </td>
 
                               <td>
                                 <div className="dropdown dropdown-action text-end">
@@ -279,7 +293,15 @@ const ApproveEmployeeRequests = () => {
                                         handleApproveClick(employee)
                                       }
                                     >
-                                      Approve
+                                      {loadingSend ? (
+                                        <ClipLoader
+                                          size={20}
+                                          color={"#ffffff"}
+                                          loading={true}
+                                        />
+                                      ) : (
+                                        "Approve"
+                                      )}
                                     </p>
                                     <p
                                       className="dropdown-item text-danger"
@@ -370,10 +392,25 @@ const ApproveEmployeeRequests = () => {
             Cancel
           </Button>
           <Button variant="danger" onClick={handleRejectConfirm}>
-            Reject
+            {loadingSend ? (
+              <ClipLoader size={20} color={"#ffffff"} loading={true} />
+            ) : (
+              "Reject"
+            )}
           </Button>
         </Modal.Footer>
       </Modal>
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </>
   );
 };

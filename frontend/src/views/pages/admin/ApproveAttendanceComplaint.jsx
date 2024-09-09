@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { DatePicker } from "antd";
+import DatePicker from "react-datepicker";
 import { FaTimes } from "react-icons/fa";
 import axios from "axios";
 import { Button, Col, Modal, Row, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import Select from "react-select";
 import Breadcrumbs from "../../../components/Breadcrumbs";
+import ClipLoader from "react-spinners/ClipLoader";
+import { toast, ToastContainer } from "react-toastify";
 
 const formatTime = (timeString) => {
   if (!timeString) return "00:00";
@@ -52,6 +54,17 @@ const getType = (type) => {
   }
 };
 
+const formatDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+};
+
 const ApproveAttendanceComplaint = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -62,11 +75,15 @@ const ApproveAttendanceComplaint = () => {
   });
   const [showModal, setShowModal] = useState(false);
   const [images, setImages] = useState([]);
+  const [showApproveModel, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [selectedComplaint, setSelectedComplaint] = useState(null);
+  const [loadingSend, setLoadingSend] = useState(false);
   const [focused, setFocused] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [checkInTime, setCheckInTime] = useState(new Date());
+  const [checkOutTime, setCheckOutTime] = useState(new Date());
 
   useEffect(() => {
     fetchAttendanceData();
@@ -138,20 +155,38 @@ const ApproveAttendanceComplaint = () => {
 
   const handleCloseModal = () => setShowModal(false);
 
-  const handleApproveClick = async (complaint) => {
+  const handleApproveClick = (complaint) => {
+    setSelectedComplaint(complaint);
+    setShowApproveModal(true);
+  };
+
+  const handleCloseApproveModal = () => {
+    setShowApproveModal(false);
+  };
+
+  const handleApproveConfirm = async () => {
     const confirmed = window.confirm(
       "Are you sure you want to approve this complaint?"
     );
     if (confirmed) {
       try {
+        setLoadingSend(true);
         await axios.post(
-          `http://localhost:8080/api/complaint/approve/${complaint.id}`,
-          null,
+          `http://localhost:8080/api/complaint/approve`,
+          {
+            id: selectedComplaint.id,
+            checkInTime: formatDate(checkInTime),
+            checkOutTime: formatDate(checkOutTime),
+          },
           { withCredentials: true }
         );
-        await fetchAttendanceData(); // Fetch data again after approval
+        await fetchAttendanceData();
+        toast.success("Successfully");
+        handleCloseApproveModal();
       } catch (error) {
-        console.error("Error approving complaint:", error);
+        toast.error("Something wrong!");
+      } finally {
+        setLoadingSend(false);
       }
     }
   };
@@ -162,26 +197,30 @@ const ApproveAttendanceComplaint = () => {
   };
 
   const handleRejectConfirm = async () => {
-    if (!rejectReason.trim()) {
-      alert("Please provide a reason for rejection.");
-      return;
-    }
+    const confirmed = window.confirm(
+      "Are you sure you want to reject this complaint?"
+    );
 
-    try {
-      await axios.post(
-        "http://localhost:8080/api/complaint/reject",
-        {
-          id: selectedComplaint.id,
-          description: rejectReason,
-        },
-        { withCredentials: true }
-      );
-      await fetchAttendanceData(); // Fetch data again after rejection
-      setRejectReason(""); // Reset reject reason after successful rejection
-      handleCloseRejectModal(); // Close modal after success
-    } catch (error) {
-      console.error("Error rejecting complaint:", error);
-      alert("There was an error rejecting the complaint. Please try again.");
+    if (confirmed) {
+      try {
+        setLoadingSend(true);
+        await axios.post(
+          "http://localhost:8080/api/complaint/reject",
+          {
+            id: selectedComplaint.id,
+            description: rejectReason,
+          },
+          { withCredentials: true }
+        );
+        await fetchAttendanceData(); // Fetch data again after rejection
+        setRejectReason(""); // Reset reject reason after successful rejection
+        handleCloseRejectModal(); // Close modal after success
+        toast.success("Successfully");
+      } catch (error) {
+        toast.error("Something wrong!");
+      } finally {
+        setLoadingSend(false);
+      }
     }
   };
 
@@ -406,7 +445,11 @@ const ApproveAttendanceComplaint = () => {
                         <td>{formatTimeAMPM(complaint.checkOutTime)}</td>
                         <td>{formatTime(complaint.totalTime)}</td>
                         <td>{formatTime(complaint.officeHours)}</td>
-                        <td>{complaint.overtime ? formatTime(complaint.overtime) : "N/A"}</td>
+                        <td>
+                          {complaint.overtime
+                            ? formatTime(complaint.overtime)
+                            : "N/A"}
+                        </td>
                         <td>
                           {complaint.overTimes
                             ? getType(complaint.overTimes.type)
@@ -444,7 +487,15 @@ const ApproveAttendanceComplaint = () => {
                                 className="dropdown-item text-success"
                                 onClick={() => handleApproveClick(complaint)}
                               >
-                                Approve
+                                {loadingSend ? (
+                                  <ClipLoader
+                                    size={20}
+                                    color={"#ffffff"}
+                                    loading={true}
+                                  />
+                                ) : (
+                                  "Approve"
+                                )}
                               </p>
                               <p
                                 className="dropdown-item text-danger"
@@ -499,6 +550,108 @@ const ApproveAttendanceComplaint = () => {
         </Modal.Footer>
       </Modal>
 
+      <Modal show={showApproveModel} onHide={handleCloseApproveModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Update Check Out Time</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="row">
+            {selectedComplaint && (
+              <div className="col-sm-12 mb-3">
+                <label className="col-form-label">Complaint Date</label>
+                <DatePicker
+                  selected={selectedComplaint.attendanceDate}
+                  dateFormat="dd-MM-yyyy"
+                  className="form-control"
+                  readOnly
+                />
+              </div>
+            )}
+            {selectedComplaint && (
+              <div className="col-sm-6 mb-3">
+                <label className="col-form-label">Default Check-In Time</label>
+                <DatePicker
+                  selected={selectedComplaint.checkInTime}
+                  showTimeSelect
+                  showTimeSelectOnly
+                  timeFormat="HH:mm"
+                  timeIntervals={5}
+                  dateFormat="HH:mm"
+                  className="form-control"
+                  readOnly
+                />
+              </div>
+            )}
+            {selectedComplaint && (
+              <div className="col-sm-6 mb-3">
+                <label>Default Check-Out Time</label>
+                <DatePicker
+                  selected={selectedComplaint.checkOutTime}
+                  showTimeSelect
+                  showTimeSelectOnly
+                  timeFormat="HH:mm"
+                  timeIntervals={5}
+                  dateFormat="HH:mm"
+                  className="form-control"
+                  readOnly
+                />
+              </div>
+            )}
+            <div className="col-sm-6 mb-3">
+              <label className="col-form-label">Select Check-In Time</label>
+              <DatePicker
+                selected={checkInTime}
+                onChange={setCheckInTime}
+                showTimeSelect
+                showTimeSelectOnly
+                timeFormat="HH:mm"
+                timeIntervals={5}
+                dateFormat="HH:mm"
+                className="form-control"
+                placeholderText="Select check-in time"
+              />
+            </div>
+            <div className="col-sm-6 mb-3">
+              <label>Select Check-Out Time</label>
+              <DatePicker
+                selected={checkOutTime}
+                onChange={setCheckOutTime}
+                showTimeSelect
+                showTimeSelectOnly
+                timeFormat="HH:mm"
+                timeIntervals={5}
+                dateFormat="HH:mm"
+                className="form-control"
+                placeholderText="Select check-out time"
+              />
+            </div>
+            {selectedComplaint && selectedComplaint.overTimes && (
+              <div className="col-sm-12 mb-3">
+                <label className="col-form-label">Note</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={getType(selectedComplaint.overTimes.type)}
+                  readOnly
+                />
+              </div>
+            )}
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseApproveModal}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={handleApproveConfirm}>
+            {loadingSend ? (
+              <ClipLoader size={20} color={"#ffffff"} loading={true} />
+            ) : (
+              "Submit"
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       {/* Reject Modal */}
       <Modal show={showRejectModal} onHide={handleCloseRejectModal}>
         <Modal.Header closeButton>
@@ -522,10 +675,25 @@ const ApproveAttendanceComplaint = () => {
             Cancel
           </Button>
           <Button variant="danger" onClick={handleRejectConfirm}>
-            Reject
+            {loadingSend ? (
+              <ClipLoader size={20} color={"#ffffff"} loading={true} />
+            ) : (
+              "Reject"
+            )}
           </Button>
         </Modal.Footer>
       </Modal>
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </>
   );
 };

@@ -3,6 +3,8 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import { Button, Modal, Form } from "react-bootstrap";
+import ClipLoader from "react-spinners/ClipLoader";
+import { toast, ToastContainer } from "react-toastify";
 
 const getStatusStyle = (status) => {
   switch (status) {
@@ -55,6 +57,7 @@ const ApproveOvertimeRequests = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [selectedReject, setSelectedReject] = useState(null);
+  const [loadingSend, setLoadingSend] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 9;
 
@@ -106,14 +109,18 @@ const ApproveOvertimeRequests = () => {
     );
     if (confirmed) {
       try {
+        setLoadingSend(true);
         await axios.post(
           `http://localhost:8080/api/overtime/approveRequest/${overtime.id}`,
           null,
           { withCredentials: true }
         );
-        await fetchOvertimes(); // Fetch data again after approval
+        await fetchOvertimes();
+        toast.success("Successfully");
       } catch (error) {
-        console.error("Error approving complaint:", error);
+        toast.error("Something wrong!");
+      } finally {
+        setLoadingSend(false);
       }
     }
   };
@@ -130,6 +137,7 @@ const ApproveOvertimeRequests = () => {
     }
 
     try {
+      setLoadingSend(true);
       await axios.post(
         `http://localhost:8080/api/overtime/rejectRequest/${selectedReject.id}`,
         null,
@@ -143,8 +151,11 @@ const ApproveOvertimeRequests = () => {
       await fetchOvertimes();
       setRejectReason("");
       handleCloseRejectModal();
+      toast.success("Successfully");
     } catch (error) {
-      alert("There was an error rejecting the complaint. Please try again.");
+      toast.error("Something wrong!");
+    } finally {
+      setLoadingSend(false);
     }
   };
 
@@ -276,7 +287,15 @@ const ApproveOvertimeRequests = () => {
                                         handleApproveClick(overtime)
                                       }
                                     >
-                                      Approve
+                                      {loadingSend ? (
+                                        <ClipLoader
+                                          size={20}
+                                          color={"#ffffff"}
+                                          loading={true}
+                                        />
+                                      ) : (
+                                        "Reject"
+                                      )}
                                     </button>
                                     <button
                                       className="dropdown-item text-danger"
@@ -368,10 +387,25 @@ const ApproveOvertimeRequests = () => {
             Cancel
           </Button>
           <Button variant="danger" onClick={handleRejectConfirm}>
-            Reject
+            {loadingSend ? (
+              <ClipLoader size={20} color={"#ffffff"} loading={true} />
+            ) : (
+              "Reject"
+            )}
           </Button>
         </Modal.Footer>
       </Modal>
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </>
   );
 };

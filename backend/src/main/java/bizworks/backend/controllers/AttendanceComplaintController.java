@@ -2,6 +2,7 @@ package bizworks.backend.controllers;
 
 import bizworks.backend.dtos.AttendanceComplaintDTO;
 import bizworks.backend.dtos.AttendanceComplaintRequestDTO;
+import bizworks.backend.dtos.AttendanceComplaintUpdateDTO;
 import bizworks.backend.dtos.RejectComplaintRequestDTO;
 import bizworks.backend.helpers.ApiResponse;
 import bizworks.backend.services.AttendanceComplaintService;
@@ -85,10 +86,10 @@ public class AttendanceComplaintController {
         }
     }
 
-    @PostMapping("/approve/{id}")
-    public ResponseEntity<ApiResponse<?>> approve(@PathVariable("id") Long id){
+    @PostMapping("/approve")
+    public ResponseEntity<ApiResponse<?>> approve(@RequestBody AttendanceComplaintUpdateDTO attendanceComplaintUpdateDTO){
         try{
-            AttendanceComplaintDTO attendanceComplaintDTO = attendanceComplaintService.approveComplaint(id);
+            AttendanceComplaintDTO attendanceComplaintDTO = attendanceComplaintService.approveComplaint(attendanceComplaintUpdateDTO);
             return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(attendanceComplaintDTO, "Complaint accept successfully"));
         }catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getLocalizedMessage(), "ERROR_SERVER"));

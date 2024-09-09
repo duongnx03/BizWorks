@@ -209,6 +209,7 @@ import ViewOvertimeRequests from "../../views/pages/admin/ViewOvertimeRequests.j
 import ApproveAttendanceComplaint from "../../views/pages/admin/ApproveAttendanceComplaint.jsx";
 import ApproveOvertimeRequests from "../../views/pages/admin/ApproveOvertimeRequests.jsx";
 import ApproveEmployeeRequests from "../../views/pages/manage/ApproveEmployeeRequests.jsx";
+import MissedCheckOutCorrection from "../../views/pages/manage/MissedCheckOutCorrection.jsx";
 
 const AppContainer = () => {
   useEffect(() => {
@@ -445,6 +446,11 @@ const AppContainer = () => {
       id: 34,
       path: "approve-employee-requests",
       element: <PrivateRoute element={ApproveEmployeeRequests} />,
+    },
+    {
+      id: 34,
+      path: "missed-checkout-correction",
+      element: <PrivateRoute element={MissedCheckOutCorrection} />,
     },
     {
       id: 35,

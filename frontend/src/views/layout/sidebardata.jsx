@@ -166,6 +166,10 @@ export const SidebarData = [
             route: "/manage-employees",
           },
           {
+            menuValue: "Missed CheckOut Correction",
+            route: "/missed-checkout-correction",
+          },
+          {
             menuValue: "Approve Employee Requests",
             route: "/approve-employee-requests",
           },

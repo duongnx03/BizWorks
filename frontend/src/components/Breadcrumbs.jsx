@@ -11,7 +11,8 @@ const Breadcrumbs = (props) => {
     location.pathname === "/approve-attendance-complaint" || 
     location.pathname === "/view-employee-requests" || 
     location.pathname === "/view-attendance-complaint-requests" || 
-    location.pathname === "/view-overtime-requests" || 
+    location.pathname === "/view-overtime-requests" ||
+    location.pathname === "/missed-checkout-correction" ||  
     location.pathname === "/form-basic-inputs" ||
     location.pathname === "/form-input-groups" ||
     location.pathname === "/form-horizontal" ||
