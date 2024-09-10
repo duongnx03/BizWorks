@@ -4,6 +4,7 @@ import bizworks.backend.dtos.ViolationDTO;
 import bizworks.backend.services.humanresources.ViolationService;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 import bizworks.backend.helpers.ApiResponse;
 import org.springframework.http.HttpStatus;
@@ -24,22 +25,34 @@ public class ViolationController {
         try {
             ViolationDTO created = violationService.createViolation(dto);
             return ResponseEntity.ok(ApiResponse.success(created, "Violation created successfully"));
+        } catch (AccessDeniedException ex) {
+            // Trả về lỗi 403 Forbidden nếu gặp lỗi AccessDeniedException
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.errorClient(null, ex.getMessage(), "FORBIDDEN"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.errorServer("An error occurred while creating the violation", "INTERNAL_SERVER_ERROR"));
         }
     }
 
+
     @GetMapping
     public ResponseEntity<ApiResponse<List<ViolationDTO>>> getAllViolations() {
         try {
+            // Lấy danh sách violation với logic phân quyền trong service
             List<ViolationDTO> violations = violationService.getAllViolations();
             return ResponseEntity.ok(ApiResponse.success(violations, "Violations fetched successfully"));
+        } catch (AccessDeniedException ex) {
+            // Trường hợp người dùng không có quyền truy cập
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.errorClient(null, ex.getMessage(), "FORBIDDEN"));
         } catch (Exception e) {
+            // Các lỗi khác (nội bộ server)
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.errorServer("An error occurred while fetching violations", "INTERNAL_SERVER_ERROR"));
         }
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ViolationDTO>> getViolationById(@PathVariable Long id) {
@@ -67,11 +80,15 @@ public class ViolationController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.notfound(null, "Violation not found"));
             }
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.errorClient(null, ex.getMessage(), "FORBIDDEN"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.errorServer("An error occurred while updating the violation", "INTERNAL_SERVER_ERROR"));
         }
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteViolation(@PathVariable Long id) {
@@ -111,9 +128,18 @@ public class ViolationController {
         try {
             violationService.updateViolationStatus(id, status);
             return ResponseEntity.ok(ApiResponse.success(null, "Violation status updated successfully"));
+        } catch (AccessDeniedException ex) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.errorClient(null, ex.getMessage(), "FORBIDDEN"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.errorServer("An error occurred while updating violation status", "INTERNAL_SERVER_ERROR"));
         }
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.errorClient(null, ex.getMessage(), "FORBIDDEN"));
     }
 }

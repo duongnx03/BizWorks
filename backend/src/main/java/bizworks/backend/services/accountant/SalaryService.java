@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -43,88 +44,33 @@ public class SalaryService {
         this.mailService = mailService;
     }
 
-    @Scheduled(cron = "0 0 0 1 * ?")  // Chạy vào đầu mỗi tháng lúc 00:00
-    public void checkAndCreateSalariesForEmployees() {
-        // Lấy thông tin tháng và năm hiện tại
+    public ResponseEntity<ApiResponse<List<SalaryDTO>>> createSalary(@RequestBody SalaryDTO dto) {
+        List<SalaryDTO> createdSalaries = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
         int currentMonth = now.getMonthValue();
         int currentYear = now.getYear();
 
-        // Lấy danh sách tất cả các employee
-        List<Employee> employees = employeeRepository.findAll();
+        for (EmployeeDTO employeeDTO : dto.getEmployees()) {
+            // Lấy thông tin nhân viên
+            Employee employee = employeeRepository.findById(employeeDTO.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
 
-        for (Employee employee : employees) {
-            // Kiểm tra xem bảng lương đã tồn tại cho nhân viên này trong tháng và năm hiện tại chưa
+            // Kiểm tra xem bảng lương cho nhân viên này đã tồn tại trong tháng và năm hiện tại chưa
             boolean exists = salaryRepository.existsByEmployeeIdAndMonthAndYear(employee.getId(), currentMonth, currentYear);
-
-            if (!exists) {
-                // Tạo salary mới nếu chưa tồn tại
-                createSalaryForEmployee(employee);
+            if (exists) {
+                continue; // Nếu bản ghi đã tồn tại, bỏ qua và tiếp tục với nhân viên tiếp theo
             }
-        }
-    }
 
-    public EmployeeDTO getEmployeeWithAutoSalaryCheck(Long employeeId) {
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
-
-        // Tự động kiểm tra và tạo lương nếu chưa tồn tại
-        createSalaryForEmployeeIfNotExists(employee);
-
-        // Trả về thông tin nhân viên
-        return employeeService.convertToEmpDTO(employee);
-    }
-
-    public void createSalaryForEmployeeIfNotExists(Employee employee) {
-        LocalDateTime now = LocalDateTime.now();
-        int currentMonth = now.getMonthValue();
-        int currentYear = now.getYear();
-
-        boolean exists = salaryRepository.existsByEmployeeIdAndMonthAndYear(employee.getId(), currentMonth, currentYear);
-        if (!exists) {
-            createSalaryForEmployee(employee);
-        }
-    }
-
-    public void createMonthlySalariesForAllEmployees() {
-        LocalDateTime now = LocalDateTime.now();
-        int currentMonth = now.getMonthValue();
-        int currentYear = now.getYear();
-
-        // Lấy danh sách tất cả nhân viên
-        List<Employee> employees = employeeRepository.findAll();
-
-        // Duyệt qua từng nhân viên và tạo lương nếu chưa tồn tại bản ghi lương cho tháng và năm hiện tại
-        for (Employee employee : employees) {
-            boolean exists = salaryRepository.existsByEmployeeIdAndMonthAndYear(employee.getId(), currentMonth, currentYear);
-            if (!exists) {
-                createSalaryForEmployee(employee);
-            }
-        }
-    }
-    public void createSalaryForEmployee(Employee employee) {
-        // Lấy thông tin hiện tại
-        LocalDateTime now = LocalDateTime.now();
-        int currentMonth = now.getMonthValue();
-        int currentYear = now.getYear();
-
-        // Kiểm tra xem bảng lương cho nhân viên này đã tồn tại trong tháng và năm hiện tại chưa
-        boolean exists = salaryRepository.existsByEmployeeIdAndMonthAndYear(employee.getId(), currentMonth, currentYear);
-        if (!exists) {
             // Tạo mới Salary nếu không tồn tại bản ghi
             Salary salary = new Salary();
-            String salaryCode;
-            do {
-                salaryCode = generateSalaryCode();
-            } while (salaryRepository.existsBySalaryCode(salaryCode)); // Kiểm tra mã có tồn tại trong cơ sở dữ liệu
-            salary.setSalaryCode(salaryCode); // Tạo mã tự động cho phiếu lương
+            salary.setSalaryCode(generateSalaryCode());
             salary.setMonth(currentMonth);
             salary.setYear(currentYear);
-            salary.setBasicSalary(0.0);
-            salary.setBonusSalary(0.0);
-            salary.setOvertimeSalary(0.0);
-            salary.setAdvanceSalary(0.0);
-            salary.setAllowances(0.0);
+            salary.setBasicSalary(dto.getBasicSalary() != null ? dto.getBasicSalary() : 0.0);
+            salary.setBonusSalary(dto.getBonusSalary() != null ? dto.getBonusSalary() : 0.0);
+            salary.setOvertimeSalary(dto.getOvertimeSalary() != null ? dto.getOvertimeSalary() : 0.0);
+            salary.setAdvanceSalary(dto.getAdvanceSalary() != null ? dto.getAdvanceSalary() : 0.0);
+            salary.setAllowances(dto.getAllowances() != null ? dto.getAllowances() : 0.0);
 
             // Tính tiền phạt từ Violation
             List<Violation> violations = violationRepository.findByEmployeeId(employee.getId());
@@ -135,104 +81,61 @@ public class SalaryService {
 
             // Tính tổng lương
             salary.setTotalSalary(calculateTotalSalary(salary));
-            salary.setDateSalary(LocalDateTime.now()); // Ngày nhận lương
-            salary.setCreatedAt(LocalDateTime.now()); // Ngày tạo bản ghi
-            salary.setUpdatedAt(LocalDateTime.now()); // Ngày cập nhật bản ghi
+            salary.setDateSalary(null);
+            salary.setCreatedAt(LocalDateTime.now());
+            salary.setUpdatedAt(LocalDateTime.now());
             salary.setEmployee(employee);
+            salary.setStatus(dto.getStatus() != null ? dto.getStatus() : "Pending");
+            salary.setNotes(dto.getNotes());
+            salary.setCreatedBy(dto.getCreatedBy()!= null ? dto.getCreatedBy() : "MANAGE");
+            salary.setUpdatedBy(dto.getCreatedBy());
 
-            salaryRepository.save(salary);
-        }
-    }
-
-    public ResponseEntity<ApiResponse<SalaryDTO>> createSalary(@RequestBody SalaryDTO dto) {
-        // Lấy thông tin hiện tại
-        LocalDateTime now = LocalDateTime.now();
-        int currentMonth = now.getMonthValue();
-        int currentYear = now.getYear();
-
-        // Truy vấn Employee để lấy Position và từ đó lấy basicSalary
-        Employee employee = employeeRepository.findById(dto.getEmployee().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
-
-        // Kiểm tra xem bảng lương cho nhân viên này đã tồn tại trong tháng và năm hiện tại chưa
-        boolean exists = salaryRepository.existsByEmployeeIdAndMonthAndYear(employee.getId(), currentMonth, currentYear);
-        if (exists) {
-            ApiResponse<SalaryDTO> badRequestResponse = ApiResponse.badRequest("Employee already has a salary record for this month");
-            return new ResponseEntity<>(badRequestResponse, HttpStatus.BAD_REQUEST);
+            Salary saved = salaryRepository.save(salary);
+            createdSalaries.add(convertToDTO(saved));
+//            sendSalaryEmail(saved, "created");
         }
 
-        // Tạo mới Salary nếu không tồn tại bản ghi
-        Salary salary = new Salary();
-        salary.setSalaryCode(generateSalaryCode()); // Tạo mã tự động cho phiếu lương
-        salary.setMonth(currentMonth);
-        salary.setYear(currentYear);
-        salary.setBasicSalary(dto.getBasicSalary() != null ? dto.getBasicSalary() : 0.0);
-        salary.setBonusSalary(dto.getBonusSalary() != null ? dto.getBonusSalary() : 0.0);
-        salary.setOvertimeSalary(dto.getOvertimeSalary() != null ? dto.getOvertimeSalary() : 0.0);
-        salary.setAdvanceSalary(dto.getAdvanceSalary() != null ? dto.getAdvanceSalary() : 0.0);
-        salary.setAllowances(dto.getAllowances() != null ? dto.getAllowances() : 0.0);
-
-
-        // Tính tiền phạt từ Violation
-        List<Violation> violations = violationRepository.findByEmployeeId(dto.getEmployee().getId());
-        double totalViolationMoney = violations.stream()
-                .mapToDouble(v -> v.getViolationType().getViolationMoney())
-                .sum();
-        salary.setDeductions(totalViolationMoney);
-
-        // Tính tổng lương
-        salary.setTotalSalary(calculateTotalSalary(salary));
-        salary.setDateSalary(LocalDateTime.now()); // Ngày nhận lương
-        salary.setCreatedAt(LocalDateTime.now()); // Ngày tạo bản ghi
-        salary.setUpdatedAt(LocalDateTime.now()); // Ngày cập nhật bản ghi
-        salary.setEmployee(employee);
-
-        Salary saved = salaryRepository.save(salary);
-        ApiResponse<SalaryDTO> successResponse = ApiResponse.success(convertToDTO(saved), "Salary created successfully");
-        sendSalaryEmail(saved, "created");
-
+        ApiResponse<List<SalaryDTO>> successResponse = ApiResponse.success(createdSalaries, "Salaries created successfully");
         return new ResponseEntity<>(successResponse, HttpStatus.OK);
     }
+
 
     public ResponseEntity<ApiResponse<SalaryDTO>> updateSalary(Long id, SalaryDTO dto) {
         Optional<Salary> optional = salaryRepository.findById(id);
         if (optional.isPresent()) {
             Salary salary = optional.get();
-            salary.setSalaryCode(dto.getSalaryCode());
 
             LocalDateTime now = LocalDateTime.now();
             salary.setMonth(now.getMonthValue());
             salary.setYear(now.getYear());
-
-//            Employee employee = employeeRepository.findById(dto.getEmployee().getId())
-//                    .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
-//            double basicSalary = employee.getPosition().getBasicSalary();
             salary.setBasicSalary(dto.getBasicSalary() != null ? dto.getBasicSalary() : salary.getBasicSalary());
-
-            // Cập nhật các trường với giá trị mới nếu có
             salary.setBonusSalary(dto.getBonusSalary() != null ? dto.getBonusSalary() : salary.getBonusSalary());
             salary.setOvertimeSalary(dto.getOvertimeSalary() != null ? dto.getOvertimeSalary() : salary.getOvertimeSalary());
             salary.setAdvanceSalary(dto.getAdvanceSalary() != null ? dto.getAdvanceSalary() : salary.getAdvanceSalary());
             salary.setAllowances(dto.getAllowances() != null ? dto.getAllowances() : salary.getAllowances());
 
-            List<Violation> violations = violationRepository.findByEmployeeId(dto.getEmployee().getId());
-            double totalViolationMoney = violations.stream()
-                    .mapToDouble(v -> v.getViolationType().getViolationMoney())
-                    .sum();
+            // Chỉ cập nhật các trường khác, bỏ qua danh sách nhân viên
+            double totalViolationMoney = salary.getDeductions(); // Giữ nguyên giá trị khấu trừ hiện tại
+
             salary.setDeductions(totalViolationMoney);
 
             salary.setTotalSalary(calculateTotalSalary(salary));
             salary.setUpdatedAt(now);
+            salary.setStatus(dto.getStatus() != null ? dto.getStatus() : salary.getStatus()); // Giữ nguyên trạng thái hiện tại nếu không có trong DTO
+            salary.setNotes(dto.getNotes() != null ? dto.getNotes() : salary.getNotes()); // Ghi chú có thể null hoặc từ DTO
+            salary.setCreatedBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : salary.getCreatedBy()); // Ai tạo bản ghi
+            salary.setUpdatedBy(dto.getUpdatedBy()); // Người tạo cũng là người cập nhật lần đầu
 
             Salary updated = salaryRepository.save(salary);
             ApiResponse<SalaryDTO> successResponse = ApiResponse.success(convertToDTO(updated), "Salary updated successfully");
-            sendSalaryEmail(updated, "updated");
+//            sendSalaryEmail(updated, "updated");
 
             return new ResponseEntity<>(successResponse, HttpStatus.OK);
         }
         ApiResponse<SalaryDTO> notFoundResponse = ApiResponse.notfound(null, "Salary not found");
         return new ResponseEntity<>(notFoundResponse, HttpStatus.NOT_FOUND);
     }
+
 
     public ResponseEntity<ApiResponse<Void>> deleteSalary(Long id) {
         try {
@@ -304,14 +207,20 @@ public class SalaryService {
 
     private SalaryDTO convertToDTO(Salary salary) {
         Employee employee = salary.getEmployee();
-        EmployeeDTO employeeDTO = (employee != null)
-                ? new EmployeeDTO(employee.getId(),employee.getEmpCode(), employee.getFullname(), employee.getEmail(), employee.getPhone(),
+        List<EmployeeDTO> employeeDTOList = (employee != null)
+                ? List.of(new EmployeeDTO(
+                employee.getId(),
+                employee.getEmpCode(),
+                employee.getFullname(),
+                employee.getEmail(),
+                employee.getPhone(),
                 employee.getAvatar(),
                 employee.getStartDate(),
                 (employee.getDepartment() != null) ? employee.getDepartment().getName() : null, // Adjust if Department is not a String
-                (employee.getPosition() != null) ? employee.getPosition().getPositionName() : null        // Adjust if Position is not a String
-        )
-                : null;
+                (employee.getPosition() != null) ? employee.getPosition().getPositionName() : null // Adjust if Position is not a String
+        ))
+                : List.of(); // Nếu không có nhân viên, trả về danh sách rỗng
+
         return new SalaryDTO(
                 salary.getId(),
                 salary.getSalaryCode(),
@@ -325,11 +234,17 @@ public class SalaryService {
                 salary.getDeductions(),
                 salary.getTotalSalary(),
                 salary.getDateSalary(),
-                employeeDTO,
+                employeeDTOList, // Sử dụng danh sách nhân viên
                 salary.getCreatedAt(),
-                salary.getUpdatedAt()
+                salary.getUpdatedAt(),
+                salary.getStatus(),
+                salary.getNotes(),
+                salary.getCreatedBy(),
+                salary.getUpdatedBy()
         );
     }
+
+
 
     private String generateSalaryCode() {
         return "SAL-" + System.currentTimeMillis();
@@ -421,6 +336,5 @@ public class SalaryService {
             e.printStackTrace(); // You can handle the email sending error differently if needed
         }
     }
-
 
 }

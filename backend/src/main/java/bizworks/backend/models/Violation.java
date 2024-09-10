@@ -25,6 +25,6 @@ public class Violation {
     private ViolationType violationType;
 
     private LocalDate violationDate;
-    private String reason;
+    private String description;
     private String status;
 }

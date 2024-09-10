@@ -14,6 +14,6 @@ public class ViolationDTO {
     private EmployeeDTO employee;;
     private ViolationTypeDTO violationType;
     private LocalDate violationDate;
-    private String reason;
+    private String description;
     private String status;
 }

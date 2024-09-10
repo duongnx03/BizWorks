@@ -2,35 +2,63 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import Select from "react-select";
-import DatePicker from "react-datepicker";
 import Breadcrumbs from "../../../../../components/Breadcrumbs";
-import "react-datepicker/dist/react-datepicker.css";
 import AddSalaryModal from "../../../../../components/modelpopup/AddSalaryModal";
 import SalaryTable from "./SalaryTable";
 import { base_url } from "../../../../../base_urls";
 
 const EmployeeSalary = () => {
   const [selectedOption, setSelectedOption] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedDateTwo, setSelectedDateTwo] = useState(null);
-  const [dateTwo, setDateTwo] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
-  const [focused, setFocused] = useState(false);
-  const [inputValue, setInputValue] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [inputEmployeeName, setInputEmployeeName] = useState("");
+  const [inputSalaryCode, setInputSalaryCode] = useState("");
   const [salaryData, setSalaryData] = useState([]);
+  const [departmentOptions, setDepartmentOptions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [employeeNameFocused, setEmployeeNameFocused] = useState(false);
+  const [salaryCodeFocused, setSalaryCodeFocused] = useState(false);
+  
+  const months = [
+    { value: "01", label: "January" },
+    { value: "02", label: "February" },
+    { value: "03", label: "March" },
+    { value: "04", label: "April" },
+    { value: "05", label: "May" },
+    { value: "06", label: "June" },
+    { value: "07", label: "July" },
+    { value: "08", label: "August" },
+    { value: "09", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" },
+  ];
+
+  const years = Array.from({ length: 10 }, (_, i) => {
+    const year = new Date().getFullYear() - i;
+    return { value: year, label: year };
+  });
+
+  useEffect(() => {
+    fetchSalaries();
+    fetchDepartments();
+  }, [inputEmployeeName, inputSalaryCode, selectedOption, selectedMonth, selectedYear]);
 
   const fetchSalaries = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${base_url}/api/salaries`, { withCredentials: true });
-      console.log('Fetched data:', response.data); // Kiểm tra dữ liệu nhận được
-  
-      if (Array.isArray(response.data.data)) {
-        setSalaryData(response.data.data);
-      } else {
-        console.error('Data is not an array:', response.data.data);
-      }
+      const params = {
+        employeeName: inputEmployeeName,
+        salaryCode: inputSalaryCode,
+        department: selectedOption ? selectedOption.value : '',
+        month: selectedMonth ? selectedMonth.value : '',
+        year: selectedYear ? selectedYear.value : ''
+      };
+      const response = await axios.get(`${base_url}/api/salaries`, {
+        params,
+        withCredentials: true
+      });
+      setSalaryData(Array.isArray(response.data.data) ? response.data.data : []);
     } catch (error) {
       console.error("Error fetching salaries:", error);
     } finally {
@@ -38,57 +66,25 @@ const EmployeeSalary = () => {
     }
   };
 
-  useEffect(() => {
-    fetchSalaries();
-  }, []);
-
-  const handleLabelClick = () => {
-    setFocused(true);
-  };
-
-  const handleInputBlur = () => {
-    if (inputValue === "") {
-      setFocused(false);
+  const fetchDepartments = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/departments`, { withCredentials: true });
+      setDepartmentOptions(response.data.map(department => ({
+        value: department.id,
+        label: department.name,
+      })));
+    } catch (error) {
+      console.error("Error fetching departments:", error);
     }
   };
 
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    setInputValue(value);
-    if (value !== "" && !focused) {
-      setFocused(true);
-    }
-  };
-
-  const handleFocus = () => {
-    setIsFocused(true);
-  };
-
-  const handleBlur = () => {
-    setIsFocused(false);
-  };
-
-  const handleFocusTwo = () => {
-    setDateTwo(true);
-  };
-
-  const handleBlurTwo = () => {
-    setDateTwo(false);
-  };
-
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-  };
-
-  const handleDateChangeTwo = (date) => {
-    setSelectedDateTwo(date);
-  };
-
-  const options = [
-    { value: "--Select--", label: "--Select--" },
-    { value: "A01", label: "A01" },
-    { value: "A02", label: "A02" },
-  ];
+  const handleEmployeeNameFocus = () => setEmployeeNameFocused(true);
+  const handleEmployeeNameBlur = () => inputEmployeeName === "" && setEmployeeNameFocused(false);
+  const handleSalaryCodeFocus = () => setSalaryCodeFocused(true);
+  const handleSalaryCodeBlur = () => inputSalaryCode === "" && setSalaryCodeFocused(false);
+  
+  const handleEmployeeNameChange = (e) => setInputEmployeeName(e.target.value);
+  const handleSalaryCodeChange = (e) => setInputSalaryCode(e.target.value);
 
   const customStyles = {
     option: (provided, state) => ({
@@ -115,43 +111,31 @@ const EmployeeSalary = () => {
 
           <div className="row filter-row">
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
-              <div
-                className={
-                  focused || inputValue !== ""
-                    ? "input-block form-focus focused"
-                    : "input-block form-focus"
-                }
-              >
+              <div className={`input-block form-focus ${employeeNameFocused || inputEmployeeName ? 'focused' : ''}`}>
                 <input
                   type="text"
                   className="form-control floating"
-                  value={inputValue}
-                  onFocus={handleLabelClick}
-                  onBlur={handleInputBlur}
-                  onChange={handleInputChange}
+                  value={inputEmployeeName}
+                  onFocus={handleEmployeeNameFocus}
+                  onBlur={handleEmployeeNameBlur}
+                  onChange={handleEmployeeNameChange}
                 />
-                <label className="focus-label" onClick={handleLabelClick}>
+                <label className="focus-label" onClick={handleEmployeeNameFocus}>
                   Employee Name
                 </label>
               </div>
             </div>
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
-              <div
-                className={
-                  focused || inputValue !== ""
-                    ? "input-block form-focus focused"
-                    : "input-block form-focus"
-                }
-              >
+              <div className={`input-block form-focus ${salaryCodeFocused || inputSalaryCode ? 'focused' : ''}`}>
                 <input
                   type="text"
                   className="form-control floating"
-                  value={inputValue}
-                  onFocus={handleLabelClick}
-                  onBlur={handleInputBlur}
-                  onChange={handleInputChange}
+                  value={inputSalaryCode}
+                  onFocus={handleSalaryCodeFocus}
+                  onBlur={handleSalaryCodeBlur}
+                  onChange={handleSalaryCodeChange}
                 />
-                <label className="focus-label" onClick={handleLabelClick}>
+                <label className="focus-label" onClick={handleSalaryCodeFocus}>
                   Salary Code
                 </label>
               </div>
@@ -161,7 +145,7 @@ const EmployeeSalary = () => {
                 <Select
                   placeholder="--Select--"
                   onChange={setSelectedOption}
-                  options={options}
+                  options={departmentOptions}
                   className="select floating"
                   styles={customStyles}
                 />
@@ -169,47 +153,32 @@ const EmployeeSalary = () => {
               </div>
             </div>
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
-              <div
-                className={`input-block mb-3 form-focus ${
-                  isFocused ? "focused" : ""
-                }`}
-              >
-                <div className="cal-icon focused">
-                  <DatePicker
-                    className="form-control floating datetimepicker"
-                    selected={selectedDate}
-                    onChange={handleDateChange}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
-                    dateFormat="dd-MM-yyyy"
-                  />
-                </div>
-                <label className="focus-label">From</label>
+              <div className="input-block mb-3 form-focus select-focus">
+                <Select
+                  placeholder="--Select Month--"
+                  onChange={setSelectedMonth}
+                  options={months}
+                  className="select floating"
+                  styles={customStyles}
+                />
+                <label className="focus-label">Month</label>
               </div>
             </div>
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
-              <div
-                className={`input-block mb-3 form-focus ${
-                  dateTwo ? "focused" : ""
-                }`}
-              >
-                <div className="cal-icon">
-                  <DatePicker
-                    className="form-control floating datetimepicker"
-                    selected={selectedDateTwo}
-                    onChange={handleDateChangeTwo}
-                    onFocus={handleFocusTwo}
-                    onBlur={handleBlurTwo}
-                    dateFormat="dd-MM-yyyy"
-                  />
-                </div>
-                <label className="focus-label">To</label>
+              <div className="input-block mb-3 form-focus select-focus">
+                <Select
+                  placeholder="--Select Year--"
+                  onChange={setSelectedYear}
+                  options={years}
+                  className="select floating"
+                  styles={customStyles}
+                />
+                <label className="focus-label">Year</label>
               </div>
             </div>
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
               <Link to="#" className="btn btn-success w-100">
-                {" "}
-                Payment{" "}
+                {" "}Payment{" "}
               </Link>
             </div>
           </div>

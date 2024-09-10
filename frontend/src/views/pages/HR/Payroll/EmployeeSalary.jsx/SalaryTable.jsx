@@ -1,55 +1,167 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Table } from "antd";
-import EditSalaryModal from "../../../../../components/modelpopup/EditSalaryModal";
-import DeleteModal from "../../../../../components/modelpopup/deletePopup";
-import SearchBox from "../../../../../components/SearchBox";
+import { Table, Button, Input } from "antd";
 
 const SalaryTable = ({ data, loading }) => {
   const [selectedSalary, setSelectedSalary] = useState(null);
-  const navigate = useNavigate(); // Use useNavigate instead of useHistory
+  const [totalSalary, setTotalSalary] = useState(0);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [showCheckbox, setShowCheckbox] = useState(false);
+  const [filteredData, setFilteredData] = useState(data);
+  const [searchValue, setSearchValue] = useState('');
+  const [userRole, setUserRole] = useState(() => sessionStorage.getItem('userRole'));
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const calculateTotalSalary = () => {
+      const total = filteredData.reduce((acc, item) => acc + item.totalSalary, 0);
+      setTotalSalary(total);
+    };
+
+    calculateTotalSalary();
+  }, [filteredData]);
+
+  useEffect(() => {
+    setFilteredData(data);
+  }, [data]);
 
   const handleGenerateSlip = (salary) => {
     setSelectedSalary(salary);
-    navigate("/salary-view", { state: { salary } }); // Navigate to PaySlip page with salary data
+    navigate("/salary-view", { state: { salary } });
+  };
+
+  const handleSelectChange = (selectedRowKeys) => {
+    setSelectedRowKeys(selectedRowKeys);
+  };
+
+  const handlePaymentRequest = () => {
+    setShowCheckbox(!showCheckbox);
+  };
+
+  const handleSearch = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchValue(value);
+
+    const filtered = data.filter(item => {
+      const employee = item.employees[0] || {};
+      return (
+        (employee.fullname && employee.fullname.toLowerCase().includes(value)) ||
+        (item.salaryCode && item.salaryCode.toLowerCase().includes(value))
+      );
+    });
+
+    setFilteredData(filtered);
+  };
+
+  const handleStatusChange = (id, newStatus) => {
+    // Implement status change logic here
+    console.log(`Changing status of ${id} to ${newStatus}`);
   };
 
   const columns = [
     {
       title: "Employee Name",
-      dataIndex: "employee",
-      render: (employee) => (
-        <div className="table-avatar">
-          <Link to="/profile" className="avatar">
-            <img alt="" src={employee.avatar} /> {/* Assuming employee has an avatar field */}
-          </Link>
-          <Link to="/profile">
-            {employee.fullname}
-          </Link>
-        </div>
+      dataIndex: "employees",
+      render: (employees) => (
+        employees.length > 0 ? (
+          <div className="table-avatar">
+            <Link to="/profile" className="avatar">
+              <img alt="" src={employees[0].avatar} />
+            </Link>
+            <Link to="/profile">
+              {employees[0].fullname} - {employees[0].empCode}
+            </Link>
+          </div>
+        ) : "No Employee"
       ),
-      sorter: (a, b) => a.employee.fullname.localeCompare(b.employee.fullname),
+      sorter: (a, b) => a.employees[0]?.fullname.localeCompare(b.employees[0]?.fullname),
     },
     {
       title: "Email",
-      dataIndex: "employee",
-      render: (employee) => employee.email,
-      sorter: (a, b) => a.employee.email.localeCompare(b.employee.email),
+      dataIndex: "employees",
+      render: (employees) => {
+        if (employees.length > 0) {
+          const emailPrefix = employees[0].email.split('@')[0];
+          return emailPrefix.length > 10 ? `${emailPrefix.slice(0, 10)}...` : emailPrefix;
+        }
+        return "No Email";
+      },
+      sorter: (a, b) => a.employees[0]?.email.split('@')[0].localeCompare(b.employees[0]?.email.split('@')[0]),
     },
     {
       title: "Department",
-      dataIndex: "employee",
-      render: (employee) => employee.departmentName, // Assuming department is part of employee
+      dataIndex: "employees",
+      render: (employees) => employees.length > 0 ? employees[0].departmentName : "No Department",
     },
     {
-      title: "Position",
-      dataIndex: "employee",
-      render: (employee) => employee.positionName, // Assuming position is part of employee
+      title: "Status",
+      dataIndex: "status",
+      render: (text, record) => (
+        <>
+          {userRole === "MANAGE" || userRole === "ADMIN" ? (
+            <div className="dropdown action-label">
+              <Button
+                className="btn btn-white btn-sm btn-rounded dropdown-toggle"
+                type="button"
+                id={`dropdownMenuButton-${record.id}`}
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <i
+                  className={
+                    text === "Pending"
+                      ? "far fa-dot-circle text-primary"
+                      : text === "Approved"
+                      ? "far fa-dot-circle text-success"
+                      : "far fa-dot-circle text-secondary"
+                  }
+                />{" "}
+                {text}
+              </Button>
+              <ul
+                className="dropdown-menu"
+                aria-labelledby={`dropdownMenuButton-${record.id}`}
+              >
+                <li>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => handleStatusChange(record.id, "Approved")}
+                  >
+                    <i className="far fa-dot-circle text-success" /> Approved
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => handleStatusChange(record.id, "Rejected")}
+                  >
+                    <i className="far fa-dot-circle text-secondary" /> Rejected
+                  </button>
+                </li>
+              </ul>
+            </div>
+          ) : (
+            <span>
+              <i
+                className={
+                  text === "Pending"
+                    ? "far fa-dot-circle text-danger"
+                    : text === "Approved"
+                    ? "far fa-dot-circle text-success"
+                    : "far fa-dot-circle text-secondary"
+                }
+              />{" "}
+              {text}
+            </span>
+          )}
+        </>
+      ),
+      sorter: (a, b) => a.status.length - b.status.length,
     },
     {
       title: "Salary Date",
       dataIndex: "dateSalary",
-      render: (dateSalary) => new Date(dateSalary).toLocaleDateString(), // Format date
+      render: (dateSalary) => dateSalary ? new Date(dateSalary).toLocaleDateString() : "No Date",
       sorter: (a, b) => new Date(a.dateSalary) - new Date(b.dateSalary),
     },
     {
@@ -92,14 +204,14 @@ const SalaryTable = ({ data, loading }) => {
       ),
     },
     {
-      title: "Payslip",
+      title: "Details",
       render: (record) => (
-        <button
+        <Button
           className="btn btn-sm btn-primary"
           onClick={() => handleGenerateSlip(record)}
         >
           View
-        </button>
+        </Button>
       ),
     },
   ];
@@ -109,21 +221,40 @@ const SalaryTable = ({ data, loading }) => {
       <div className="row">
         <div className="col-md-12">
           <div className="table-responsive">
-            <SearchBox />
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <Input 
+                placeholder="Search..."
+                value={searchValue}
+                onChange={handleSearch}
+                style={{ width: 200 }}
+              />
+              <Button 
+                type="primary" 
+                onClick={handlePaymentRequest}
+              >
+                {showCheckbox ? "Hide" : "Request Payment"}
+              </Button>
+              <div className="d-flex justify-content-end">
+                <h5>Total Salary to be Paid: <span className="text-success">${totalSalary.toFixed(2)}</span></h5>
+              </div>
+            </div>
             <Table
               className="table-striped"
               style={{ overflowX: "auto" }}
               columns={columns}
-              dataSource={data}
+              dataSource={filteredData}
               rowKey={(record) => record.id}
               loading={loading}
+              rowSelection={showCheckbox ? {
+                selectedRowKeys,
+                onChange: handleSelectChange,
+              } : null}
             />
           </div>
         </div>
       </div>
 
-      <EditSalaryModal />
-      <DeleteModal Name="Delete Salary" />
+      {/* Assuming modals are handled elsewhere */}
     </>
   );
 };

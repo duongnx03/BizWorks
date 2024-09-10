@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -23,7 +24,11 @@ public class SalaryDTO {
     private Double deductions; // Các khoản khấu trừ
     private Double totalSalary; // Tổng lương
     private LocalDateTime dateSalary; // Ngày nhận lương
-    private EmployeeDTO employee; // Thông tin nhân viên
+    private List<EmployeeDTO> employees;
     private LocalDateTime createdAt; // Ngày tạo
     private LocalDateTime updatedAt; // Ngày cập nhật
+    private String status; // Tình trạng phiếu lương
+    private String notes; // Ghi chú về phiếu lương
+    private String createdBy; // Người tạo bản ghi
+    private String updatedBy; // Người cập nhật bản ghi
 }

@@ -8,7 +8,7 @@ import AddViolation from "../../../components/modelpopup/AddViolation";
 import EditViolation from "../../../components/modelpopup/EditViolation";
 import DeleteModal from "../../../components/modelpopup/DeleteModal";
 import { base_url } from "../../../base_urls";
-import { Avatar_02, Avatar_09 } from "../../../Routes/ImagePath";
+import { Avatar_02 } from "../../../Routes/ImagePath";
 
 const Violation = () => {
   const [violations, setViolations] = useState([]);
@@ -18,6 +18,7 @@ const Violation = () => {
   const [editViolationData, setEditViolationData] = useState(null);
   const [statsData, setStatsData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [userRole, setUserRole] = useState(() => sessionStorage.getItem('userRole'));
 
   const fetchViolations = async () => {
     setLoading(true);
@@ -52,40 +53,63 @@ const Violation = () => {
 
   const updateStats = async (violationsData) => {
     try {
-      const employeeIds = violationsData.map((v) => v.employeeId);
-      const uniqueEmployeeIds = [...new Set(employeeIds)];
-      const totalEmployeesWithViolations = uniqueEmployeeIds.length;
-      const totalViolations = violationsData.length;
-      const pendingViolations = violationsData.filter(
+      // Fetch tất cả các nhân viên
+      const allEmployees = await fetchEmployees();
+  
+      // Lấy tháng và năm hiện tại
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth(); // Tháng hiện tại (0-11)
+      const currentYear = currentDate.getFullYear(); // Năm hiện tại
+  
+      // Lọc các vi phạm trong tháng hiện tại
+      const violationsThisMonth = violationsData.filter((v) => {
+        const violationDate = new Date(v.violationDate); // Chuyển đổi chuỗi ngày thành đối tượng Date
+        return (
+          violationDate.getMonth() === currentMonth &&
+          violationDate.getFullYear() === currentYear
+        );
+      });
+  
+      // Tìm những nhân viên có vi phạm trong tháng hiện tại
+      const employeeIdsWithViolations = violationsThisMonth.map((v) => v.id);
+      const uniqueEmployeeIdsWithViolations = [...new Set(employeeIdsWithViolations)];
+  
+      // Đếm tổng số nhân viên có vi phạm và tổng số vi phạm trong tháng hiện tại
+      const totalEmployeesWithViolations = uniqueEmployeeIdsWithViolations.length;
+      const totalViolations = violationsThisMonth.length;
+      const pendingViolations = violationsThisMonth.filter(
         (v) => v.status === "Pending"
       ).length;
-      const rejectedViolations = violationsData.filter(
+      const rejectedViolations = violationsThisMonth.filter(
         (v) => v.status === "Rejected"
       ).length;
+  
       setStatsData([
         {
           title: "Violation Staff",
-          value: totalEmployeesWithViolations,
+          value: totalEmployeesWithViolations, // Nhân viên có vi phạm trong tháng hiện tại
           month: "this month",
         },
         {
           title: "Total Violation",
-          value: totalViolations,
+          value: totalViolations, // Tổng số vi phạm trong tháng hiện tại
           month: "this month",
         },
         {
-          title: "Pending",
-          value: pendingViolations,
+          title: "Pending Request",
+          value: pendingViolations, // Vi phạm đang chờ xử lý trong tháng hiện tại
         },
         {
           title: "Rejected",
-          value: rejectedViolations,
+          value: rejectedViolations, // Vi phạm bị từ chối trong tháng hiện tại
         },
       ]);
     } catch (error) {
       console.error("Error updating stats:", error);
     }
   };
+  
+  
 
   useEffect(() => {
     fetchViolations();
@@ -151,11 +175,13 @@ const Violation = () => {
     key: index,
     id: item.id,
     index: index + 1,
-    employeeId: item.employeeId,
+    employeeId: item.id,
     employee: item.employee?.fullname || "Loading...",
     empcode: item.employee?.empCode || "Loading...",
+    department: item.employee?.departmentName || "Loading...",
+    position: item.employee?.positionName || "Loading...",
     role: item.role,
-    reason: item.reason,
+    description: item.description,
     violationTypeId: item.violationTypeId,
     violationType: item.violationType?.type || "Loading...",
     date: item.violationDate,
@@ -199,7 +225,15 @@ const Violation = () => {
       ),
     },
     {
-      title: "Date",
+      title: "Department",
+      dataIndex: "department",
+    },
+    // {
+    //   title: "Position",
+    //   dataIndex: "position",
+    // },
+    {
+      title: "Date Violation",
       dataIndex: "date",
       sorter: (a, b) => a.date.length - b.date.length,
     },
@@ -208,8 +242,8 @@ const Violation = () => {
       dataIndex: "violationType",
     },
     {
-      title: "Reason",
-      dataIndex: "reason",
+      title: "Description",
+      dataIndex: "description",
       render: (text) => (
         <span>{text.length > 10 ? `${text.substring(0, 8)}...` : text}</span>
       ),
@@ -218,50 +252,69 @@ const Violation = () => {
       title: "Status",
       dataIndex: "status",
       render: (text, record) => (
-        <div className="dropdown action-label">
-          <button
-            className="btn btn-white btn-sm btn-rounded dropdown-toggle"
-            type="button"
-            id={`dropdownMenuButton-${record.id}`}
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
-            <i
-              className={
-                text === "New"
-                  ? "far fa-dot-circle text-danger"
-                  : text === "Approved"
-                  ? "far fa-dot-circle text-success"
-                  : "far fa-dot-circle text-secondary"
-              }
-            />{" "}
-            {text}
-          </button>
-          <ul
-            className="dropdown-menu"
-            aria-labelledby={`dropdownMenuButton-${record.id}`}
-          >
-            <li>
+        <>
+          {userRole === "MANAGE" || userRole === "ADMIN" ? (
+            <div className="dropdown action-label">
               <button
-                className="dropdown-item"
-                onClick={() => handleStatusChange(record.id, "Approved")}
+                className="btn btn-white btn-sm btn-rounded dropdown-toggle"
+                type="button"
+                id={`dropdownMenuButton-${record.id}`}
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
               >
-                <i className="far fa-dot-circle text-success" /> Approved
+                <i
+                  className={
+                    text === "Pending"
+                      ? "far fa-dot-circle text-danger"
+                      : text === "Approved"
+                      ? "far fa-dot-circle text-success"
+                      : "far fa-dot-circle text-secondary"
+                  }
+                />{" "}
+                {text}
               </button>
-            </li>
-            <li>
-              <button
-                className="dropdown-item"
-                onClick={() => handleStatusChange(record.id, "Rejected")}
+              <ul
+                className="dropdown-menu"
+                aria-labelledby={`dropdownMenuButton-${record.id}`}
               >
-                <i className="far fa-dot-circle text-secondary" /> Rejected
-              </button>
-            </li>
-          </ul>
-        </div>
+                <li>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => handleStatusChange(record.id, "Approved")}
+                  >
+                    <i className="far fa-dot-circle text-success" /> Approved
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => handleStatusChange(record.id, "Rejected")}
+                  >
+                    <i className="far fa-dot-circle text-secondary" /> Rejected
+                  </button>
+                </li>
+              </ul>
+            </div>
+          ) : (
+            // Nếu role là EMPLOYEE thì chỉ hiển thị status mà không có dropdown
+            <span>
+              <i
+                className={
+                  text === "Pending"
+                    ? "far fa-dot-circle text-danger"
+                    : text === "Approved"
+                    ? "far fa-dot-circle text-success"
+                    : "far fa-dot-circle text-secondary"
+                }
+              />{" "}
+              {text}
+            </span>
+          )}
+        </>
       ),
       sorter: (a, b) => a.status.length - b.status.length,
     },
+    
     {
       title: "Action",
       render: (text, record) => (
@@ -296,6 +349,7 @@ const Violation = () => {
       ),
     },
   ];
+
   return (
     <>
       <div className="page-wrapper">

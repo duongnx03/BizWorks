@@ -10,20 +10,15 @@ const EditViolation = ({ violationData, onSave }) => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedViolationType, setSelectedViolationType] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
-  const [reason, setReason] = useState("");
+  const [description, setDescription] = useState("");
   const [employees, setEmployees] = useState([]);
   const [violationTypes, setViolationTypes] = useState([]);
 
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, {
-          withCredentials: true,
-        });
-        const data = response.data.data.map((emp) => ({
-          value: emp.id,
-          label: emp.fullname,
-        }));
+        const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, { withCredentials: true });
+        const data = response.data.data.map(emp => ({ value: emp.id, label: emp.fullname }));
         setEmployees(data);
       } catch (error) {
         console.error("Error fetching employees:", error);
@@ -32,13 +27,8 @@ const EditViolation = ({ violationData, onSave }) => {
 
     const fetchViolationTypes = async () => {
       try {
-        const response = await axios.get(`${base_url}/api/violation-types`, {
-          withCredentials: true,
-        });
-        const data = response.data.map((vt) => ({
-          value: vt.id,
-          label: vt.type,
-        }));
+        const response = await axios.get(`${base_url}/api/violation-types`, { withCredentials: true });
+        const data = response.data.map(vt => ({ value: vt.id, label: vt.type }));
         setViolationTypes(data);
       } catch (error) {
         console.error("Error fetching violation types:", error);
@@ -50,21 +40,13 @@ const EditViolation = ({ violationData, onSave }) => {
   }, []);
 
   useEffect(() => {
+    console.log(violationData); // Kiểm tra xem violationData có đúng không
     if (violationData) {
       setSelectedDate(new Date(violationData.violationDate));
-      setSelectedEmployee({
-        value: violationData.employee.id,
-        label: violationData.employee.fullname,
-      });
-      setSelectedViolationType({
-        value: violationData.violationType.id,
-        label: violationData.violationType.type,
-      });
-      setSelectedStatus({
-        value: violationData.status === "Pending" ? 1 : violationData.status === "Resolved" ? 2 : 3,
-        label: violationData.status,
-      });
-      setReason(violationData.reason);
+      setSelectedEmployee({ value: violationData.employeeId, label: violationData.employeeName });
+      setSelectedViolationType({ value: violationData.violationTypeId, label: violationData.violationType });
+      setSelectedStatus({ value: violationData.statusId, label: violationData.status });
+      setDescription(violationData.reason);
     }
   }, [violationData]);
 
@@ -78,7 +60,7 @@ const EditViolation = ({ violationData, onSave }) => {
       employeeId: selectedEmployee?.value,
       violationTypeId: selectedViolationType?.value,
       violationDate: selectedDate?.toISOString(),
-      reason,
+      description,
       status: selectedStatus?.label,
     };
 
@@ -157,13 +139,13 @@ const EditViolation = ({ violationData, onSave }) => {
               </div>
               <div className="input-block mb-3">
                 <label className="col-form-label">
-                  Reason <span className="text-danger">*</span>
+                  Description <span className="text-danger">*</span>
                 </label>
                 <textarea
                   rows={4}
                   className="form-control"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
               <div className="input-block mb-3">
@@ -172,9 +154,8 @@ const EditViolation = ({ violationData, onSave }) => {
                 </label>
                 <Select
                   options={[
-                    { value: 1, label: "Pending" },
-                    { value: 2, label: "Resolved" },
-                    { value: 3, label: "Cancel" },
+                    { value: 2, label: "Approved" },
+                    { value: 3, label: "Rejected" },
                   ]}
                   value={selectedStatus}
                   placeholder="Select"

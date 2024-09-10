@@ -4,8 +4,8 @@ import Select from "react-select";
 
 const AddSalaryModal = () => {
   const [employees, setEmployees] = useState([]);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [error, setError] = useState(null); // Thêm trạng thái lỗi
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -17,7 +17,7 @@ const AddSalaryModal = () => {
         if (response.data && response.data.data) {
           const employeeOptions = response.data.data.map((emp) => ({
             value: emp.id,
-            label: emp.fullname,
+            label: `${emp.fullname} - ${emp.empCode}`,
           }));
           setEmployees(employeeOptions);
         } else {
@@ -44,14 +44,17 @@ const AddSalaryModal = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError(null); // Reset lỗi khi bắt đầu gửi request
+    setError(null);
 
-    if (selectedEmployee) {
+    if (selectedEmployees.length > 0) {
       try {
-        console.log("Submitting employee with ID:", selectedEmployee.value);
+        const employeeIds = selectedEmployees.map(emp => emp.value);
+        console.log("Submitting employees with IDs:", employeeIds);
 
-        const response = await axios.post('http://localhost:8080/api/salaries', {withCredentials: true},{
-          employee: { id: selectedEmployee.value },
+        const response = await axios.post('http://localhost:8080/api/salaries', { 
+          employees: employeeIds.map(id => ({ id }))
+        }, {
+          withCredentials: true
         });
 
         console.log("API Response:", response.data);
@@ -64,12 +67,16 @@ const AddSalaryModal = () => {
         }
       } catch (error) {
         console.error("Error submitting data:", error);
-        setError("Failed to submit data. Please try again."); // Cập nhật lỗi
+        setError("Failed to submit data. Please try again.");
       }
     } else {
-      console.error("No employee selected");
-      setError("Please select an employee."); // Cập nhật lỗi
+      console.error("No employees selected");
+      setError("Please select at least one employee.");
     }
+  };
+
+  const handleSelectAll = () => {
+    setSelectedEmployees(employees);
   };
 
   return (
@@ -95,12 +102,21 @@ const AddSalaryModal = () => {
                     <div className="input-block mb-3">
                       <label className="col-form-label">Select Staff</label>
                       <Select
+                        isMulti
                         placeholder="Select"
                         options={employees}
-                        onChange={setSelectedEmployee}
+                        value={selectedEmployees}
+                        onChange={setSelectedEmployees}
                         className="select"
                         styles={customStyles}
                       />
+                      <button
+                        type="button"
+                        className="btn btn-secondary mt-2"
+                        onClick={handleSelectAll}
+                      >
+                        Select All
+                      </button>
                     </div>
                   </div>
                 </div>

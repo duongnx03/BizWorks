@@ -35,6 +35,11 @@ public class ApiResponse<T> {
         return new ApiResponse<>(null, "Validation errors", "BAD REQUEST", errorsBadRequest);
     }
 
+    public static <T> ApiResponse<T> errorClient(T data, String message, String status) {
+        return new ApiResponse<>(data, message, status, null);
+    }
+
+
     public static <T> ApiResponse<T> errorServer(String message, String status) {
         return new ApiResponse<>(null, message, status, null);
     }

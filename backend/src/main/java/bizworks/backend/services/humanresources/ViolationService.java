@@ -3,6 +3,7 @@ package bizworks.backend.services.humanresources;
 import bizworks.backend.dtos.EmployeeDTO;
 import bizworks.backend.dtos.ViolationDTO;
 import bizworks.backend.dtos.ViolationTypeDTO;
+import bizworks.backend.models.Employee;
 import bizworks.backend.models.Salary;
 import bizworks.backend.models.User;
 import bizworks.backend.models.Violation;
@@ -14,6 +15,7 @@ import bizworks.backend.services.AuthenticationService;
 import bizworks.backend.services.MailService;
 import jakarta.mail.MessagingException;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -47,29 +49,88 @@ public class ViolationService {
     }
     public ViolationDTO createViolation(ViolationDTO dto) {
         User currentUser = authenticationService.getCurrentUser();
-        checkRole(currentUser, Arrays.asList("LEADER", "MANAGE"));
+        checkRole(currentUser, Arrays.asList("LEADER", "MANAGE", "ADMIN"));
 
+        // Lấy thông tin employee
         Violation violation = new Violation();
-        violation.setEmployee(employeeRepository.findById(dto.getEmployee().getId()).orElse(null));
+        Employee employee = employeeRepository.findById(dto.getEmployee().getId()).orElse(null);
+        if (employee == null) {
+            throw new IllegalArgumentException("Employee not found.");
+        }
+
+        // Kiểm tra role của employee dựa trên vai trò của currentUser
+        if ("LEADER".equals(currentUser.getRole())) {
+            // LEADER chỉ được tạo vi phạm cho employee có role là EMPLOYEE
+            if (!"EMPLOYEE".equals(employee.getUser().getRole())) {
+                throw new AccessDeniedException("Leader can only create violations for employees with role EMPLOYEE.");
+            }
+            violation.setStatus("Pending");
+        } else if ("MANAGE".equals(currentUser.getRole())) {
+            // MANAGE chỉ được tạo vi phạm cho EMPLOYEE và LEADER, không được tạo cho ADMIN
+            String employeeRole = employee.getUser().getRole();
+            if (!"EMPLOYEE".equals(employeeRole) && !"LEADER".equals(employeeRole)) {
+                throw new AccessDeniedException("Manage can only create violations for EMPLOYEE or LEADER.");
+            }
+            violation.setStatus("Approved");
+        } else if ("ADMIN".equals(currentUser.getRole())) {
+            // ADMIN có quyền tạo cho tất cả các role
+            violation.setStatus("Approved");
+        }
+
+        // Tiếp tục gán các thông tin còn lại cho violation
+        violation.setEmployee(employee);
         violation.setViolationType(violationTypeRepository.findById(dto.getViolationType().getId()).orElse(null));
         violation.setViolationDate(dto.getViolationDate());
-        violation.setReason(dto.getReason());
-        violation.setStatus("Pending");
+        violation.setDescription(dto.getDescription());
 
+        // Lưu vi phạm
         Violation saved = violationRepository.save(violation);
 
-//        sendViolationEmail(saved, "created");
+        // Gửi email nếu là MANAGE hoặc ADMIN
+        if ("MANAGE".equals(currentUser.getRole()) || "ADMIN".equals(currentUser.getRole())) {
+            sendViolationEmail(saved, "created");
+        }
+
+        // Cập nhật lương cho employee
         updateSalaryForEmployee(saved.getEmployee().getId());
 
         return convertToViolationDTO(saved);
     }
 
+    public ViolationDTO updateViolation(Long id, ViolationDTO dto) {
+        // Lấy thông tin người dùng hiện tại
+        User currentUser = authenticationService.getCurrentUser();
+
+        // Kiểm tra quyền hạn của người dùng
+        checkRole(currentUser, Arrays.asList("MANAGE", "ADMIN"));
+
+        return violationRepository.findById(id)
+                .map(v -> {
+                    v.setEmployee(employeeRepository.findById(dto.getEmployee().getId()).orElse(null));
+                    v.setViolationType(violationTypeRepository.findById(dto.getViolationType().getId()).orElse(null));
+                    v.setViolationDate(dto.getViolationDate());
+                    v.setDescription(dto.getDescription());
+                    v.setStatus(dto.getStatus());
+
+                    Violation updated = violationRepository.save(v);
+
+                    // Gửi email thông báo về việc cập nhật vi phạm
+                    sendViolationEmail(updated, "updated");
+
+                    // Cập nhật lương cho nhân viên liên quan
+                    updateSalaryForEmployee(updated.getEmployee().getId());
+
+                    return convertToViolationDTO(updated);
+                })
+                .orElse(null);
+    }
+
     private void checkRole(User user, List<String> allowedRoles) {
         if (user == null) {
-            throw new RuntimeException("User is not authenticated.");
+            throw new AccessDeniedException("User is not authenticated.");
         }
         if (!allowedRoles.contains(user.getRole())) {
-            throw new RuntimeException("User does not have the required permissions. Required roles: " + allowedRoles);
+            throw new AccessDeniedException("User does not have the required permissions. Required roles: " + allowedRoles);
         }
     }
 
@@ -95,42 +156,51 @@ public class ViolationService {
             salaryRepository.save(latestSalary);
         }
     }
-
-
     private double calculateTotalSalary(Salary salary) {
         return salary.getBasicSalary()
                 + salary.getBonusSalary()
                 + salary.getOvertimeSalary()
                 + salary.getAllowances()
-                - salary.getDeductions();
+                - salary.getDeductions()
+                - salary.getAdvanceSalary();
     }
 
     public List<ViolationDTO> getAllViolations() {
-        return violationRepository.findAll().stream()
-                .map(this::convertToViolationDTO)
-                .collect(Collectors.toList());
+        User currentUser = authenticationService.getCurrentUser();
+
+        if (currentUser == null) {
+            throw new RuntimeException("User is not authenticated.");
+        }
+
+        if ("EMPLOYEE".equals(currentUser.getRole())) {
+            // Nếu vai trò là employee, chỉ lấy những violation của employee đó
+            return violationRepository.findByEmployeeId(currentUser.getEmployee().getId()).stream()
+                    .map(this::convertToViolationDTO)
+                    .collect(Collectors.toList());
+        } else if ("LEADER".equals(currentUser.getRole())) {
+            // Nếu vai trò là leader, chỉ lấy những violation của employee có role là EMPLOYEE
+            return violationRepository.findByEmployeeUserRole("EMPLOYEE").stream()
+                    .map(this::convertToViolationDTO)
+                    .collect(Collectors.toList());
+        } else if ("MANAGE".equals(currentUser.getRole())) {
+            // Nếu vai trò là manage, lấy những violation của cả employee và leader
+            return violationRepository.findByEmployeeUserRoleIn(Arrays.asList("EMPLOYEE", "LEADER")).stream()
+                    .map(this::convertToViolationDTO)
+                    .collect(Collectors.toList());
+        } else if ("ADMIN".equals(currentUser.getRole())) {
+            // Nếu vai trò là admin, trả về tất cả violation
+            return violationRepository.findAll().stream()
+                    .map(this::convertToViolationDTO)
+                    .collect(Collectors.toList());
+        } else {
+            throw new AccessDeniedException("You do not have permission to view violations.");
+        }
     }
+
 
     public ViolationDTO getViolationById(Long id) {
         return violationRepository.findById(id)
                 .map(this::convertToViolationDTO)
-                .orElse(null);
-    }
-
-    public ViolationDTO updateViolation(Long id, ViolationDTO dto) {
-        return violationRepository.findById(id)
-                .map(v -> {
-                    v.setEmployee(employeeRepository.findById(dto.getEmployee().getId()).orElse(null));
-                    v.setViolationType(violationTypeRepository.findById(dto.getViolationType().getId()).orElse(null));
-                    v.setViolationDate(dto.getViolationDate());
-                    v.setReason(dto.getReason());
-                    v.setStatus(dto.getStatus());
-                    Violation updated = violationRepository.save(v);
-
-                    sendViolationEmail(updated, "updated");
-                    updateSalaryForEmployee(updated.getEmployee().getId());
-                    return convertToViolationDTO(updated);
-                })
                 .orElse(null);
     }
 
@@ -157,7 +227,7 @@ public class ViolationService {
 
     public void updateViolationStatus(Long id, String status) {
         User currentUser = authenticationService.getCurrentUser();
-        checkRole(currentUser, Arrays.asList("MANAGE"));
+        checkRole(currentUser, Arrays.asList("MANAGE", "ADMIN"));
 
         violationRepository.findById(id)
                 .ifPresent(violation -> {
@@ -178,9 +248,6 @@ public class ViolationService {
                 });
     }
 
-
-
-
     private void sendViolationEmail(Violation violation, String action) {
         String to = violation.getEmployee().getEmail();
         String subject = "Violation " + action;
@@ -195,7 +262,7 @@ public class ViolationService {
                 + "</tr>"
                 + "<tr>"
                 + "<td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description:</strong></td>"
-                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + violation.getReason() + "</td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + violation.getDescription() + "</td>"
                 + "</tr>"
                 + "<tr>"
                 + "<td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Status:</strong></td>"
@@ -234,7 +301,7 @@ public class ViolationService {
                         violation.getViolationType().getViolationMoney()
                 ) : null,
                 violation.getViolationDate(),
-                violation.getReason(),
+                violation.getDescription(),
                 violation.getStatus()
         );
     }

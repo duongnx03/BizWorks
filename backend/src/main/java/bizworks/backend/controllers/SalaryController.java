@@ -20,7 +20,7 @@ public class SalaryController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<SalaryDTO>> createSalary(@RequestBody SalaryDTO dto) {
+    ResponseEntity<ApiResponse<List<SalaryDTO>>> createSalary(@RequestBody SalaryDTO dto) {
         return salaryService.createSalary(dto);
     }
 

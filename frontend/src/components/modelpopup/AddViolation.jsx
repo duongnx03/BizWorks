@@ -9,7 +9,7 @@ const AddViolation = ({ onAdd }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedViolationType, setSelectedViolationType] = useState(null);
-  const [reason, setReason] = useState("");
+  const [description, setDescription] = useState("");
   const [employees, setEmployees] = useState([]);
   const [violationTypes, setViolationTypes] = useState([]);
 
@@ -17,7 +17,10 @@ const AddViolation = ({ onAdd }) => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, { withCredentials: true });
-        const data = response.data.data.map(emp => ({ value: emp.id, label: emp.fullname }));
+        const data = response.data.data.map(emp => ({
+          value: emp.id,
+          label: `${emp.fullname} - ${emp.empCode}`, // Cập nhật label ở đây
+        }));
         setEmployees(data);
       } catch (error) {
         console.error("Error fetching employees:", error);
@@ -53,9 +56,8 @@ const AddViolation = ({ onAdd }) => {
     const violation = {
       employeeId: selectedEmployee?.value,
       violationTypeId: selectedViolationType?.value,
-      violationDate: formattedDate,  // Sử dụng ngày đã chuyển đổi
-      reason,
-      // Status is omitted as it is set to "Pending" by default in the backend
+      violationDate: formattedDate,
+      description,
     };
 
     try {
@@ -133,13 +135,13 @@ const AddViolation = ({ onAdd }) => {
               </div>
               <div className="input-block mb-3">
                 <label className="col-form-label">
-                  Reason <span className="text-danger">*</span>
+                  Description <span className="text-danger">*</span>
                 </label>
                 <textarea
                   rows={4}
                   className="form-control"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
               <div className="submit-section">
