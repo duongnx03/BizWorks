@@ -43,6 +43,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/overtime/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER", "MANAGE")
                         .requestMatchers("/api/emp-queue/**").hasAnyAuthority("ADMIN", "LEADER", "MANAGE")
                         .requestMatchers("/api/missedCheckOut/**").hasAnyAuthority("ADMIN", "LEADER", "MANAGE", "EMPLOYEE")
+                        .requestMatchers("/api/review/**").hasAnyAuthority("ADMIN", "LEADER", "MANAGE", "EMPLOYEE")
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)

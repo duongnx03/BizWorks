@@ -1,27 +1,33 @@
-    package bizworks.backend.models;
+package bizworks.backend.models;
 
-    import jakarta.persistence.*;
-    import lombok.AllArgsConstructor;
-    import lombok.Data;
-    import lombok.NoArgsConstructor;
+import bizworks.backend.dtos.LeaveType;
+import jakarta.persistence.*;
+import java.util.Date;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-    import java.util.Date;
+@Entity
+@Table(name = "leave_requests")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class LeaveRequest {
 
-    @Entity
-    @Table(name = "leave_requests")
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public class LeaveRequest {
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private Long id;
-        private Date startDate;
-        private Date endDate;
-        private String leaveType;
-        private String status;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-        @ManyToOne
-        @JoinColumn(name = "empId")
-        private Employee employee;
-    }
+  private Date startDate;
+  private Date endDate;
+
+  @Enumerated(EnumType.STRING)
+  private LeaveType leaveType;
+
+  private String reason;
+  private String status;
+
+  @ManyToOne
+  @JoinColumn(name = "empId")
+  private Employee employee;
+}

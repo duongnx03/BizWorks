@@ -26,6 +26,7 @@ const Sidebar = () => {
   const [level2Menu, setLevel2Menu] = useState("");
   const [level3Menu, setLevel3Menu] = useState("");
   const [isSideMenunew, setSideMenuNew] = useState("dashboard");
+  const [userRole, setUserRole] = useState(() => sessionStorage.getItem('userRole'));
 
   
 

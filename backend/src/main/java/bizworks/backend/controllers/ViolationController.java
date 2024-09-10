@@ -31,7 +31,7 @@ public class ViolationController {
                     .body(ApiResponse.errorClient(null, ex.getMessage(), "FORBIDDEN"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.errorServer("An error occurred while creating the violation", "INTERNAL_SERVER_ERROR"));
+                    .body(ApiResponse.errorServer("An error occurred while creating the violation: "+ e.getMessage(), "INTERNAL_SERVER_ERROR"));
         }
     }
 

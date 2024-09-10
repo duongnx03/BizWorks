@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Table, Button, Input } from "antd";
+import EditSalaryModal from "../../../../../components/modelpopup/EditSalaryModal";
+import DeleteModal from "../../../../../components/modelpopup/deletePopup";
 
 const SalaryTable = ({ data, loading }) => {
   const [selectedSalary, setSelectedSalary] = useState(null);
@@ -112,8 +114,10 @@ const SalaryTable = ({ data, loading }) => {
                     text === "Pending"
                       ? "far fa-dot-circle text-primary"
                       : text === "Approved"
+                      ? "far fa-dot-circle text-info"
+                      : text === "Paid"
                       ? "far fa-dot-circle text-success"
-                      : "far fa-dot-circle text-secondary"
+                      : "far fa-dot-circle text-danger"
                   }
                 />{" "}
                 {text}
@@ -127,7 +131,7 @@ const SalaryTable = ({ data, loading }) => {
                     className="dropdown-item"
                     onClick={() => handleStatusChange(record.id, "Approved")}
                   >
-                    <i className="far fa-dot-circle text-success" /> Approved
+                    <i className="far fa-dot-circle text-info" /> Approved
                   </button>
                 </li>
                 <li>
@@ -135,7 +139,15 @@ const SalaryTable = ({ data, loading }) => {
                     className="dropdown-item"
                     onClick={() => handleStatusChange(record.id, "Rejected")}
                   >
-                    <i className="far fa-dot-circle text-secondary" /> Rejected
+                    <i className="far fa-dot-circle text-danger" /> Rejected
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => handleStatusChange(record.id, "Rejected")}
+                  >
+                    <i className="far fa-dot-circle text-success" /> Paid
                   </button>
                 </li>
               </ul>
@@ -145,10 +157,12 @@ const SalaryTable = ({ data, loading }) => {
               <i
                 className={
                   text === "Pending"
-                    ? "far fa-dot-circle text-danger"
-                    : text === "Approved"
-                    ? "far fa-dot-circle text-success"
-                    : "far fa-dot-circle text-secondary"
+                      ? "far fa-dot-circle text-primary"
+                      : text === "Approved"
+                      ? "far fa-dot-circle text-info"
+                      : text === "Paid"
+                      ? "far fa-dot-circle text-success"
+                      : "far fa-dot-circle text-danger"
                 }
               />{" "}
               {text}
@@ -254,6 +268,8 @@ const SalaryTable = ({ data, loading }) => {
         </div>
       </div>
 
+      <EditSalaryModal />
+      <DeleteModal Name="Delete Salary" />
       {/* Assuming modals are handled elsewhere */}
     </>
   );

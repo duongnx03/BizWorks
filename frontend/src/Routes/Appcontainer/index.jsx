@@ -210,6 +210,8 @@ import ApproveAttendanceComplaint from "../../views/pages/admin/ApproveAttendanc
 import ApproveOvertimeRequests from "../../views/pages/admin/ApproveOvertimeRequests.jsx";
 import ApproveEmployeeRequests from "../../views/pages/manage/ApproveEmployeeRequests.jsx";
 import MissedCheckOutCorrection from "../../views/pages/manage/MissedCheckOutCorrection.jsx";
+import LeaveRequestsAdmin from "../../views/pages/Employees/LeaveRequestsAdmin";
+import LeaveRequestsEmployee from "../../views/pages/Employees/LeaveRequestsEmployee";
 
 const AppContainer = () => {
   useEffect(() => {
@@ -1008,6 +1010,16 @@ const AppContainer = () => {
       id: 134,
       path: "positions/:departmentId",
       element: <Position />,
+    },
+    {
+      id: 135,
+      path: "leave-requests",      
+      element: <LeaveRequestsAdmin />,
+    },
+    {
+      id: 136,
+      path: "leave-requests-employee",      
+      element: <LeaveRequestsEmployee />,
     },
   ];
 

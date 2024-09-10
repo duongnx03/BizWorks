@@ -55,9 +55,10 @@ const ViolationType = () => {
       await axios.delete(`${base_url}/api/violation-types/${deleteId}`, {withCredentials: true});
       fetchViolationTypes();
       setDeleteId(null); // Clear the delete ID after successful deletion
-      setShowDeleteModal(false);
     } catch (error) {
       console.error("Error deleting violation type:", error);
+    }finally{
+      handleClose();
     }
   };
   const handleClose = () => {

@@ -4,6 +4,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import Select from "react-select";
 import axios from "axios";
 import { base_url } from "../../base_urls";
+import { Modal } from "bootstrap";  // Import Bootstrap modal if not already
 
 const AddViolation = ({ onAdd }) => {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -19,7 +20,7 @@ const AddViolation = ({ onAdd }) => {
         const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, { withCredentials: true });
         const data = response.data.data.map(emp => ({
           value: emp.id,
-          label: `${emp.fullname} - ${emp.empCode}`, // Cập nhật label ở đây
+          label: `${emp.fullname} - ${emp.empCode}`,
         }));
         setEmployees(data);
       } catch (error) {
@@ -48,14 +49,20 @@ const AddViolation = ({ onAdd }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Kiểm tra nếu các trường cần thiết chưa được chọn
+    if (!selectedEmployee || !selectedViolationType || !selectedDate) {
+      alert("Please fill out all required fields");
+      return;
+    }
+
     // Chuyển đổi selectedDate sang định dạng yyyy-MM-dd
     const formattedDate = selectedDate
       ? selectedDate.toISOString().split("T")[0]
       : null;
 
     const violation = {
-      employeeId: selectedEmployee?.value,
-      violationTypeId: selectedViolationType?.value,
+      employee: { id: selectedEmployee?.value },
+      violationType: { id: selectedViolationType?.value },
       violationDate: formattedDate,
       description,
     };
@@ -63,9 +70,18 @@ const AddViolation = ({ onAdd }) => {
     try {
       await axios.post(`${base_url}/api/violations`, violation, { withCredentials: true });
       onAdd(violation);
+
+      // Đóng modal sử dụng Bootstrap Modal API
+      const modalElement = document.getElementById('add_violation');
+      const modalInstance = Modal.getInstance(modalElement); // Lấy instance modal
+      if (modalInstance) {
+        modalInstance.hide();  // Đóng modal
+      }
+      
     } catch (error) {
       console.error("Error adding violation:", error);
-    }
+      alert("Error occurred while submitting the form.");
+    } 
   };
 
   const customStyles = {
