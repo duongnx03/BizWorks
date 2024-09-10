@@ -24,6 +24,16 @@ import java.util.stream.Collectors;
 public class AttendanceController {
     private final AttendanceService attendanceService;
 
+    @PostMapping("/checkLocation")
+    public ResponseEntity<ApiResponse<?>> checkLocation(@RequestParam("latitude") double latitude, @RequestParam("longitude") double longitude) {
+        try {
+            attendanceService.checkLocation(latitude, longitude);
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(null, "Valid Location"));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getLocalizedMessage(), "ERROR_SERVER"));
+        }
+    }
+
     @PostMapping("/checkIn")
     public ResponseEntity<ApiResponse<?>> checkIn(@RequestParam("faceImage") MultipartFile faceImage) {
         try {

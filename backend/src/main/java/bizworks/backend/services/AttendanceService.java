@@ -1,5 +1,6 @@
 package bizworks.backend.services;
 
+import bizworks.backend.configs.Util.GeoToolsDistanceCalculator;
 import bizworks.backend.dtos.*;
 import bizworks.backend.models.Attendance;
 import bizworks.backend.models.Employee;
@@ -34,6 +35,21 @@ public class AttendanceService {
     private final MailService mailService;
     private final FaceRecognitionService faceRecognitionService;
     private final MissedCheckOutHandlingService missedCheckOutHandlingService;
+
+    // Địa điểm yêu cầu chấm công
+    private static final double REQUIRED_LATITUDE = 10.80766371098707; // Vĩ độ
+    private static final double REQUIRED_LONGITUDE =  106.71900364124757; // Kinh độ
+    private static final double ACCEPTABLE_RADIUS = 100; // Bán kính chấp nhận tính bằng mét
+
+    public void checkLocation(double latitude, double longitude){
+        double distance = GeoToolsDistanceCalculator.calculateDistance(
+                REQUIRED_LATITUDE, REQUIRED_LONGITUDE,
+                latitude, longitude
+        );
+        if(distance >= ACCEPTABLE_RADIUS){
+            throw new RuntimeException("We cannot confirm your attendance as you are not at the required location. Please move to the correct area and try again.");
+        }
+    }
 
     public Attendance save(Attendance attendance) {
         return attendanceRepository.save(attendance);

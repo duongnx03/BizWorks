@@ -15,7 +15,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Service
 @RequiredArgsConstructor
@@ -38,23 +42,31 @@ public class FaceRecognitionService {
         Employee employee = employeeService.findByEmail(email);
         String storedImageUrl = employee.getAvatar();
 
-        // Chuyển đổi URL thành đường dẫn hệ thống
-        String storedImagePath = storedImageUrl
-                .replace("http://localhost:8080/uploads/avatars/", "\\Bizworks\\backend\\uploads\\avatars\\")
-                .replace("/", File.separator);
+        // Lấy đường dẫn thư mục gốc của ứng dụng
+        Path rootDirectory = Paths.get(System.getProperty("user.dir"));
+
+        // Chuyển đổi URL thành đường dẫn hệ thống (đường dẫn tương đối)
+        String relativePath = storedImageUrl.replace("http://localhost:8080/uploads/avatars/", "uploads/avatars/");
+        Path storedImagePath = rootDirectory.resolve(relativePath);
+
+        // Kiểm tra xem đường dẫn có tồn tại không
+        if (!Files.exists(storedImagePath)) {
+            throw new FileNotFoundException("Stored image file not found at: " + storedImagePath);
+        }
 
         // Lưu ảnh mới tạm thời để so sánh
         String uploadedImageFileName = fileUpload.storeImage(subFolder, faceImage);
-        String uploadedImagePath = "\\Bizworks\\backend\\uploads\\" + subFolder + File.separator + uploadedImageFileName;
+        Path uploadedImagePath = rootDirectory.resolve("uploads").resolve(subFolder).resolve(uploadedImageFileName);
 
         // So sánh ảnh đã lưu với ảnh mới tải lên
-        boolean isMatch = compareFacesWithFacepp(storedImagePath, uploadedImagePath);
+        boolean isMatch = compareFacesWithFacepp(storedImagePath.toString(), uploadedImagePath.toString());
 
         // Xóa ảnh tạm sau khi so sánh
-        fileUpload.deleteImage(uploadedImagePath);
+        fileUpload.deleteImage(uploadedImagePath.toString());
 
         return isMatch;
     }
+
 
     private boolean compareFacesWithFacepp(String storedImagePath, String uploadedImagePath) throws IOException {
         String url = "https://api-us.faceplusplus.com/facepp/v3/compare";

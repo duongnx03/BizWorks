@@ -4,7 +4,7 @@ import axios from "axios";
 import ClipLoader from "react-spinners/ClipLoader";
 import { Modal } from "react-bootstrap";
 import Webcam from "react-webcam";
-import { toast, ToastContainer } from 'react-toastify';
+import { toast, ToastContainer } from "react-toastify";
 
 const getHours = (timeString) => {
   const [hours, minutes] = timeString.split(":").map(Number);
@@ -111,7 +111,33 @@ const AttendanceEmployee = () => {
     fetchTotalWorkTime();
   }, []);
 
+  const getLocation = () => {
+    return new Promise((resolve, reject) => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            });
+          },
+          (error) => {
+            reject(new Error("Failed to get location: " + error.message));
+          },
+          {
+            enableHighAccuracy: true, // Yêu cầu độ chính xác cao hơn
+            timeout: 10000, // Thời gian chờ lâu hơn (10 giây)
+            maximumAge: 0, // Không sử dụng thông tin vị trí đã lưu
+          }
+        );
+      } else {
+        reject(new Error("Geolocation is not supported by this browser."));
+      }
+    });
+  };
+
   const handleCheckIn = async () => {
+    const position = await getLocation();
     const now = new Date();
     const checkInTime = new Date();
     checkInTime.setHours(7, 55, 0);
@@ -124,40 +150,54 @@ const AttendanceEmployee = () => {
       return;
     }
 
-    setLoading(true);
-    setModalShow(true);
+    axios
+      .post("http://localhost:8080/api/attendance/checkLocation", null, {
+        params: {
+          latitude: position.latitude,
+          longitude: position.longitude,
+        },
+        withCredentials: true,
+      })
+      .then(async () => {
+        setModalShow(true);
 
-    setTimeout(() => {
-      if (webcamRef.current) {
-        const imageSrc = webcamRef.current.getScreenshot();
-        setCapturedImage(imageSrc);
+        setTimeout(() => {
+          if (webcamRef.current) {
+            const imageSrc = webcamRef.current.getScreenshot();
+            setCapturedImage(imageSrc);
 
-        // Tạo form data để gửi ảnh lên server
-        const formData = new FormData();
-        const blob = dataURItoBlob(imageSrc);
-        formData.append("faceImage", blob, "photo.jpg");
+            // Tạo form data để gửi ảnh lên server
+            const formData = new FormData();
+            const blob = dataURItoBlob(imageSrc);
+            formData.append("faceImage", blob, "photo.jpg");
 
-        // Gửi yêu cầu check-in
-        axios
-          .post("http://localhost:8080/api/attendance/checkIn", formData, {
-            withCredentials: true,
-          })
-          .then(async () => {
-            await updateTodayActivity(setTodayActivity);
-          })
-          .catch((error) => {
-            toast.error(error.response.data.message);
-          })
-          .finally(() => {
-            setLoading(false);
-            setModalShow(false); 
-            setCapturedImage(null);
-          });
-      }
-    }, 4000); 
+            // Gửi yêu cầu check-in
+            axios
+              .post("http://localhost:8080/api/attendance/checkIn", formData, {
+                withCredentials: true,
+              })
+              .then(async () => {
+                await updateTodayActivity(setTodayActivity);
+              })
+              .catch((error) => {
+                toast.error(error.response.data.message);
+              })
+              .finally(() => {
+                setLoading(false);
+                setModalShow(false);
+                setCapturedImage(null);
+              });
+          }
+        }, 4000);
+      })
+      .catch((error) => {
+        toast.error(error.response.data.message);
+        setLoading(false);
+      });
   };
 
   const handleCheckOut = async () => {
+    const position = await getLocation();
     const now = new Date();
     const checkOutTime = new Date();
     checkOutTime.setHours(16, 55, 0);
@@ -166,40 +206,54 @@ const AttendanceEmployee = () => {
 
     if (now < checkOutTime) {
       alert("You cannot check out before 4:58 PM.");
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setModalShow(true);
+    axios
+      .post("http://localhost:8080/api/attendance/checkLocation", null, {
+        params: {
+          latitude: position.latitude,
+          longitude: position.longitude,
+        },
+        withCredentials: true,
+      })
+      .then(async () => {
+        setModalShow(true);
 
-    setTimeout(() => {
-      if (webcamRef.current) {
-        const imageSrc = webcamRef.current.getScreenshot();
-        setCapturedImage(imageSrc);
+        setTimeout(() => {
+          if (webcamRef.current) {
+            const imageSrc = webcamRef.current.getScreenshot();
+            setCapturedImage(imageSrc);
 
-        // Tạo form data để gửi ảnh lên server
-        const formData = new FormData();
-        const blob = dataURItoBlob(imageSrc);
-        formData.append("faceImage", blob, "photo.jpg");
+            // Tạo form data để gửi ảnh lên server
+            const formData = new FormData();
+            const blob = dataURItoBlob(imageSrc);
+            formData.append("faceImage", blob, "photo.jpg");
 
-        // Gửi yêu cầu check-in
-        axios
-          .post("http://localhost:8080/api/attendance/checkOut", formData, {
-            withCredentials: true,
-          })
-          .then(async () => {
-            await updateTodayActivity(setTodayActivity);
-          })
-          .catch((error) => {
-            toast.error(error.response.data.message);
-          })
-          .finally(() => {
-            setLoading(false);
-            setModalShow(false); 
-            setCapturedImage(null);
-          });
-      }
-    }, 4000); 
+            // Gửi yêu cầu check-in
+            axios
+              .post("http://localhost:8080/api/attendance/checkOut", formData, {
+                withCredentials: true,
+              })
+              .then(async () => {
+                await updateTodayActivity(setTodayActivity);
+              })
+              .catch((error) => {
+                toast.error(error.response.data.message);
+              })
+              .finally(() => {
+                setLoading(false);
+                setModalShow(false);
+                setCapturedImage(null);
+              });
+          }
+        }, 4000);
+      })
+      .catch((error) => {
+        toast.error(error.response.data.message);
+        setLoading(false);
+      });
   };
 
   const isCheckOutAvailable = () => {
@@ -439,7 +493,17 @@ const AttendanceEmployee = () => {
           )}
         </Modal.Body>
       </Modal>
-      <ToastContainer position="top-center" autoClose={5000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 };
