@@ -1009,6 +1009,16 @@ const AppContainer = () => {
       path: "positions/:departmentId",
       element: <Position />,
     },
+    {
+      id: 135,
+      path: "leave-requests",      
+      element: <LeaveRequestsAdmin />
+    },
+    {
+      id: 136,
+      path: "leave-requests-employee",      
+      element: <LeaveRequestsEmployee />
+    },
   ];
 
   const ChatRoutingeObjects = [

@@ -121,6 +121,10 @@ export const SidebarData = [
             menuValue: "Approve Overtime Requests",
             route: "/approve-overtime-requests",
           },
+          {
+            menuValue: 'All Leave Requests',
+            route: "/leave-requests",
+          },
           // {
           //   menuValue: 'Holidays',
           //   route: "/holidays",
@@ -198,6 +202,10 @@ export const SidebarData = [
             route: "/overtime",
           },
           {
+            menuValue: 'All Leave Requests',
+            route: "/leave-requests",
+          },
+          {
             menuValue: "Leaves",
             route: "/adminleaves",
           },
@@ -258,6 +266,10 @@ export const SidebarData = [
             route: "/overtime",
           },
           {
+            menuValue: 'All Leave Requests',
+            route: "/leave-requests",
+          },
+          {
             menuValue: "Leaves",
             route: "/adminleaves",
           },
@@ -309,6 +321,10 @@ export const SidebarData = [
           //   menuValue: 'Holidays',
           //   route: "/holidays",
           // },
+          {
+            menuValue: 'Leave Request',
+            route: "/leave-requests-employee",
+          },
           {
             menuValue: "Leaves",
             route: "/leaves-employee",
