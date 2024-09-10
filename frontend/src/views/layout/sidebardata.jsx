@@ -65,8 +65,6 @@ export const SidebarData = [
             menuValue: "Approve Overtime Requests",
             route: "/approve-overtime-requests",
           },
-<<<<<<< HEAD
-=======
           {
             menuValue: 'All Leave Requests',
             route: "/leave-requests",
@@ -75,7 +73,6 @@ export const SidebarData = [
           //   menuValue: 'Holidays',
           //   route: "/holidays",
           // },
->>>>>>> 089a7fc2dd280d2b5f9d71690c0b26c59755fcbc
           {
             menuValue: "Leaves",
             route: "/adminleaves",
