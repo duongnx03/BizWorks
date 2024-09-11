@@ -4,8 +4,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import Select from "react-select";
 import axios from "axios";
 import { base_url } from "../../base_urls";
+import { format } from 'date-fns';
 
-const EditViolation = ({ violationData, onSave }) => {
+const EditViolation = ({ violationData, onSave, onClose }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedViolationType, setSelectedViolationType] = useState(null);
@@ -18,7 +19,10 @@ const EditViolation = ({ violationData, onSave }) => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, { withCredentials: true });
-        const data = response.data.data.map(emp => ({ value: emp.id, label: emp.fullname }));
+        const data = response.data.data.map(emp => ({
+          value: emp.id,
+          label: `${emp.fullname} - ${emp.empCode}`,
+        }));
         setEmployees(data);
       } catch (error) {
         console.error("Error fetching employees:", error);
@@ -40,13 +44,13 @@ const EditViolation = ({ violationData, onSave }) => {
   }, []);
 
   useEffect(() => {
-    console.log(violationData); // Kiểm tra xem violationData có đúng không
-    if (violationData) {
-      setSelectedDate(new Date(violationData.violationDate));
-      setSelectedEmployee({ value: violationData.employeeId, label: violationData.employeeName });
-      setSelectedViolationType({ value: violationData.violationTypeId, label: violationData.violationType });
-      setSelectedStatus({ value: violationData.statusId, label: violationData.status });
-      setDescription(violationData.reason);
+    if (violationData && violationData.data) {
+      const data = violationData.data;
+      setSelectedDate(new Date(data.violationDate));
+      setSelectedEmployee({ value: data.employee.id, label: `${data.employee.fullname} - ${data.employee.empCode}` });
+      setSelectedViolationType({ value: data.violationType.id, label: data.violationType.type });
+      setSelectedStatus({ value: data.status.id, label: data.status.status });
+      setDescription(data.description);
     }
   }, [violationData]);
 
@@ -54,22 +58,27 @@ const EditViolation = ({ violationData, onSave }) => {
     setSelectedDate(date);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const violation = {
-      employeeId: selectedEmployee?.value,
-      violationTypeId: selectedViolationType?.value,
-      violationDate: selectedDate?.toISOString(),
+    if (!selectedEmployee || !selectedViolationType || !selectedStatus || !selectedDate || !description) {
+      console.error("All fields are required");
+      return;
+    }
+
+    // Chuyển đổi ngày từ định dạng dd-MM-yyyy sang yyyy-MM-dd
+    const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+
+    const updatedViolation = {
+      employeeId: selectedEmployee.value,
+      violationTypeId: selectedViolationType.value,
+      violationDate: formattedDate,
       description,
-      status: selectedStatus?.label,
+      status: selectedStatus.label,
     };
 
-    try {
-      await axios.put(`${base_url}/api/violations/${violationData.id}`, violation);
-      onSave(violation);
-    } catch (error) {
-      console.error("Error updating violation:", error);
-    }
+    // Gọi hàm onSave để thông báo cho component cha cập nhật dữ liệu
+    onSave(updatedViolation);
+    onClose(); // Đóng modal sau khi lưu thành công
   };
 
   const customStyles = {
@@ -80,6 +89,10 @@ const EditViolation = ({ violationData, onSave }) => {
       "&:hover": {
         backgroundColor: "#ff9b44",
       },
+    }),
+    container: (provided) => ({
+      ...provided,
+      marginBottom: '15px'
     }),
   };
 
@@ -94,6 +107,7 @@ const EditViolation = ({ violationData, onSave }) => {
               className="btn-close"
               data-bs-dismiss="modal"
               aria-label="Close"
+              onClick={onClose} // Đóng modal khi nhấn nút close
             >
               <span aria-hidden="true">×</span>
             </button>
@@ -102,15 +116,16 @@ const EditViolation = ({ violationData, onSave }) => {
             <form onSubmit={handleSubmit}>
               <div className="input-block mb-3">
                 <label className="col-form-label">
-                  Select Employee <span className="text-danger">*</span>
+                  Employee <span className="text-danger">*</span>
                 </label>
-                <Select
-                  options={employees}
-                  value={selectedEmployee}
-                  placeholder="Select"
-                  styles={customStyles}
-                  onChange={setSelectedEmployee}
-                />
+                <div>
+                  <input
+                    type="text"
+                    value={selectedEmployee ? selectedEmployee.label : ""}
+                    readOnly
+                    className="form-control"
+                  />
+                </div>
               </div>
               <div className="input-block mb-3">
                 <label className="col-form-label">
@@ -146,21 +161,6 @@ const EditViolation = ({ violationData, onSave }) => {
                   className="form-control"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                />
-              </div>
-              <div className="input-block mb-3">
-                <label className="col-form-label">
-                  Status <span className="text-danger">*</span>
-                </label>
-                <Select
-                  options={[
-                    { value: 2, label: "Approved" },
-                    { value: 3, label: "Rejected" },
-                  ]}
-                  value={selectedStatus}
-                  placeholder="Select"
-                  styles={customStyles}
-                  onChange={setSelectedStatus}
                 />
               </div>
               <div className="submit-section">

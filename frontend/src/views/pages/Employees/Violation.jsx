@@ -18,7 +18,10 @@ const Violation = () => {
   const [editViolationData, setEditViolationData] = useState(null);
   const [statsData, setStatsData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [userRole, setUserRole] = useState(() => sessionStorage.getItem('userRole'));
+  const [userRole, setUserRole] = useState(() =>
+    sessionStorage.getItem("userRole")
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchViolations = async () => {
     setLoading(true);
@@ -55,12 +58,12 @@ const Violation = () => {
     try {
       // Fetch tất cả các nhân viên
       const allEmployees = await fetchEmployees();
-  
+
       // Lấy tháng và năm hiện tại
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth(); // Tháng hiện tại (0-11)
       const currentYear = currentDate.getFullYear(); // Năm hiện tại
-  
+
       // Lọc các vi phạm trong tháng hiện tại
       const violationsThisMonth = violationsData.filter((v) => {
         const violationDate = new Date(v.violationDate); // Chuyển đổi chuỗi ngày thành đối tượng Date
@@ -69,13 +72,16 @@ const Violation = () => {
           violationDate.getFullYear() === currentYear
         );
       });
-  
+
       // Tìm những nhân viên có vi phạm trong tháng hiện tại
       const employeeIdsWithViolations = violationsThisMonth.map((v) => v.id);
-      const uniqueEmployeeIdsWithViolations = [...new Set(employeeIdsWithViolations)];
-  
+      const uniqueEmployeeIdsWithViolations = [
+        ...new Set(employeeIdsWithViolations),
+      ];
+
       // Đếm tổng số nhân viên có vi phạm và tổng số vi phạm trong tháng hiện tại
-      const totalEmployeesWithViolations = uniqueEmployeeIdsWithViolations.length;
+      const totalEmployeesWithViolations =
+        uniqueEmployeeIdsWithViolations.length;
       const totalViolations = violationsThisMonth.length;
       const pendingViolations = violationsThisMonth.filter(
         (v) => v.status === "Pending"
@@ -83,7 +89,7 @@ const Violation = () => {
       const rejectedViolations = violationsThisMonth.filter(
         (v) => v.status === "Rejected"
       ).length;
-  
+
       setStatsData([
         {
           title: "Violation Staff",
@@ -108,15 +114,16 @@ const Violation = () => {
       console.error("Error updating stats:", error);
     }
   };
-  
-  
 
   useEffect(() => {
     fetchViolations();
   }, []);
 
   const handleAdd = async (data) => {
+    if (isSubmitting) return; // Ngăn gửi form nhiều lần
+    setIsSubmitting(true);
     try {
+      console.log("handleAdd called with data: ", data);
       await axios.post(`${base_url}/api/violations`, data, {
         withCredentials: true,
       });
@@ -126,14 +133,18 @@ const Violation = () => {
         "Error adding violation:",
         error.response?.data || error.message
       );
+    } finally {
+      setIsSubmitting(false); // Kích hoạt lại nút submit sau khi xong
     }
   };
 
   const handleEdit = async (id) => {
     try {
+      console.log("Fetching data for violation id:", id);
       const response = await axios.get(`${base_url}/api/violations/${id}`, {
         withCredentials: true,
       });
+      console.log("Fetched data:", response.data);
       setEditViolationData(response.data);
       setShowEditModal(true);
     } catch (error) {
@@ -175,18 +186,18 @@ const Violation = () => {
     key: index,
     id: item.id,
     index: index + 1,
-    employeeId: item.id,
+    employeeId: item.id || "Loading...",
     employee: item.employee?.fullname || "Loading...",
     empcode: item.employee?.empCode || "Loading...",
     department: item.employee?.departmentName || "Loading...",
     position: item.employee?.positionName || "Loading...",
-    role: item.role,
-    description: item.description,
-    violationTypeId: item.violationTypeId,
+    role: item.role || "Loading...",
+    description: item.description || "Loading...",
+    violationTypeId: item.violationTypeId || "Loading...",
     violationType: item.violationType?.type || "Loading...",
-    date: item.violationDate,
+    date: item.violationDate || "Loading...",
     avatar: item.employee?.avatar || Avatar_02,
-    status: item.status,
+    status: item.status || "Loading...",
   }));
 
   const handleStatusChange = async (violationId, newStatus) => {
@@ -220,7 +231,9 @@ const Violation = () => {
           <Link to="/client-profile" className="avatar">
             <img alt="" src={record.avatar} />
           </Link>
-          <Link to="/client-profile">{text} - {record.empcode}</Link>
+          <Link to="/client-profile">
+            {text} - {record.empcode}
+          </Link>
         </span>
       ),
     },
@@ -314,7 +327,7 @@ const Violation = () => {
       ),
       sorter: (a, b) => a.status.length - b.status.length,
     },
-    
+
     {
       title: "Action",
       render: (text, record) => (
@@ -333,6 +346,7 @@ const Violation = () => {
               to="#"
               data-bs-toggle="modal"
               data-bs-target="#edit_violation"
+              onClick={() => handleEdit(record.id)} // Gọi handleEdit khi click
             >
               <i className="fa fa-pencil m-r-5" /> Edit
             </Link>
@@ -404,7 +418,13 @@ const Violation = () => {
           )}
         </div>
         <AddViolation onAdd={handleAdd} />
-        <EditViolation onEdit={handleEdit} />
+        <EditViolation
+          show={showEditModal}
+          onClose={handleClose}
+          onSave={handleSaveEdit}
+          violationData={editViolationData}
+        />
+
         <DeleteModal
           show={showDeleteModal}
           handleClose={handleClose}

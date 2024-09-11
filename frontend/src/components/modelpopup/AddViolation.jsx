@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Select from "react-select";
 import axios from "axios";
 import { base_url } from "../../base_urls";
-import { Modal } from "bootstrap";  // Import Bootstrap modal if not already
 
 const AddViolation = ({ onAdd }) => {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -13,6 +12,8 @@ const AddViolation = ({ onAdd }) => {
   const [description, setDescription] = useState("");
   const [employees, setEmployees] = useState([]);
   const [violationTypes, setViolationTypes] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Trạng thái để khóa submit
+  const isSubmittingRef = useRef(false); // Sử dụng useRef để theo dõi trạng thái submit
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -48,41 +49,55 @@ const AddViolation = ({ onAdd }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Kiểm tra nếu các trường cần thiết chưa được chọn
-    if (!selectedEmployee || !selectedViolationType || !selectedDate) {
-      alert("Please fill out all required fields");
+    if (isSubmitting || isSubmittingRef.current) {
       return;
     }
-
+  
+    isSubmittingRef.current = true; // Đánh dấu đang gửi dữ liệu
+    setIsSubmitting(true); // Khóa form khi đang submit
+  
+    // Kiểm tra nếu các trường cần thiết chưa được chọn
+    if (!selectedEmployee || !selectedViolationType || !selectedDate || !description) {
+      alert("Please fill out all required fields");
+      isSubmittingRef.current = false; // Mở khóa form
+      setIsSubmitting(false); // Mở khóa form
+      return;
+    }
+  
     // Chuyển đổi selectedDate sang định dạng yyyy-MM-dd
     const formattedDate = selectedDate
       ? selectedDate.toISOString().split("T")[0]
       : null;
-
+  
     const violation = {
       employee: { id: selectedEmployee?.value },
       violationType: { id: selectedViolationType?.value },
       violationDate: formattedDate,
       description,
     };
-
+  
     try {
-      await axios.post(`${base_url}/api/violations`, violation, { withCredentials: true });
+      console.log("Adding violation with data:", violation); // Thêm log để kiểm tra dữ liệu gửi
+  
+      // Gọi hàm onAdd để thêm violation mà không gửi request POST
       onAdd(violation);
-
-      // Đóng modal sử dụng Bootstrap Modal API
-      const modalElement = document.getElementById('add_violation');
-      const modalInstance = Modal.getInstance(modalElement); // Lấy instance modal
-      if (modalInstance) {
-        modalInstance.hide();  // Đóng modal
-      }
-      
+  
+      // Reset form
+      setSelectedEmployee(null);
+      setSelectedViolationType(null);
+      setSelectedDate(null);
+      setDescription("");
+  
+      // Đóng modal bằng cách kích hoạt nút close
+      document.querySelector("#add_violation .btn-close").click();
     } catch (error) {
       console.error("Error adding violation:", error);
-      alert("Error occurred while submitting the form.");
-    } 
+    } finally {
+      isSubmittingRef.current = false; // Mở khóa form sau khi submit
+      setIsSubmitting(false); // Mở khóa form
+    }
   };
+  
 
   const customStyles = {
     option: (provided, state) => ({
@@ -164,6 +179,7 @@ const AddViolation = ({ onAdd }) => {
                 <button
                   className="btn btn-primary submit-btn"
                   type="submit"
+                  disabled={isSubmitting} // Khóa nút submit khi đang xử lý
                 >
                   Submit
                 </button>

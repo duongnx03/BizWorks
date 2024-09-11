@@ -102,7 +102,7 @@ public class ViolationService {
         User currentUser = authenticationService.getCurrentUser();
 
         // Kiểm tra quyền hạn của người dùng
-        checkRole(currentUser, Arrays.asList("MANAGE", "ADMIN"));
+        checkRole(currentUser, Arrays.asList("LEADER", "MANAGE", "ADMIN"));
 
         return violationRepository.findById(id)
                 .map(v -> {
