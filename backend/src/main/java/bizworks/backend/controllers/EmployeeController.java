@@ -76,4 +76,34 @@ public class EmployeeController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
         }
     }
+
+    @GetMapping("/getEmployeesByRole")
+    public ResponseEntity<ApiResponse<?>> getEmployeesByRole() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String role = authentication.getAuthorities().stream()
+                    .map(grantedAuthority -> grantedAuthority.getAuthority())
+                    .findFirst()
+                    .orElse("EMPLOYEE");
+            List<Employee> employees;
+            switch (role) {
+                case "ADMIN":
+                    employees = employeeService.findByRoleIn(List.of("MANAGE", "LEADER", "EMPLOYEE"));
+                    break;
+                case "MANAGE":
+                    employees = employeeService.findByRoleIn(List.of("LEADER", "EMPLOYEE"));
+                    break;
+                case "LEADER":
+                    employees = employeeService.findByRole("EMPLOYEE");
+                    break;
+                default:
+                    employees = List.of(); // Default to empty list if role is unknown
+                    break;
+            }
+            List<EmployeeResponseDTO> employeeDTOs = employees.stream().map(employeeService::convertToDTO).collect(Collectors.toList());
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(employeeDTOs, "Get Employees by Role successfully"));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
+        }
+    }
 }

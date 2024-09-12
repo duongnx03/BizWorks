@@ -47,6 +47,15 @@ public class EmployeeService {
         return convertToDTO(employee);
     }
 
+    public List<Employee> findByRoleIn(List<String> roles) {
+        return employeeRepository.findByUser_RoleIn(roles);
+    }
+
+    // Tìm tất cả nhân viên theo vai trò
+    public List<Employee> findByRole(String role) {
+        return employeeRepository.findByUser_Role(role);
+    }
+
     public Employee updateEmployee(EmployeeUpdateDTO request) {
         String email = getCurrentUserEmail();
         Employee employeeExisted = findByEmail(email);

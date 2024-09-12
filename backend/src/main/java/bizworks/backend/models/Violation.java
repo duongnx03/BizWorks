@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "violations")
@@ -27,4 +28,6 @@ public class Violation {
     private LocalDate violationDate;
     private String description;
     private String status;
+    private LocalDateTime createdDate;
+    private LocalDateTime updatedAt;
 }

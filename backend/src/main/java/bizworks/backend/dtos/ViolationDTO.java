@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -16,4 +17,7 @@ public class ViolationDTO {
     private LocalDate violationDate;
     private String description;
     private String status;
+    private LocalDateTime createdDate;
+    private LocalDateTime updatedAt;
+
 }

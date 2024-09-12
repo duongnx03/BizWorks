@@ -43,4 +43,9 @@ public class ApiResponse<T> {
     public static <T> ApiResponse<T> errorServer(String message, String status) {
         return new ApiResponse<>(null, message, status, null);
     }
+
+    public static <T> ApiResponse<T> forbidden(String message) {
+        return new ApiResponse<>(null, message, "FORBIDDEN", null);
+    }
+
 }

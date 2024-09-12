@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -82,6 +83,8 @@ public class ViolationService {
         violation.setViolationType(violationTypeRepository.findById(dto.getViolationType().getId()).orElse(null));
         violation.setViolationDate(dto.getViolationDate());
         violation.setDescription(dto.getDescription());
+        violation.setCreatedDate(LocalDateTime.now());
+        violation.setUpdatedAt(LocalDateTime.now());
 
         // Lưu vi phạm
         Violation saved = violationRepository.save(violation);
@@ -106,24 +109,50 @@ public class ViolationService {
 
         return violationRepository.findById(id)
                 .map(v -> {
-                    v.setEmployee(employeeRepository.findById(dto.getEmployee().getId()).orElse(null));
-                    v.setViolationType(violationTypeRepository.findById(dto.getViolationType().getId()).orElse(null));
-                    v.setViolationDate(dto.getViolationDate());
-                    v.setDescription(dto.getDescription());
-                    v.setStatus(dto.getStatus());
+                    boolean hasChanges = false;
 
-                    Violation updated = violationRepository.save(v);
+                    // So sánh và cập nhật từng trường nếu cần thiết
+                    if (dto.getEmployee() != null && !dto.getEmployee().equals(v.getEmployee())) {
+                        v.setEmployee(employeeRepository.findById(dto.getEmployee().getId()).orElse(null));
+                        hasChanges = true;
+                    }
+                    if (dto.getViolationType() != null && !dto.getViolationType().equals(v.getViolationType())) {
+                        v.setViolationType(violationTypeRepository.findById(dto.getViolationType().getId()).orElse(null));
+                        hasChanges = true;
+                    }
+                    if (dto.getViolationDate() != null && !dto.getViolationDate().equals(v.getViolationDate())) {
+                        v.setViolationDate(dto.getViolationDate());
+                        hasChanges = true;
+                    }
+                    if (dto.getDescription() != null && !dto.getDescription().equals(v.getDescription())) {
+                        v.setDescription(dto.getDescription());
+                        hasChanges = true;
+                    }
+                    if (dto.getStatus() != null && !dto.getStatus().equals(v.getStatus())) {
+                        v.setStatus(dto.getStatus());
+                        hasChanges = true;
+                    }
+                    v.setUpdatedAt(LocalDateTime.now());
 
-                    // Gửi email thông báo về việc cập nhật vi phạm
-                    sendViolationEmail(updated, "updated");
+                    if (hasChanges) {
+                        // Nếu có thay đổi, lưu cập nhật và gửi email
+                        Violation updated = violationRepository.save(v);
 
-                    // Cập nhật lương cho nhân viên liên quan
-                    updateSalaryForEmployee(updated.getEmployee().getId());
+                        // Gửi email thông báo về việc cập nhật vi phạm
+                        sendViolationEmail(updated, "updated");
 
-                    return convertToViolationDTO(updated);
+                        // Cập nhật lương cho nhân viên liên quan
+                        updateSalaryForEmployee(updated.getEmployee().getId());
+
+                        return convertToViolationDTO(updated);
+                    } else {
+                        // Nếu không có thay đổi, trả về thông tin hiện tại
+                        return convertToViolationDTO(v);
+                    }
                 })
                 .orElse(null);
     }
+
 
     private void checkRole(User user, List<String> allowedRoles) {
         if (user == null) {
@@ -302,7 +331,9 @@ public class ViolationService {
                 ) : null,
                 violation.getViolationDate(),
                 violation.getDescription(),
-                violation.getStatus()
+                violation.getStatus(),
+                violation.getCreatedDate(),
+                violation.getUpdatedAt()
         );
     }
 }

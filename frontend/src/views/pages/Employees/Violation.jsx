@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Table } from "antd";
 import axios from "axios";
 import Breadcrumbs from "../../../components/Breadcrumbs";
-import SearchBox from "../../../components/SearchBox";
 import AddViolation from "../../../components/modelpopup/AddViolation";
 import EditViolation from "../../../components/modelpopup/EditViolation";
 import DeleteModal from "../../../components/modelpopup/DeleteModal";
@@ -29,22 +28,21 @@ const Violation = () => {
       const response = await axios.get(`${base_url}/api/violations`, {
         withCredentials: true,
       });
-      setViolations(response.data.data);
-      await updateStats(response.data.data);
+      const sortedViolations = response.data.data.sort((a, b) => new Date(b.violationDate) - new Date(a.violationDate));
+      setViolations(sortedViolations);
+      await updateStats(sortedViolations);
     } catch (error) {
-      console.error(
-        "Error fetching violations:",
-        error.response?.data || error.message
-      );
+      console.error("Error fetching violations:", error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
   };
+  
 
   const fetchEmployees = async () => {
     try {
       const response = await axios.get(
-        `${base_url}/api/employee/getAllEmployees`,
+        `${base_url}/api/employee/getEmployeesByRole`,
         { withCredentials: true }
       );
       return response.data.data;
@@ -58,12 +56,12 @@ const Violation = () => {
     try {
       // Fetch tất cả các nhân viên
       const allEmployees = await fetchEmployees();
-
+  
       // Lấy tháng và năm hiện tại
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth(); // Tháng hiện tại (0-11)
       const currentYear = currentDate.getFullYear(); // Năm hiện tại
-
+  
       // Lọc các vi phạm trong tháng hiện tại
       const violationsThisMonth = violationsData.filter((v) => {
         const violationDate = new Date(v.violationDate); // Chuyển đổi chuỗi ngày thành đối tượng Date
@@ -72,16 +70,14 @@ const Violation = () => {
           violationDate.getFullYear() === currentYear
         );
       });
-
-      // Tìm những nhân viên có vi phạm trong tháng hiện tại
-      const employeeIdsWithViolations = violationsThisMonth.map((v) => v.id);
-      const uniqueEmployeeIdsWithViolations = [
-        ...new Set(employeeIdsWithViolations),
-      ];
-
+  
+      // Tạo tập hợp để lưu trữ ID nhân viên duy nhất
+      const employeeIdsWithViolations = new Set(
+        violationsThisMonth.map((v) => v.employee?.id).filter((id) => id != null)
+      );
+  
       // Đếm tổng số nhân viên có vi phạm và tổng số vi phạm trong tháng hiện tại
-      const totalEmployeesWithViolations =
-        uniqueEmployeeIdsWithViolations.length;
+      const totalEmployeesWithViolations = employeeIdsWithViolations.size;
       const totalViolations = violationsThisMonth.length;
       const pendingViolations = violationsThisMonth.filter(
         (v) => v.status === "Pending"
@@ -89,7 +85,7 @@ const Violation = () => {
       const rejectedViolations = violationsThisMonth.filter(
         (v) => v.status === "Rejected"
       ).length;
-
+  
       setStatsData([
         {
           title: "Violation Staff",
@@ -114,29 +110,29 @@ const Violation = () => {
       console.error("Error updating stats:", error);
     }
   };
+  
 
   useEffect(() => {
     fetchViolations();
   }, []);
 
   const handleAdd = async (data) => {
-    if (isSubmitting) return; // Ngăn gửi form nhiều lần
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
-      console.log("handleAdd called with data: ", data);
       await axios.post(`${base_url}/api/violations`, data, {
         withCredentials: true,
       });
-      fetchViolations();
+      const response = await axios.get(`${base_url}/api/violations`, { withCredentials: true });
+      const sortedViolations = response.data.data.sort((a, b) => new Date(b.violationDate) - new Date(a.violationDate));
+      setViolations(sortedViolations);
     } catch (error) {
-      console.error(
-        "Error adding violation:",
-        error.response?.data || error.message
-      );
+      console.error("Error adding violation:", error.response?.data || error.message);
     } finally {
-      setIsSubmitting(false); // Kích hoạt lại nút submit sau khi xong
+      setIsSubmitting(false);
     }
   };
+  
 
   const handleEdit = async (id) => {
     try {
@@ -144,36 +140,80 @@ const Violation = () => {
       const response = await axios.get(`${base_url}/api/violations/${id}`, {
         withCredentials: true,
       });
-      console.log("Fetched data:", response.data);
-      setEditViolationData(response.data);
-      setShowEditModal(true);
+  
+      if (response.data.status === "SUCCESS" && response.data.data) {
+        setEditViolationData(response.data); // Đảm bảo rằng dữ liệu đúng
+        setShowEditModal(true);
+      } else {
+        console.error("Invalid violation data", response.data.data);
+      }
     } catch (error) {
       console.error("Error fetching violation data:", error);
     }
   };
+  
 
   const handleSaveEdit = async (data) => {
+    if (!data.id) {
+      console.error("Violation ID is missing");
+      return;
+    }
+  
     try {
-      await axios.put(`${base_url}/api/violations/${data.id}`, data, {
+      // Kiểm tra dữ liệu trước khi gửi
+      console.log("Saving data:", data);
+  
+      // Gọi API để cập nhật vi phạm
+      const response = await axios.put(`${base_url}/api/violations/${data.id}`, data, {
         withCredentials: true,
       });
-      fetchViolations();
-      setShowEditModal(false);
+  
+      // Kiểm tra kết quả trả về từ API
+      if (response.data.status === "SUCCESS") {
+        fetchViolations();
+        // Đóng modal sau khi cập nhật thành công
+        setShowEditModal(false);
+      } else {
+        console.error("Error updating violation:", response.data.message || "Unknown error");
+      }
     } catch (error) {
       console.error("Error updating violation:", error);
     }
   };
+  
 
   const handleDelete = async () => {
+    if (deleteId === null) {
+      console.error("No violation ID to delete");
+      return;
+    }
+    
     try {
       await axios.delete(`${base_url}/api/violations/${deleteId}`, {
         withCredentials: true,
       });
-      fetchViolations();
+      fetchViolations(); // Cập nhật danh sách sau khi xóa
       setDeleteId(null);
       setShowDeleteModal(false);
     } catch (error) {
       console.error("Error deleting violation:", error);
+    }
+  };
+  
+
+  const handleStatusChange = async (violationId, newStatus) => {
+    try {
+      await axios.put(
+        `${base_url}/api/violations/${violationId}/status`,
+        null,
+        {
+          params: { status: newStatus },
+          withCredentials: true,
+        }
+      );
+      fetchViolations(); // Cập nhật lại danh sách vi phạm sau khi thay đổi trạng thái
+    } catch (error) {
+      console.error("Error updating status:", error);
     }
   };
 
@@ -200,22 +240,6 @@ const Violation = () => {
     status: item.status || "Loading...",
   }));
 
-  const handleStatusChange = async (violationId, newStatus) => {
-    try {
-      await axios.put(
-        `${base_url}/api/violations/${violationId}/status`,
-        null,
-        {
-          params: { status: newStatus },
-          withCredentials: true,
-        }
-      );
-      fetchViolations(); // Cập nhật lại danh sách vi phạm sau khi thay đổi trạng thái
-    } catch (error) {
-      console.error("Error updating status:", error);
-    }
-  };
-
   const columns = [
     {
       title: "#",
@@ -241,10 +265,6 @@ const Violation = () => {
       title: "Department",
       dataIndex: "department",
     },
-    // {
-    //   title: "Position",
-    //   dataIndex: "position",
-    // },
     {
       title: "Date Violation",
       dataIndex: "date",
@@ -309,7 +329,6 @@ const Violation = () => {
               </ul>
             </div>
           ) : (
-            // Nếu role là EMPLOYEE thì chỉ hiển thị status mà không có dropdown
             <span>
               <i
                 className={
@@ -325,7 +344,6 @@ const Violation = () => {
           )}
         </>
       ),
-      sorter: (a, b) => a.status.length - b.status.length,
     },
 
     {
@@ -350,14 +368,17 @@ const Violation = () => {
             >
               <i className="fa fa-pencil m-r-5" /> Edit
             </Link>
-            <Link
+            {/* <Link
               className="dropdown-item"
               to="#"
               data-bs-toggle="modal"
               data-bs-target="#delete"
+              onClick={() => {
+                setDeleteId(record.id); // Đặt ID để xóa
+              }}
             >
               <i className="fa fa-trash m-r-5" /> Delete
-            </Link>
+            </Link> */}
           </div>
         </div>
       ),
@@ -423,6 +444,7 @@ const Violation = () => {
           onClose={handleClose}
           onSave={handleSaveEdit}
           violationData={editViolationData}
+          userRole={userRole}
         />
 
         <DeleteModal

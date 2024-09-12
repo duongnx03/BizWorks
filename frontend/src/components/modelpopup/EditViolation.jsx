@@ -4,7 +4,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import Select from "react-select";
 import axios from "axios";
 import { base_url } from "../../base_urls";
-import { format } from 'date-fns';
+import { format } from "date-fns";
 
 const EditViolation = ({ violationData, onSave, onClose }) => {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -14,12 +14,16 @@ const EditViolation = ({ violationData, onSave, onClose }) => {
   const [description, setDescription] = useState("");
   const [employees, setEmployees] = useState([]);
   const [violationTypes, setViolationTypes] = useState([]);
+  const [originalData, setOriginalData] = useState({});
 
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, { withCredentials: true });
-        const data = response.data.data.map(emp => ({
+        const response = await axios.get(
+          `${base_url}/api/employee/getAllEmployees`,
+          { withCredentials: true }
+        );
+        const data = response.data.data.map((emp) => ({
           value: emp.id,
           label: `${emp.fullname} - ${emp.empCode}`,
         }));
@@ -31,8 +35,13 @@ const EditViolation = ({ violationData, onSave, onClose }) => {
 
     const fetchViolationTypes = async () => {
       try {
-        const response = await axios.get(`${base_url}/api/violation-types`, { withCredentials: true });
-        const data = response.data.map(vt => ({ value: vt.id, label: vt.type }));
+        const response = await axios.get(`${base_url}/api/violation-types`, {
+          withCredentials: true,
+        });
+        const data = response.data.map((vt) => ({
+          value: vt.id,
+          label: vt.type,
+        }));
         setViolationTypes(data);
       } catch (error) {
         console.error("Error fetching violation types:", error);
@@ -47,10 +56,26 @@ const EditViolation = ({ violationData, onSave, onClose }) => {
     if (violationData && violationData.data) {
       const data = violationData.data;
       setSelectedDate(new Date(data.violationDate));
-      setSelectedEmployee({ value: data.employee.id, label: `${data.employee.fullname} - ${data.employee.empCode}` });
-      setSelectedViolationType({ value: data.violationType.id, label: data.violationType.type });
-      setSelectedStatus({ value: data.status.id, label: data.status.status });
+      setSelectedEmployee({
+        value: data.employee.id,
+        label: `${data.employee.fullname} - ${data.employee.empCode}`,
+      });
+      setSelectedViolationType({
+        value: data.violationType.id,
+        label: data.violationType.type,
+      });
       setDescription(data.description);
+      setSelectedStatus({ value: data.status, label: data.status });
+
+      // Lưu dữ liệu gốc để so sánh
+      setOriginalData({
+        id: data.id,
+        employee: { id: data.employee.id },
+        violationType: { id: data.violationType.id },
+        violationDate: data.violationDate,
+        description: data.description,
+        status: data.status,
+      });
     }
   }, [violationData]);
 
@@ -60,25 +85,30 @@ const EditViolation = ({ violationData, onSave, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!selectedEmployee || !selectedViolationType || !selectedStatus || !selectedDate || !description) {
+    if (!selectedEmployee || !selectedViolationType || !selectedDate || !description || !selectedStatus) {
       console.error("All fields are required");
       return;
     }
 
-    // Chuyển đổi ngày từ định dạng dd-MM-yyyy sang yyyy-MM-dd
     const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-
     const updatedViolation = {
-      employeeId: selectedEmployee.value,
-      violationTypeId: selectedViolationType.value,
+      id: violationData.data.id, // Đảm bảo ID được lấy đúng
+      employee: { id: selectedEmployee.value },
+      violationType: { id: selectedViolationType.value },
       violationDate: formattedDate,
-      description,
-      status: selectedStatus.label,
+      description: description,
+      status: selectedStatus.value,
     };
 
-    // Gọi hàm onSave để thông báo cho component cha cập nhật dữ liệu
-    onSave(updatedViolation);
-    onClose(); // Đóng modal sau khi lưu thành công
+    // So sánh dữ liệu mới với dữ liệu gốc
+    if (JSON.stringify(updatedViolation) !== JSON.stringify(originalData)) {
+      console.log("Updated Violation:", updatedViolation);
+      onSave(updatedViolation);
+      onClose();
+      document.querySelector("#edit_violation .btn-close").click();
+    } else {
+      console.log("No changes detected.");
+    }
   };
 
   const customStyles = {
@@ -92,7 +122,7 @@ const EditViolation = ({ violationData, onSave, onClose }) => {
     }),
     container: (provided) => ({
       ...provided,
-      marginBottom: '15px'
+      marginBottom: "15px",
     }),
   };
 
@@ -107,7 +137,7 @@ const EditViolation = ({ violationData, onSave, onClose }) => {
               className="btn-close"
               data-bs-dismiss="modal"
               aria-label="Close"
-              onClick={onClose} // Đóng modal khi nhấn nút close
+              onClick={onClose}
             >
               <span aria-hidden="true">×</span>
             </button>
@@ -124,6 +154,7 @@ const EditViolation = ({ violationData, onSave, onClose }) => {
                     value={selectedEmployee ? selectedEmployee.label : ""}
                     readOnly
                     className="form-control"
+                    aria-label="Employee"
                   />
                 </div>
               </div>
@@ -163,11 +194,24 @@ const EditViolation = ({ violationData, onSave, onClose }) => {
                   onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
+              <div className="input-block mb-3">
+                <label className="col-form-label">
+                  Status <span className="text-danger">*</span>
+                </label>
+                <Select
+                  options={[
+                    { value: "Approved", label: "Approved" },
+                    { value: "Rejected", label: "Rejected" },
+                  ]}
+                  value={selectedStatus}
+                  placeholder="Select Status"
+                  styles={customStyles}
+                  onChange={setSelectedStatus}
+                />
+              </div>
+
               <div className="submit-section">
-                <button
-                  className="btn btn-primary submit-btn"
-                  type="submit"
-                >
+                <button className="btn btn-primary submit-btn" type="submit">
                   Save Changes
                 </button>
               </div>

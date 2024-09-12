@@ -18,7 +18,7 @@ const AddViolation = ({ onAdd }) => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, { withCredentials: true });
+        const response = await axios.get(`${base_url}/api/employee/getEmployeesByRole`, { withCredentials: true });
         const data = response.data.data.map(emp => ({
           value: emp.id,
           label: `${emp.fullname} - ${emp.empCode}`,
