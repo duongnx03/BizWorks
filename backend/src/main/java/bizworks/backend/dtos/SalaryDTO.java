@@ -14,8 +14,8 @@ import java.util.List;
 public class SalaryDTO {
     private Long id;
     private String salaryCode; // Mã tự động (nếu cần)
-    private int month; // Tháng trả lương
-    private int year; // Năm trả lương
+    private Integer month; // Tháng trả lương
+    private Integer year; // Năm trả lương
     private Double basicSalary; // Lương cơ bản
     private Double bonusSalary; // Thưởng
     private Double overtimeSalary; // Lương tăng ca
