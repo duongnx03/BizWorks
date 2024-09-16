@@ -6,7 +6,7 @@ import axios from "axios";
 import { base_url } from "../../base_urls";
 import { format } from "date-fns";
 
-const EditViolation = ({ violationData, onSave, onClose }) => {
+const EditViolation = ({ violationData, onSave, onClose, userRole }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedViolationType, setSelectedViolationType] = useState(null);
@@ -67,7 +67,7 @@ const EditViolation = ({ violationData, onSave, onClose }) => {
       setDescription(data.description);
       setSelectedStatus({ value: data.status, label: data.status });
 
-      // Lưu dữ liệu gốc để so sánh
+      // Save original data for comparison
       setOriginalData({
         id: data.id,
         employee: { id: data.employee.id },
@@ -92,7 +92,7 @@ const EditViolation = ({ violationData, onSave, onClose }) => {
 
     const formattedDate = format(selectedDate, 'yyyy-MM-dd');
     const updatedViolation = {
-      id: violationData.data.id, // Đảm bảo ID được lấy đúng
+      id: violationData.data.id,
       employee: { id: selectedEmployee.value },
       violationType: { id: selectedViolationType.value },
       violationDate: formattedDate,
@@ -100,7 +100,7 @@ const EditViolation = ({ violationData, onSave, onClose }) => {
       status: selectedStatus.value,
     };
 
-    // So sánh dữ liệu mới với dữ liệu gốc
+    // Compare new data with original data
     if (JSON.stringify(updatedViolation) !== JSON.stringify(originalData)) {
       console.log("Updated Violation:", updatedViolation);
       onSave(updatedViolation);
@@ -206,7 +206,8 @@ const EditViolation = ({ violationData, onSave, onClose }) => {
                   value={selectedStatus}
                   placeholder="Select Status"
                   styles={customStyles}
-                  onChange={setSelectedStatus}
+                  onChange={userRole !== "LEADER" ? setSelectedStatus : null}
+                  isDisabled={userRole === "LEADER"}
                 />
               </div>
 

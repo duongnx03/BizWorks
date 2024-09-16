@@ -111,49 +111,26 @@ public class ViolationService {
                 .map(v -> {
                     boolean hasChanges = false;
 
-                    // Cập nhật các trường tùy thuộc vào vai trò người dùng
-                    if (currentUser.getRole().equals("LEADER")) {
-                        // LEADER không thể thay đổi trạng thái
-                        if (dto.getEmployee() != null && !dto.getEmployee().equals(v.getEmployee())) {
-                            v.setEmployee(employeeRepository.findById(dto.getEmployee().getId()).orElse(null));
-                            hasChanges = true;
-                        }
-                        if (dto.getViolationType() != null && !dto.getViolationType().equals(v.getViolationType())) {
-                            v.setViolationType(violationTypeRepository.findById(dto.getViolationType().getId()).orElse(null));
-                            hasChanges = true;
-                        }
-                        if (dto.getViolationDate() != null && !dto.getViolationDate().equals(v.getViolationDate())) {
-                            v.setViolationDate(dto.getViolationDate());
-                            hasChanges = true;
-                        }
-                        if (dto.getDescription() != null && !dto.getDescription().equals(v.getDescription())) {
-                            v.setDescription(dto.getDescription());
-                            hasChanges = true;
-                        }
-                        // Không cho phép LEADER cập nhật status
-                        v.setStatus(v.getStatus()); // Giữ nguyên status hiện tại
-                    } else {
-                        // ADMIN và MANAGE có thể cập nhật tất cả các trường
-                        if (dto.getEmployee() != null && !dto.getEmployee().equals(v.getEmployee())) {
-                            v.setEmployee(employeeRepository.findById(dto.getEmployee().getId()).orElse(null));
-                            hasChanges = true;
-                        }
-                        if (dto.getViolationType() != null && !dto.getViolationType().equals(v.getViolationType())) {
-                            v.setViolationType(violationTypeRepository.findById(dto.getViolationType().getId()).orElse(null));
-                            hasChanges = true;
-                        }
-                        if (dto.getViolationDate() != null && !dto.getViolationDate().equals(v.getViolationDate())) {
-                            v.setViolationDate(dto.getViolationDate());
-                            hasChanges = true;
-                        }
-                        if (dto.getDescription() != null && !dto.getDescription().equals(v.getDescription())) {
-                            v.setDescription(dto.getDescription());
-                            hasChanges = true;
-                        }
-                        if (dto.getStatus() != null && !dto.getStatus().equals(v.getStatus())) {
-                            v.setStatus(dto.getStatus());
-                            hasChanges = true;
-                        }
+                    // So sánh và cập nhật từng trường nếu cần thiết
+                    if (dto.getEmployee() != null && !dto.getEmployee().equals(v.getEmployee())) {
+                        v.setEmployee(employeeRepository.findById(dto.getEmployee().getId()).orElse(null));
+                        hasChanges = true;
+                    }
+                    if (dto.getViolationType() != null && !dto.getViolationType().equals(v.getViolationType())) {
+                        v.setViolationType(violationTypeRepository.findById(dto.getViolationType().getId()).orElse(null));
+                        hasChanges = true;
+                    }
+                    if (dto.getViolationDate() != null && !dto.getViolationDate().equals(v.getViolationDate())) {
+                        v.setViolationDate(dto.getViolationDate());
+                        hasChanges = true;
+                    }
+                    if (dto.getDescription() != null && !dto.getDescription().equals(v.getDescription())) {
+                        v.setDescription(dto.getDescription());
+                        hasChanges = true;
+                    }
+                    if (dto.getStatus() != null && !dto.getStatus().equals(v.getStatus())) {
+                        v.setStatus(dto.getStatus());
+                        hasChanges = true;
                     }
                     v.setUpdatedAt(LocalDateTime.now());
 
@@ -177,7 +154,6 @@ public class ViolationService {
     }
 
 
-
     private void checkRole(User user, List<String> allowedRoles) {
         if (user == null) {
             throw new AccessDeniedException("User is not authenticated.");
@@ -193,11 +169,9 @@ public class ViolationService {
         if (latestSalaryOpt.isPresent()) {
             Salary latestSalary = latestSalaryOpt.get();
 
-            // Lấy danh sách vi phạm của nhân viên đã được duyệt trong cùng tháng và năm của bản ghi lương
+            // Lấy danh sách vi phạm của nhân viên với trạng thái New hoặc Approved
             List<Violation> violations = violationRepository.findByEmployeeId(employeeId).stream()
                     .filter(v -> "Approved".equals(v.getStatus()))
-                    .filter(v -> v.getViolationDate().getMonthValue() == latestSalary.getMonth() &&
-                            v.getViolationDate().getYear() == latestSalary.getYear())
                     .collect(Collectors.toList());
 
             // Tính tổng tiền vi phạm
@@ -205,15 +179,12 @@ public class ViolationService {
                     .mapToDouble(v -> v.getViolationType().getViolationMoney())
                     .sum();
 
-            // Cập nhật các khoản khấu trừ và tổng lương
             latestSalary.setDeductions(totalViolationMoney);
             latestSalary.setTotalSalary(calculateTotalSalary(latestSalary));
 
-            // Lưu bản ghi lương đã cập nhật
             salaryRepository.save(latestSalary);
         }
     }
-
     private double calculateTotalSalary(Salary salary) {
         return salary.getBasicSalary()
                 + salary.getBonusSalary()
