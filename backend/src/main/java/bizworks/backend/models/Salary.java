@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -43,7 +44,7 @@ public class Salary {
     private double advanceSalary; // Tiền ứng lương
 
     @Column(name = "date_salary")
-    private LocalDateTime dateSalary; // Ngày nhận lương
+    private LocalDate dateSalary; // Ngày nhận lương
 
     @ManyToOne
     @JoinColumn(name = "empId", nullable = false)

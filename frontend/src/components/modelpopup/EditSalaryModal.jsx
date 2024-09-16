@@ -3,7 +3,7 @@ import Select from "react-select";
 import axios from "axios";
 import { base_url } from "../../base_urls";
 
-const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose }) => {
+const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose, userRole }) => {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [basic, setBasic] = useState("");
@@ -63,11 +63,11 @@ const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose }) => {
     setLoading(true);
     try {
       if (departments.length === 0 || employees.length === 0) {
-        // Nếu dữ liệu chưa được tải xong, đợi hoặc xử lý lỗi
+        // If data is not loaded yet, wait or handle the error
         console.warn('Departments or employees data not loaded yet.');
         return;
       }
-  
+
       const response = await axios.get(`${base_url}/api/salaries/${id}`, {
         withCredentials: true,
       });
@@ -90,8 +90,6 @@ const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose }) => {
       setLoading(false);
     }
   };
-  
-  
 
   const customStyles = {
     option: (provided, state) => ({
@@ -129,12 +127,23 @@ const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose }) => {
     }
   };
 
+  useEffect(() => {
+    if (!salaryId) {
+      // Manually trigger closing if salaryId is not provided
+      if (closeButtonRef.current) {
+        closeButtonRef.current.click();
+      }
+    }
+  }, [salaryId]);
+
   return (
     <div
       id="edit_salary"
       className="modal custom-modal fade"
       role="dialog"
-      style={{ display: salaryId ? "block" : "none" }}
+      tabIndex="-1"
+      aria-labelledby="editSalaryModalLabel"
+      aria-hidden={!salaryId}
     >
       <div className="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div className="modal-content">
@@ -229,6 +238,7 @@ const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose }) => {
                       type="text"
                       value={deductions}
                       onChange={(e) => setDeductions(e.target.value)}
+                      disabled={userRole === "LEADER"} // Disable the input for LEADER role
                     />
                   </div>
                 </div>
