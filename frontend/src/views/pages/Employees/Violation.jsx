@@ -117,17 +117,19 @@ const Violation = () => {
   }, []);
 
   const handleAdd = async (data) => {
-    if (isSubmitting) return;
+    if (isSubmitting) return false; // Trả về false nếu đang gửi dữ liệu
+  
     setIsSubmitting(true);
+  
     try {
       await axios.post(`${base_url}/api/violations`, data, {
         withCredentials: true,
       });
-      const response = await axios.get(`${base_url}/api/violations`, { withCredentials: true });
-      const sortedViolations = response.data.data.sort((a, b) => new Date(b.violationDate) - new Date(a.violationDate));
-      setViolations(sortedViolations);
+      await fetchViolations(); // Đảm bảo rằng fetchViolations hoàn tất
+      return true; // Trả về true nếu thành công
     } catch (error) {
       console.error("Error adding violation:", error.response?.data || error.message);
+      return false; // Trả về false nếu có lỗi
     } finally {
       setIsSubmitting(false);
     }
