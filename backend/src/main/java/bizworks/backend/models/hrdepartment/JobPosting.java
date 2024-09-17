@@ -33,7 +33,7 @@ public class JobPosting {
     private Position position;
 
     private String location;
-    private String employmentType; // Ví dụ: full-time, part-time
+    private String employmentType;
     private String requirements;
 
     // Thêm các trường mới cho mức lương

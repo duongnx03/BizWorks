@@ -40,7 +40,7 @@
                 joinColumns = @JoinColumn(name = "training_program_id"),
                 inverseJoinColumns = @JoinColumn(name = "employee_id")
         )
-        private Set<Employee> employees; // Add the employees participating in the training
+        private Set<Employee> employees;
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;

@@ -24,10 +24,10 @@ public class JobApplication {
     private String applicantName;
     private String applicantEmail;
     private String applicantPhone;
-    private String resumeUrl; // URL của CV hoặc hồ sơ xin việc
+    private String resumeUrl;
     private LocalDate applicationDate;
-    private String status; // Ví dụ: PENDING, REVIEWED, ACCEPTED, REJECTED
+    private String status;
 
     @Column(name = "rejection_reason")
-    private String rejectionReason; // Thêm trường lý do từ chối
+    private String rejectionReason;
 }

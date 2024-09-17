@@ -20,23 +20,24 @@ public class Exam {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String subjectName;  // Tên môn thi
+    private String subjectName;
 
-    private LocalDateTime examDateTime;  // Ngày và giờ thi
+    private LocalDateTime examDateTime;
 
-    private String location;  // Địa điểm thi
+    private String location;
 
-    private String examDuration;  // Thời lượng thi
+    private String examDuration;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "training_program_id")
     private TrainingProgram trainingProgram;
-    // Liên kết với chương trình đào tạo
+
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Answer> answers = new HashSet<>();
 
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Question> questions = new HashSet<>();  // Thêm thuộc tính này
+    private Set<Question> questions = new HashSet<>();
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

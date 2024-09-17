@@ -47,7 +47,6 @@ public class TrainingProgramService {
         trainingProgram.setStartDate(trainingProgramDTO.getStartDate());
         trainingProgram.setEndDate(trainingProgramDTO.getEndDate());
 
-        // Save the new training program
         TrainingProgram savedTrainingProgram = trainingProgramRepository.save(trainingProgram);
 
         return TrainingProgramDTO.from(savedTrainingProgram);
@@ -162,11 +161,9 @@ public class TrainingProgramService {
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new RuntimeException("Exam not found"));
 
-        // Remove the exam from the training program
         trainingProgram.getExams().remove(exam);
         trainingProgramRepository.save(trainingProgram);
 
-        // Delete the exam
         examRepository.delete(exam);
     }
 

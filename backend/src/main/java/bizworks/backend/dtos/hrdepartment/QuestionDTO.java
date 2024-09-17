@@ -15,7 +15,7 @@ public class QuestionDTO {
     private Long id;
     private String questionText;
     private Boolean isMultipleChoice;
-    private String answerOptions; // Dữ liệu dạng chuỗi phân cách bởi dấu chấm phẩy
+    private String answerOptions;
     private String correctAnswer;
     private Integer points;
 

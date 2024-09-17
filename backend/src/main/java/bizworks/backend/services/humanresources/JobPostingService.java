@@ -30,11 +30,9 @@ public class JobPostingService {
         jobPosting.setTitle(jobPostingDTO.getTitle());
         jobPosting.setDescription(jobPostingDTO.getDescription());
 
-        // Set postedDate to current date
         LocalDate postedDate = LocalDate.now();
         jobPosting.setPostedDate(postedDate);
 
-        // Kiểm tra nếu deadline nhỏ hơn postedDate
         if (jobPostingDTO.getDeadline() != null && jobPostingDTO.getDeadline().isBefore(postedDate)) {
             throw new IllegalArgumentException("Application deadline cannot be before the posted date.");
         }
@@ -44,7 +42,6 @@ public class JobPostingService {
         jobPosting.setEmploymentType(jobPostingDTO.getEmploymentType());
         jobPosting.setRequirements(jobPostingDTO.getRequirements());
 
-        // Gán Department và Position
         Department department = departmentRepository.findById(jobPostingDTO.getDepartmentId())
                 .orElseThrow(() -> new RuntimeException("Department not found"));
         jobPosting.setDepartment(department);
@@ -53,7 +50,6 @@ public class JobPostingService {
                 .orElseThrow(() -> new RuntimeException("Position not found"));
         jobPosting.setPosition(position);
 
-        // Kiểm tra mức lương
         if (jobPostingDTO.getSalaryRangeMin() != null && jobPostingDTO.getSalaryRangeMax() != null) {
             if (jobPostingDTO.getSalaryRangeMin() > jobPostingDTO.getSalaryRangeMax()) {
                 throw new IllegalArgumentException("Minimum salary cannot be greater than maximum salary.");
@@ -62,7 +58,6 @@ public class JobPostingService {
         jobPosting.setSalaryRangeMin(jobPostingDTO.getSalaryRangeMin());
         jobPosting.setSalaryRangeMax(jobPostingDTO.getSalaryRangeMax());
 
-        // Lưu JobPosting vào cơ sở dữ liệu
         jobPosting = jobPostingRepository.save(jobPosting);
         return convertToDTO(jobPosting);
     }

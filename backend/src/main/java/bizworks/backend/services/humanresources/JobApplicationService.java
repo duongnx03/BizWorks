@@ -35,7 +35,7 @@
         @Autowired
         private EmailService emailService;
 
-        private final String uploadDir = "uploads"; // Define your directory here
+        private final String uploadDir = "uploads";
 
 
         public List<JobApplicationDTO> getAllApplications() {
@@ -47,12 +47,10 @@
             JobPosting jobPosting = jobPostingRepository.findById(jobApplicationDTO.getJobPostingId())
                     .orElseThrow(() -> new RuntimeException("Job posting not found"));
 
-            // Kiểm tra ngày hết hạn
             if (LocalDate.now().isAfter(jobPosting.getDeadline())) {
                 throw new RuntimeException("Cannot submit application. The job posting has expired.");
             }
 
-            // Kiểm tra nếu ứng viên đã nộp hồ sơ cho công việc này
             Optional<JobApplication> existingApplication = jobApplicationRepository.findByJobPostingIdAndApplicantEmail(
                     jobApplicationDTO.getJobPostingId(),
                     jobApplicationDTO.getApplicantEmail()
@@ -94,7 +92,6 @@
                 throw new RuntimeException("Failed to store empty file.");
             }
 
-            // Kiểm tra phần mở rộng của tệp
             String[] allowedExtensions = {"pdf", "doc", "docx"};
             String fileExtension = getFileExtension(file.getOriginalFilename());
 
@@ -102,7 +99,6 @@
                 throw new RuntimeException("Invalid file type. Only PDF, DOC, and DOCX are allowed.");
             }
 
-            // Kiểm tra MIME type để xác thực thêm
             String mimeType = Files.probeContentType(Paths.get(file.getOriginalFilename()));
             if (!mimeType.equals("application/pdf") &&
                     !mimeType.equals("application/msword") &&
@@ -110,12 +106,11 @@
                 throw new RuntimeException("Invalid file type. Only PDF, DOC, and DOCX are allowed.");
             }
 
-            // Lưu tệp
             Path path = Paths.get(uploadDir, file.getOriginalFilename());
-            Files.createDirectories(path.getParent()); // Ensure parent directories exist
+            Files.createDirectories(path.getParent());
             Files.write(path, file.getBytes());
 
-            return file.getOriginalFilename(); // Return the file name without the directory
+            return file.getOriginalFilename();
         }
 
         private String getFileExtension(String fileName) {
@@ -136,7 +131,6 @@
 
             jobApplication.setStatus(newStatus);
 
-            // Chỉ thêm lý do nếu trạng thái là "REJECTED"
             if (newStatus.equals("REJECTED") && reason != null && !reason.isEmpty()) {
                 jobApplication.setRejectionReason(reason);
             }
@@ -157,7 +151,6 @@
                         + "We appreciate your interest and encourage you to apply for future openings.";
             }
 
-            // Gửi email nếu là trạng thái ACCEPTED hoặc REJECTED
             if (!subject.isEmpty()) {
                 emailService.sendEmail(applicantEmail, subject, body);
             }

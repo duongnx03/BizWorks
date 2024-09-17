@@ -15,17 +15,17 @@ public class Question {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String questionText;  // Nội dung câu hỏi
+    private String questionText;
 
     @Column(name = "is_multiple_choice")
-    private Boolean isMultipleChoice;  // Xác định câu hỏi trắc nghiệm hay tự luận
+    private Boolean isMultipleChoice;
 
-    private String answerOptions;  // Các lựa chọn trả lời (dành cho trắc nghiệm)
+    private String answerOptions;
 
-    private String correctAnswer;  // Đáp án đúng
-    private Integer points; // Điểm đạt được khi trả lời đúng
+    private String correctAnswer;
+    private Integer points;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exam_id")
-    private Exam exam;  // Liên kết với bài thi
+    private Exam exam;
 }

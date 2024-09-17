@@ -22,7 +22,6 @@ public class FileUploadController {
     @Autowired
     private JobApplicationService jobApplicationService;
 
-    // Upload file và lưu vào thư mục "uploads"
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
@@ -59,7 +58,6 @@ public class FileUploadController {
     @GetMapping("/view/{fileName}")
     public ResponseEntity<Resource> viewFile(@PathVariable String fileName) {
         try {
-            // Đảm bảo đường dẫn đến thư mục đúng
             Path filePath = Path.of(jobApplicationService.getUploadDir(), fileName).normalize();
             Resource resource = new FileSystemResource(filePath.toFile());
 

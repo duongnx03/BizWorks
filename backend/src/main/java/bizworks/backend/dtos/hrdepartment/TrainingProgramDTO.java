@@ -26,7 +26,7 @@ public class TrainingProgramDTO {
     private TrainingType type;
     private LocalDate startDate;
     private LocalDate endDate;
-    private List<EmployeeDTO> employees; // Thay đổi từ List<Long> thành List<EmployeeDTO>
+    private List<EmployeeDTO> employees;
 
     public static TrainingProgramDTO from(TrainingProgram trainingProgram) {
         if (trainingProgram == null) {

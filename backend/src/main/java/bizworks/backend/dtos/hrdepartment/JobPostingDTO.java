@@ -21,7 +21,6 @@ public class JobPostingDTO {
     private String employmentType;
     private String requirements;
     private String positionName;
-    // Thêm các trường mới cho mức lương
     private Double salaryRangeMin;
     private Double salaryRangeMax;
 }

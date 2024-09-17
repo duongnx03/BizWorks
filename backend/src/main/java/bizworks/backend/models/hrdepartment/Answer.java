@@ -16,17 +16,17 @@ public class Answer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String answerText;  // Câu trả lời của nhân viên
+    private String answerText;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id")
-    private Employee employee;  // Liên kết với nhân viên
+    private Employee employee;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id")
-    private Question question;  // Liên kết với câu hỏi
+    private Question question;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exam_id")
-    private Exam exam;  // Liên kết với kỳ thi
+    private Exam exam;
 }

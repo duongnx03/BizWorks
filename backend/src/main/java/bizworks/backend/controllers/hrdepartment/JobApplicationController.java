@@ -31,14 +31,12 @@ public class JobApplicationController {
             @RequestParam("resume") MultipartFile resume,
             @RequestParam Long jobPostingId) {
         try {
-            // Log request parameters
             System.out.println("Received request with parameters:");
             System.out.println("applicantName: " + applicantName);
             System.out.println("applicantEmail: " + applicantEmail);
             System.out.println("applicantPhone: " + applicantPhone);
             System.out.println("jobPostingId: " + jobPostingId);
 
-            // Store the resume file and get the URL
             String resumeUrl = jobApplicationService.storeFile(resume);
 
             JobApplicationDTO jobApplicationDTO = new JobApplicationDTO();

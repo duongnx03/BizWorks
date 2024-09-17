@@ -96,7 +96,6 @@ public class TrainingProgramController {
         return ResponseEntity.noContent().build();
     }
 
-    // New endpoint to delete an exam
     @DeleteMapping("/{trainingProgramId}/exams/{examId}")
     public ResponseEntity<Void> deleteExam(@PathVariable Long trainingProgramId, @PathVariable Long examId) {
         try {

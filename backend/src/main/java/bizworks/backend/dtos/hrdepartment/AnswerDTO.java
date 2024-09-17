@@ -16,8 +16,8 @@ public class AnswerDTO {
     private Long employeeId;
     private Long questionId;
     private Long examId;
-    private Integer totalPoints;  // Total points achieved
-    private String evaluationMessage;  // Evaluation message
+    private Integer totalPoints;
+    private String evaluationMessage;
 
     public static AnswerDTO from(Answer answer) {
         if (answer == null) {
@@ -36,7 +36,6 @@ public class AnswerDTO {
         Answer answer = new Answer();
         answer.setId(this.id);
         answer.setAnswerText(this.answerText);
-        // Load other associations if needed
         return answer;
     }
 }

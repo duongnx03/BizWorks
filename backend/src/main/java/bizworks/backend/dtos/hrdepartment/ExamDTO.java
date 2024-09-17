@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class ExamDTO {
     private Long id;
     private String subjectName;
-    private LocalDateTime examDateTime;  // Ngày và giờ thi
+    private LocalDateTime examDateTime;
     private String location;
     private String examDuration;
 
