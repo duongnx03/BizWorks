@@ -98,9 +98,23 @@ public class PositionService {
     public void deletePosition(Long id) {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
+
+        // Fetch the position to delete
+        Position position = positionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Position not found"));
+
+        // Get all employees assigned to this position
+        List<Employee> employees = position.getEmployees();
+
+        // Remove the position from each employee
+        for (Employee employee : employees) {
+            employee.setPosition(null);
+            employeeService.save(employee); // Save changes to each employee
+        }
+
+        // Finally, delete the position
         positionRepository.deleteById(id);
     }
-
     public void assignPositionToEmployee(Long positionId, Long employeeId) {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
@@ -114,6 +128,7 @@ public class PositionService {
 
         employeeService.save(employee);
     }
+
     private void checkRole(User user, List<String> roles) {
         if (user == null || !roles.contains(user.getRole())) {
             throw new RuntimeException("User does not have the required role");

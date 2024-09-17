@@ -51,10 +51,10 @@ public class PositionController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{positionId}/assign/{employeeId}")
-    public ResponseEntity<Void> assignPositionToEmployee(@PathVariable Long positionId, @PathVariable Long employeeId) {
+    @PostMapping("/{positionId}/assign-employee/{employeeId}")
+    public ResponseEntity<String> assignEmployeeToPosition(@PathVariable Long positionId, @PathVariable Long employeeId) {
         positionService.assignPositionToEmployee(positionId, employeeId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Employee assigned to position successfully");
     }
     @GetMapping("/department/{departmentId}")
     public ResponseEntity<List<Position>> getPositionsByDepartmentId(@PathVariable Long departmentId) {

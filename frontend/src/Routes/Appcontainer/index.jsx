@@ -212,7 +212,20 @@ import ApproveEmployeeRequests from "../../views/pages/manage/ApproveEmployeeReq
 import MissedCheckOutCorrection from "../../views/pages/manage/MissedCheckOutCorrection.jsx";
 import LeaveRequestsAdmin from "../../views/pages/Employees/LeaveRequestsAdmin";
 import LeaveRequestsEmployee from "../../views/pages/Employees/LeaveRequestsEmployee";
-
+import TrainingProgram from "../../views/pages/Employees/TraniningProgram.jsx";
+import TrainingProgramDetails from "../../views/pages/Employees/TrainingProgramDetails.jsx";
+import AssignEmployeesToTrainingProgram from "../../views/pages/Employees/AssignEmployeesToTrainingProgram.jsx";
+import JobApplicationForm from "../../views/pages/Employees/JobApplicationForm.jsx";
+import JobPostingForm from "../../views/pages/Employees/JobPostingForm.jsx";
+import JobApplicationList from "../../views/pages/Employees/JobApplicationList.jsx";
+import JobPostingList from "../../views/pages/Employees/JobPostingList.jsx";
+import JobBoard from "../../views/pages/Employees/JobBoard.jsx";
+import JobBoardDetail from "../../views/pages/Employees/JobBoardDetails.jsx";
+import RejectedApplicationsList from "../../views/pages/Employees/RejectedApplicationsList.jsx";
+import Exam from "../../views/pages/Employees/Exam.jsx";
+import Question from "../../views/pages/Employees/Question.jsx";
+import ExamAnswerPage from "../../views/pages/Employees/ExamAnswerPage.jsx";
+import ExamResultPage from "../../views/pages/Employees/ExamResultPage.jsx";
 const AppContainer = () => {
   useEffect(() => {
     localStorage.setItem("colorschema", "orange");
@@ -1020,6 +1033,81 @@ const AppContainer = () => {
       id: 136,
       path: "leave-requests-employee",      
       element: <LeaveRequestsEmployee />,
+    },
+    {
+      id: 137,
+      path: "training-programs",      
+      element: <TrainingProgram />
+    },
+    {
+      id: 138,
+      path: "training-programs/:id",      
+      element: <TrainingProgramDetails />
+    },
+    {
+      id: 139,
+      path: "assign-employees/:id",      
+      element: <AssignEmployeesToTrainingProgram />
+    },
+    {
+      id: 140,
+      path: "job-posting-form",      
+      element: <JobPostingForm />
+    },
+    {
+      id: 141,
+      path: "job-application-form",      
+      element: <JobApplicationForm />
+    },
+    {
+      id: 142,
+      path: "job-posting-list",      
+      element: <JobPostingList />
+    }, 
+     {
+      id: 143,
+      path: "job-application-list",      
+      element: <JobApplicationList />
+    },
+    {
+      id: 144,
+      path: "job-board",      
+      element: <JobBoard  />
+    },
+    {
+      id: 145,
+      path: "job-postings/:id",      
+      element: <JobBoardDetail  />
+    },
+    {
+      id: 146,
+      path: "rejected-list",      
+      element: <RejectedApplicationsList  />
+    },
+    {
+      id: 147,
+      path: "exam/:trainingProgramId",      
+      element: <Exam  />
+    },
+    {
+      id: 148,
+      path: "exam/:trainingProgramId/:examId/questions",      
+      element: <Question  />
+    },
+    {
+      id: 149,
+      path: "exam/:trainingProgramId/:examId/answers",      
+      element: <ExamAnswerPage  />
+    },
+    {
+      id: 150,
+      path: "exam-result/:examId",      
+      element: <ExamResultPage  />
+    },
+    {
+      id: 151,
+      path: "exam-confirmation/:examId",      
+      element: <ExamResultPage  />
     },
   ];
 

@@ -89,6 +89,18 @@ export const SidebarData = [
             menuValue: "Violation",
             route: "/violations",
           },
+          {
+            menuValue: 'Training Programs',
+            route: "/training-programs",
+          },
+          {
+            menuValue: 'Job Posting',
+            route: "/job-posting-list",
+          },
+          {
+            menuValue: 'Job Application',
+            route: "/job-application-list",
+          },
         ],
       },
     ],
@@ -161,6 +173,18 @@ export const SidebarData = [
             menuValue: "Violation",
             route: "/violations",
           },
+          {
+            menuValue: 'Training Programs',
+            route: "/training-programs",
+          },
+          {
+            menuValue: 'Job Posting',
+            route: "/job-posting-list",
+          },
+          {
+            menuValue: 'Job Application',
+            route: "/job-application-list",
+          },
         ],
       },
     ],
@@ -224,6 +248,18 @@ export const SidebarData = [
           {
             menuValue: "Violation",
             route: "/violations",
+          },
+          {
+            menuValue: 'Training Programs',
+            route: "/training-programs",
+          },
+          {
+            menuValue: 'Job Posting',
+            route: "/job-posting-list",
+          },
+          {
+            menuValue: 'Job Application',
+            route: "/job-application-list",
           },
         ],
       },

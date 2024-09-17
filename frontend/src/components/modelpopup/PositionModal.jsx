@@ -1,98 +1,92 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Form, Input, Select, Button, message } from "antd";
+import { Modal, Form, Input, Button, Select, message } from "antd";
 import axios from "axios";
 import { base_url } from "../../base_urls";
 
-const PositionModal = ({ isVisible, onClose, onPositionCreated, departmentId }) => {
+const { Option } = Select;
+
+const PositionModal = ({ visible, onClose, onPositionCreated, position, departmentId }) => {
   const [form] = Form.useForm();
-  const [departments, setDepartments] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(true);
 
   useEffect(() => {
-    if (isVisible) {
-      const fetchDepartments = async () => {
-        try {
-          const response = await axios.get(`${base_url}/api/departments`);
-          setDepartments(response.data);
-        } catch (error) {
-          message.error("Failed to fetch departments");
-        }
-      };
-
-      const fetchEmployees = async () => {
-        try {
-          const response = await axios.get(`${base_url}/api/employees`);
-          setEmployees(response.data);
-        } catch (error) {
-          message.error("Failed to fetch employees");
-        }
-      };
-
-      fetchDepartments();
+    if (visible) {
       fetchEmployees();
     }
-  }, [isVisible]);
-
-  const handleCreatePosition = async (values) => {
-    try {
-      const response = await axios.post(`${base_url}/api/positions`, {
-        positionName: values.positionName,
-        departmentId: departmentId, // Pass the department ID
-        departmentName: values.departmentName || null, // Pass department name if needed
-        employee: values.employeeId ? { id: values.employeeId } : null, // Pass full employee DTO if selected
+    if (position) {
+      form.setFieldsValue({
+        positionName: position.positionName,
+        description: position.description,
+        employeeIds: position.employees ? position.employees.map(emp => emp.id) : [], // Set employeeIds if available
       });
+    } else {
+      form.resetFields();
+    }
+  }, [visible, position, form]);
 
-      if (response.status === 201) {
-        message.success("Position created successfully");
-        form.resetFields();
-        onPositionCreated();
-        onClose();
+  const fetchEmployees = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, { withCredentials: true });
+      if (response.data.status === "SUCCESS" && Array.isArray(response.data.data)) {
+        setEmployees(response.data.data);
       } else {
-        message.error("Failed to create position");
+        console.error("Unexpected response format:", response.data);
+        message.error("Unexpected response format");
       }
     } catch (error) {
-      message.error("Failed to create position");
+      console.error("Error fetching employees:", error);
+      message.error("Failed to fetch employees");
+    } finally {
+      setLoadingEmployees(false);
+    }
+  };
+
+  const handleSubmit = async (values) => {
+    try {
+      if (position) {
+        await axios.put(`${base_url}/api/positions/${position.id}`, {
+          ...values,
+          department: { id: departmentId },
+        }, { withCredentials: true });
+      } else {
+        await axios.post(`${base_url}/api/positions`, {
+          ...values,
+          department: { id: departmentId },
+        }, { withCredentials: true });
+      }
+      message.success(`Position ${position ? 'updated' : 'created'} successfully.`);
+      onPositionCreated();
+    } catch (error) {
+      message.error("Failed to save position.");
     }
   };
 
   return (
     <Modal
-      title="Add Position"
-      visible={isVisible}
+      visible={visible}
+      title={position ? "Edit Position" : "Add Position"}
       onCancel={onClose}
       footer={null}
-      destroyOnClose
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleCreatePosition}
-      >
+      <Form form={form} onFinish={handleSubmit} layout="vertical">
         <Form.Item
-          label="Position Name"
           name="positionName"
-          rules={[{ required: true, message: "Please input the position name!" }]}
+          label="Position Name"
+          rules={[{ required: true, message: 'Please input the position name!' }]}
         >
           <Input />
         </Form.Item>
         <Form.Item
-          label="Employee"
-          name="employeeId"
+          name="description"
+          label="Description"
         >
-          <Select placeholder="Select an employee (Optional)">
-            {employees.map(emp => (
-              <Select.Option key={emp.id} value={emp.id}>
-                {emp.fullname} {/* Display the employee's fullname */}
-              </Select.Option>
-            ))}
-          </Select>
+          <Input.TextArea />
         </Form.Item>
+      
         <Form.Item>
           <Button type="primary" htmlType="submit">
-            Submit
-          </Button>
-          <Button style={{ margin: '0 8px' }} onClick={onClose}>
-            Cancel
+            {position ? "Update" : "Create"}
           </Button>
         </Form.Item>
       </Form>
