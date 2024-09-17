@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Card, Spin, Typography, message, Button } from 'antd';
 import axios from 'axios';
 import { base_url } from '../../../base_urls'; // Đảm bảo bạn đã cấu hình base_url đúng
-import JobApplicationModal from '../Employees/JobApplicationModal'; // Điều chỉnh đường dẫn nếu cần
+import JobApplicationModal from '../../../components/modelpopup/JobApplicationModal'; // Điều chỉnh đường dẫn nếu cần
 
 const { Title, Paragraph } = Typography;
 

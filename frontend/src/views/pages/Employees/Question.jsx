@@ -3,7 +3,7 @@ import { Table, Button, message, Popconfirm } from "antd";
 import axios from "axios";
 import { base_url } from "../../../base_urls";
 import { useParams } from "react-router-dom";
-import QuestionModal from './QuestionModal'; // Adjust the path as needed
+import QuestionModal from '../../../components/modelpopup/QuestionModal'; // Adjust the path as needed
 
 const Question = () => {
   const { examId } = useParams(); // Get examId from route parameters

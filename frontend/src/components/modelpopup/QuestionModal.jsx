@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, Form, Input, Switch, Divider, Button, InputNumber, message } from 'antd';
 import axios from "axios";
-import { base_url } from "../../../base_urls"; // Import base_url
+import { base_url } from "../../base_urls"; // Import base_url
 
 const QuestionModal = ({ visible, onClose, onQuestionAdded, examId }) => {
   const [form] = Form.useForm();

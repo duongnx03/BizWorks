@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, Form, Input, Button, Upload, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import axios from 'axios';
-import { base_url } from '../../../base_urls';
+import { base_url } from '../../base_urls';
 
 const JobApplicationModal = ({ visible, onClose, jobPostingId }) => {
   const [form] = Form.useForm();
