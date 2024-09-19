@@ -99,8 +99,9 @@ export const SidebarData = [
           },
           {
             menuValue: 'Job Application',
-            route: "/job-application-list",
+            route: "/job-application-list/admin",
           },
+          
         ],
       },
     ],
@@ -183,7 +184,7 @@ export const SidebarData = [
           },
           {
             menuValue: 'Job Application',
-            route: "/job-application-list",
+            route: "/job-application-list/manage",
           },
         ],
       },

@@ -3,9 +3,11 @@
     import bizworks.backend.dtos.hrdepartment.JobApplicationDTO;
     import bizworks.backend.models.hrdepartment.JobApplication;
     import bizworks.backend.models.hrdepartment.JobPosting;
+    import bizworks.backend.models.hrdepartment.StatusChangeRequest;
     import bizworks.backend.repositories.hrdepartment.JobApplicationRepository;
     import bizworks.backend.repositories.hrdepartment.JobPostingRepository;
     import bizworks.backend.repositories.hrdepartment.RejectedJobApplicationRepository;
+    import bizworks.backend.repositories.hrdepartment.StatusChangeRequestRepository;
     import bizworks.backend.services.EmailService;
     import lombok.RequiredArgsConstructor;
     import org.springframework.beans.factory.annotation.Autowired;
@@ -31,13 +33,57 @@
         private final JobApplicationRepository jobApplicationRepository;
         private final JobPostingRepository jobPostingRepository;
         private final RejectedJobApplicationRepository rejectedJobApplicationRepository;
+        private final StatusChangeRequestRepository statusChangeRequestRepository;
 
         @Autowired
         private EmailService emailService;
 
         private final String uploadDir = "uploads";
 
+        public StatusChangeRequest requestStatusChange(Long applicationId, String newStatus, String reason) {
+            JobApplication jobApplication = jobApplicationRepository.findById(applicationId)
+                    .orElseThrow(() -> new RuntimeException("Application not found"));
 
+            StatusChangeRequest statusChangeRequest = new StatusChangeRequest();
+            statusChangeRequest.setJobApplication(jobApplication);
+            statusChangeRequest.setNewStatus(newStatus);
+            statusChangeRequest.setReason(reason);
+            statusChangeRequest.setRequestDate(LocalDate.now());
+            statusChangeRequest.setApproved(false);
+
+            return statusChangeRequestRepository.save(statusChangeRequest);
+        }
+
+        public StatusChangeRequest approveStatusChange(Long requestId) {
+            StatusChangeRequest statusChangeRequest = statusChangeRequestRepository.findById(requestId)
+                    .orElseThrow(() -> new RuntimeException("Status change request not found"));
+
+            if (statusChangeRequest.getApproved()) {
+                throw new RuntimeException("Status change request has already been approved.");
+            }
+
+            JobApplication jobApplication = statusChangeRequest.getJobApplication();
+            jobApplication.setStatus(statusChangeRequest.getNewStatus());
+
+            jobApplicationRepository.save(jobApplication);
+
+            statusChangeRequest.setApproved(true);
+            statusChangeRequest.setApprovalDate(LocalDate.now());
+            statusChangeRequestRepository.save(statusChangeRequest);
+
+            String applicantEmail = jobApplication.getApplicantEmail();
+            String subject = "Application Status Updated";
+            String body = "Dear " + jobApplication.getApplicantName() + ",\n\n"
+                    + "Your application status has been updated to: " + jobApplication.getStatus() + ".\n\n"
+                    + "Thank you.";
+
+            emailService.sendEmail(applicantEmail, subject, body);
+
+            return statusChangeRequest;
+        }
+        public List<StatusChangeRequest> getPendingStatusChangeRequests() {
+            return statusChangeRequestRepository.findByApproved(false);
+        }
         public List<JobApplicationDTO> getAllApplications() {
             System.out.println("Fetching all job applications");
             return jobApplicationRepository.findAll()
@@ -170,7 +216,12 @@
                     jobApplication.getStatus()
             );
         }
-
+        public List<StatusChangeRequest> getAllStatusChangeRequests() {
+            return statusChangeRequestRepository.findAll();
+        }
+        public List<StatusChangeRequest> getApprovedStatusChangeRequests() {
+            return statusChangeRequestRepository.findByApproved(true);
+        }
         public String getUploadDir() {
             return uploadDir;
         }

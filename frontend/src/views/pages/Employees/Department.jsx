@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Table, message, Button } from "antd";
 import axios from "axios";
 import Breadcrumbs from "../../../components/Breadcrumbs";
@@ -13,24 +13,53 @@ const Department = () => {
   const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState(null);
+  const [departmentModalOpen, setDepartmentModalOpen] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchDepartments();
   }, []);
 
   const fetchDepartments = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get(`${base_url}/api/departments`);
-      setDepartments(response.data); // Adjust if the API response structure differs
-      setLoading(false);
+      const response = await axios.get(`${base_url}/api/departments`, { withCredentials: true });
+      if (Array.isArray(response.data)) {
+        setDepartments(response.data);
+      } else {
+        message.error("Invalid data format received from API");
+        setDepartments([]);
+      }
     } catch (error) {
-      message.error("Failed to fetch departments");
+      if (error.response) {
+        const { status, data } = error.response;
+        switch (status) {
+          case 403:
+            message.error(`Access denied. Details: ${data.message}`);
+            break;
+          case 401:
+            message.error("Unauthorized. Please log in.");
+            break;
+          case 404:
+            message.error("Resource not found.");
+            break;
+          default:
+            message.error(`Error: ${data.message || "An error occurred"}`);
+        }
+      } else {
+        message.error("Failed to fetch departments. " + (error.message || "Unknown error"));
+      }
+      setDepartments([]);
+    } finally {
       setLoading(false);
     }
   };
 
   const handleDepartmentCreated = () => {
-    fetchDepartments(); // Refresh department list after creation
+    fetchDepartments();
+    setDepartmentModalOpen(false);
+    setSelectedDepartment(null);
   };
 
   const openDeleteModal = (id) => {
@@ -45,24 +74,30 @@ const Department = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${base_url}/api/departments/${departmentToDelete}`);
-      fetchDepartments(); // Refresh department list after deletion
+      await axios.delete(`${base_url}/api/departments/${departmentToDelete}`, {withCredentials: true});
+      // Update the department list immediately
+      setDepartments(departments.filter(department => department.id !== departmentToDelete));
+      handleDeleteModalClose();
     } catch (error) {
-      message.error("Failed to delete department");
+      if (error.response && error.response.status === 403) {
+        message.error("Access denied. Please log in.");
+      } else {
+        message.error("Failed to delete department");
+      }
     } finally {
-      handleDeleteModalClose(); // Close modal
+      handleDeleteModalClose();
     }
   };
 
-  const departmentElements = departments.map((department) => ({
+  const departmentElements = Array.isArray(departments) ? departments.map((department) => ({
     key: department.id,
     id: department.id,
-    department: department.departmentName,
-  }));
+    department: department.name,
+  })) : [];
 
   const columns = [
     {
-      title: "#",
+      title: "ID",
       dataIndex: "id",
       sorter: (a, b) => a.id - b.id,
       width: "10%",
@@ -79,7 +114,7 @@ const Department = () => {
       render: (text, record) => (
         <div className="dropdown dropdown-action text-end">
           <Link
-            to="#"
+            to="ID"
             className="action-icon dropdown-toggle"
             data-bs-toggle="dropdown"
             aria-expanded="false"
@@ -89,15 +124,23 @@ const Department = () => {
           <div className="dropdown-menu dropdown-menu-right">
             <Link
               className="dropdown-item"
-              to="#"
-              onClick={() => openDeleteModal(record.id)}
+              to="ID"
+              onClick={() => {
+                setSelectedDepartment(record);
+                setDepartmentModalOpen(true);
+              }}
             >
+              <i className="fa fa-pencil m-r-5" /> Edit
+            </Link>
+            <Link
+              className="dropdown-item"
+              to="ID"
+              onClick={() => openDeleteModal(record.id)}>
               <i className="fa fa-trash m-r-5" /> Delete
             </Link>
             <Link
               className="dropdown-item"
-              to={`/positions/${record.id}`}
-            >
+              to={`/positions/${record.id}`}>
               <i className="fa fa-eye m-r-5" /> View Positions
             </Link>
           </div>
@@ -111,7 +154,6 @@ const Department = () => {
     <>
       <div className="page-wrapper">
         <div className="content container-fluid">
-          {/* Page Header */}
           <Breadcrumbs
             maintitle="Department"
             title="Dashboard"
@@ -119,16 +161,8 @@ const Department = () => {
             modal="#add_department"
             name="Add Department"
           />
-          {/* /Page Header */}
           <div className="row mb-3">
             <div className="col-md-12 text-end">
-              <Button
-                type="primary"
-                data-bs-toggle="modal"
-                data-bs-target="#add_department"
-              >
-                Add Department
-              </Button>
             </div>
           </div>
           <div className="row">
@@ -140,7 +174,7 @@ const Department = () => {
                   dataSource={departmentElements}
                   loading={loading}
                   className="table-striped"
-                  rowKey={(record) => record.id}
+                  rowKey="id"
                 />
               </div>
             </div>
@@ -148,7 +182,12 @@ const Department = () => {
         </div>
       </div>
 
-      <DepartmentModal onDepartmentCreated={handleDepartmentCreated} />
+      <DepartmentModal 
+        visible={departmentModalOpen} 
+        onDepartmentCreated={handleDepartmentCreated} 
+        onClose={() => setDepartmentModalOpen(false)} 
+        department={selectedDepartment} 
+      />
       {deleteModalOpen && (
         <DeleteModal
           id={departmentToDelete}

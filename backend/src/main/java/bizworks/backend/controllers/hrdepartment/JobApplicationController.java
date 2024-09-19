@@ -3,6 +3,7 @@ package bizworks.backend.controllers.hrdepartment;
 import bizworks.backend.dtos.hrdepartment.JobApplicationDTO;
 import bizworks.backend.helpers.ApiResponse;
 import bizworks.backend.helpers.ApiResponseDepartment;
+import bizworks.backend.models.hrdepartment.StatusChangeRequest;
 import bizworks.backend.services.humanresources.JobApplicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -23,6 +24,63 @@ import java.util.List;
 public class JobApplicationController {
     private final JobApplicationService jobApplicationService;
 
+    @GetMapping("/status-change-requests")
+    public ResponseEntity<ApiResponse<?>> getAllStatusChangeRequests() {
+        try {
+            List<StatusChangeRequest> requests = jobApplicationService.getAllStatusChangeRequests();
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(ApiResponse.success(requests, "List of all status change requests fetched successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.errorServer(e.getMessage(), "ERROR_FETCHING_STATUS_CHANGE_REQUESTS"));
+        }
+    }
+    @GetMapping("/approved-status-change-requests")
+    public ResponseEntity<ApiResponse<List<StatusChangeRequest>>> getApprovedStatusChangeRequests() {
+        try {
+            List<StatusChangeRequest> approvedRequests = jobApplicationService.getApprovedStatusChangeRequests();
+            return ResponseEntity.ok(ApiResponse.success(approvedRequests, "Fetched approved requests successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.errorServer(e.getMessage(), "ERROR_FETCHING_APPROVED_REQUESTS"));
+        }
+    }
+
+    @PatchMapping("/request-status-change/{id}")
+    public ResponseEntity<ApiResponse<?>> requestStatusChange(
+            @PathVariable Long id,
+            @RequestParam("newStatus") String newStatus,
+            @RequestParam(value = "reason", required = false) String reason) {
+
+        try {
+            jobApplicationService.requestStatusChange(id, newStatus, reason);
+            return ResponseEntity.ok(ApiResponse.success(null, "Status change request sent successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.errorClient(null, "Failed to request status change", "BAD REQUEST"));
+        }
+    }
+    @GetMapping("/pending-status-change-requests")
+    public ResponseEntity<ApiResponse<?>> getPendingStatusChangeRequests() {
+        try {
+            List<StatusChangeRequest> pendingRequests = jobApplicationService.getPendingStatusChangeRequests();
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(ApiResponse.success(pendingRequests, "List of pending status change requests fetched successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.errorServer(e.getMessage(), "ERROR_FETCHING_PENDING_REQUESTS"));
+        }
+    }
+    @PatchMapping("/approve-status-change/{id}")
+    public ResponseEntity<ApiResponse<?>> approveStatusChange(
+            @PathVariable Long id) {
+
+        try {
+            jobApplicationService.approveStatusChange(id);
+            return ResponseEntity.ok(ApiResponse.success(null, "Status change request approved successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.errorServer("Failed to approve status change request", "FORBIDDEN"));
+        }
+    }
     @PostMapping("/submit")
     public ResponseEntity<ApiResponse<?>> submitJobApplication(
             @RequestParam String applicantName,

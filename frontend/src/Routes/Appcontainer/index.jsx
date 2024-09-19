@@ -226,6 +226,9 @@ import Exam from "../../views/pages/Employees/Exam.jsx";
 import Question from "../../views/pages/Employees/Question.jsx";
 import ExamAnswerPage from "../../views/pages/Employees/ExamAnswerPage.jsx";
 import ExamResultPage from "../../views/pages/Employees/ExamResultPage.jsx";
+import JobApplicationAdmin from "../../views/pages/Employees/JobApplication/JobApplicaitonAdmin.jsx";
+import JobApplicationManage from "../../views/pages/Employees/JobApplication/JobApplicationManage.jsx";
+import ApprovedRequestsPage from "../../views/pages/Employees/JobApplication/ApprovedRequestsPage.jsx";
 const AppContainer = () => {
   useEffect(() => {
     localStorage.setItem("colorschema", "orange");
@@ -1108,6 +1111,21 @@ const AppContainer = () => {
       id: 151,
       path: "exam-confirmation/:examId",      
       element: <ExamResultPage  />
+    },
+    {
+      id: 152,
+      path: "job-application-list/manage",      
+      element: <JobApplicationManage  />
+    },
+    {
+      id: 153,
+      path: "job-application-list/admin",      
+      element: <JobApplicationAdmin  />
+    },
+    {
+      id: 154,
+      path: "job-application-list/approve/admin",      
+      element: <ApprovedRequestsPage  />
     },
   ];
 
