@@ -17,6 +17,7 @@ const PositionModal = ({ visible, onClose, onPositionCreated, position, departme
     if (position) {
       form.setFieldsValue({
         positionName: position.positionName,
+        basicSalary: position.basicSalary,
         description: position.description,
         employeeIds: position.employees ? position.employees.map(emp => emp.id) : [], // Set employeeIds if available
       });
@@ -74,6 +75,13 @@ const PositionModal = ({ visible, onClose, onPositionCreated, position, departme
           name="positionName"
           label="Position Name"
           rules={[{ required: true, message: 'Please input the position name!' }]}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          name="basicSalary"
+          label="Basic Salary"
+          rules={[{ required: true, message: 'Please input the basic Salary!' }]}
         >
           <Input />
         </Form.Item>

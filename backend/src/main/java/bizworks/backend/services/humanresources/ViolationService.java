@@ -90,7 +90,7 @@ public class ViolationService {
         Violation saved = violationRepository.save(violation);
 
         // Gửi email nếu là MANAGE hoặc ADMIN
-        if ("MANAGE".equals(currentUser.getRole()) || "ADMIN".equals(currentUser.getRole())) {
+        if ("LEADER".equals(currentUser.getRole()) ||"MANAGE".equals(currentUser.getRole()) || "ADMIN".equals(currentUser.getRole())) {
             sendViolationEmail(saved, "created");
         }
 
@@ -310,13 +310,17 @@ public class ViolationService {
         String to = violation.getEmployee().getEmail();
         String subject = "Violation " + action;
         String content = "<div style=\"font-family: Arial, sans-serif; color: #333; line-height: 1.6;\">"
-                + "<h2 style=\"color: #4CAF50;\">Dear " + violation.getEmployee().getFullname() + ",</h2>"
+                + "<h2 style=\"color: #ed0c2a;\">Dear " + violation.getEmployee().getFullname() + ",</h2>"
                 + "<p>A violation has been <strong>" + action + "</strong>.</p>"
                 + "<h3 style=\"color: #2196F3;\">Violation Details:</h3>"
                 + "<table style=\"width: 100%; border-collapse: collapse;\">"
                 + "<tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Violation Type:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + violation.getViolationType().getType() + "</td>"
+                + "</tr>"
+                + "<tr>"
                 + "<td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Violation Money:</strong></td>"
-                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + violation.getViolationType().getViolationMoney() + "</td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + violation.getViolationType().getViolationMoney() +"$"+ "</td>"
                 + "</tr>"
                 + "<tr>"
                 + "<td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description:</strong></td>"
@@ -324,7 +328,7 @@ public class ViolationService {
                 + "</tr>"
                 + "<tr>"
                 + "<td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Status:</strong></td>"
-                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + violation.getStatus() + "</td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;color: #4CAF50;\">" + violation.getStatus() + "</td>"
                 + "</tr>"
                 + "</table>"
                 + "<p style=\"margin-top: 20px;\">Please contact the administrator for more information.</p>"

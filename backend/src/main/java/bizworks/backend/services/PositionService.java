@@ -1,12 +1,11 @@
 package bizworks.backend.services;
 
 import bizworks.backend.dtos.PositionDTO;
-import bizworks.backend.models.Department;
-import bizworks.backend.models.Employee;
-import bizworks.backend.models.Position;
-import bizworks.backend.models.User;
+import bizworks.backend.models.*;
 import bizworks.backend.repositories.DepartmentRepository;
+import bizworks.backend.repositories.EmployeeRepository;
 import bizworks.backend.repositories.PositionRepository;
+import bizworks.backend.repositories.SalaryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +28,10 @@ public class PositionService {
 
     @Autowired
     private EmployeeService employeeService;
+    @Autowired
+    private SalaryRepository salaryRepository;
+    @Autowired
+    private EmployeeRepository employeeRepository;
 
     public Position findById(Long id) {
         Optional<Position> optionalPosition = positionRepository.findById(id);
@@ -66,6 +69,7 @@ public class PositionService {
         Position position = new Position();
         position.setPositionName(positionDTO.getPositionName());
         position.setDescription(positionDTO.getDescription());
+        position.setBasicSalary(positionDTO.getBasicSalary());
 
         if (positionDTO.getDepartment() != null && positionDTO.getDepartment().getId() != null) {
             Department department = departmentRepository.findById(positionDTO.getDepartment().getId())
@@ -80,20 +84,58 @@ public class PositionService {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
 
+        // Tìm position theo id
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Position not found"));
 
+        // Cập nhật các trường của position
         position.setPositionName(positionDTO.getPositionName());
         position.setDescription(positionDTO.getDescription());
 
+        // Kiểm tra nếu có cập nhật basicSalary
+        boolean isBasicSalaryUpdated = false;
+        if (positionDTO.getBasicSalary() != null && !positionDTO.getBasicSalary().equals(position.getBasicSalary())) {
+            position.setBasicSalary(positionDTO.getBasicSalary());
+            isBasicSalaryUpdated = true;
+        }
+
+        // Cập nhật department nếu có thay đổi
         if (positionDTO.getDepartment() != null && positionDTO.getDepartment().getId() != null) {
             Department department = departmentRepository.findById(positionDTO.getDepartment().getId())
                     .orElseThrow(() -> new RuntimeException("Department not found"));
             position.setDepartment(department);
         }
+        Position updatedPosition = positionRepository.save(position);
 
-        return positionRepository.save(position);
+        // Nếu basicSalary thay đổi, cập nhật lương của nhân viên thuộc vị trí này
+        if (isBasicSalaryUpdated) {
+            updateSalariesForPosition(updatedPosition);
+        }
+
+        return updatedPosition;
     }
+
+    public void updateSalariesForPosition(Position position) {
+        // Tìm tất cả các nhân viên thuộc vị trí này
+        List<Employee> employees = employeeRepository.findByPositionId(position.getId());
+
+        // Tìm tất cả các bảng lương liên quan đến các nhân viên đó
+        for (Employee employee : employees) {
+            List<Salary> salaries = salaryRepository.findByEmployeeId(employee.getId());
+
+            for (Salary salary : salaries) {
+                // Cập nhật basicSalary cho mỗi bảng lương
+                salary.setBasicSalary(position.getBasicSalary());
+
+                // Tính lại tổng lương
+                salary.calculateTotalSalary();
+
+                // Lưu bản ghi bảng lương đã cập nhật
+                salaryRepository.save(salary);
+            }
+        }
+    }
+
 
     public void deletePosition(Long id) {
         User currentUser = authenticationService.getCurrentUser();

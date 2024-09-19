@@ -107,6 +107,7 @@ const Position = () => {
       key: position.id,
       id: position.id,
       positionName: position.positionName,
+      basicSalary: position.basicSalary,
       employeeNames: position.employees ? position.employees.map(employee => employee.fullname).join(', ') : 'None',
   })) : [];
   
@@ -121,6 +122,13 @@ const Position = () => {
         title: "Position Name",
         dataIndex: "positionName",
         sorter: (a, b) => a.positionName.localeCompare(b.positionName),
+        width: "50%",
+    },
+    {
+        title: "Basic Salary",
+        dataIndex: "basicSalary",
+        render: (text) => <span>${text.toFixed(2)}</span>,
+        sorter: (a, b) => a.basicSalary.localeCompare(b.positionName),
         width: "50%",
     },
     {

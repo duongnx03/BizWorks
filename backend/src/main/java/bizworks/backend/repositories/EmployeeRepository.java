@@ -22,4 +22,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     // Tìm tất cả nhân viên theo vai trò
     List<Employee> findByUser_Role(String role);
+
+    List<Employee> findByPositionId(Long positionId);
 }

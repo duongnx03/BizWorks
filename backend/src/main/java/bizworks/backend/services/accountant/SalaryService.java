@@ -76,7 +76,13 @@ public class SalaryService {
             salary.setSalaryCode(generateSalaryCode());
             salary.setMonth(month);
             salary.setYear(currentYear);
-            salary.setBasicSalary(dto.getBasicSalary() != null ? dto.getBasicSalary() : 0.0);
+            Double positionBasicSalary = employee.getPosition() != null
+                    ? employee.getPosition().getBasicSalary()
+                    : 0.0;  // Default to 0 if the position or basic salary is not set
+
+            // Set the basic salary to either the provided value or the position's basic salary
+            salary.setBasicSalary(dto.getBasicSalary() != null ? dto.getBasicSalary() : positionBasicSalary);
+
             salary.setBonusSalary(dto.getBonusSalary() != null ? dto.getBonusSalary() : 0.0);
             salary.setOvertimeSalary(dto.getOvertimeSalary() != null ? dto.getOvertimeSalary() : 0.0);
             salary.setAdvanceSalary(dto.getAdvanceSalary() != null ? dto.getAdvanceSalary() : 0.0);

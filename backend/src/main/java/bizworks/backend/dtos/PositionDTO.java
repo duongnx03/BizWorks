@@ -13,6 +13,7 @@ public class PositionDTO {
     private Long id;
     private String positionName;
     private String description;
+    private Double basicSalary;
     private List<EmployeeDTO> employees;
     private DepartmentDTO department; // Chỉnh sửa ở đây
 
@@ -21,6 +22,7 @@ public class PositionDTO {
         dto.setId(position.getId());
         dto.setPositionName(position.getPositionName());
         dto.setDescription(position.getDescription());
+        dto.setBasicSalary(position.getBasicSalary());
         dto.setEmployees(position.getEmployees() != null ?
                 position.getEmployees().stream()
                         .map(EmployeeDTO::from)

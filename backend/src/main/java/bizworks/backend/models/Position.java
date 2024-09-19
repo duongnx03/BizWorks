@@ -22,6 +22,7 @@ public class Position {
     private Long id;
     private String positionName;
     private String description;
+    private double basicSalary;
 
     @OneToMany(mappedBy = "position", cascade = CascadeType.ALL)
     @JsonIgnore
