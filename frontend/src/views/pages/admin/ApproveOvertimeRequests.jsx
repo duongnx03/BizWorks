@@ -272,40 +272,59 @@ const ApproveOvertimeRequests = () => {
                                 {overtime.status}
                               </td>
                               <td>
-                                <div className="dropdown text-end">
-                                  <button
-                                    className="btn btn-link p-0 border-0 text-dark"
+                                <div className="dropdown dropdown-action text-end">
+                                  <Link
+                                    to="#"
+                                    className="action-icon dropdown-toggle"
                                     data-bs-toggle="dropdown"
                                     aria-expanded="false"
+                                    onClick={() => {
+                                      if (overtime.status !== "Pending") {
+                                        // Hiển thị thông báo nếu đã Approved hoặc Rejected
+                                        toast.info(
+                                          "This request has already been processed."
+                                        );
+                                      }
+                                    }}
+                                    style={{
+                                      pointerEvents:
+                                        overtime.status !== "Pending"
+                                          ? "none"
+                                          : "auto",
+                                      opacity:
+                                        overtime.status !== "Pending" ? 0.5 : 1, // Làm mờ nút khi vô hiệu hóa
+                                    }}
                                   >
                                     <i className="material-icons">more_vert</i>
-                                  </button>
-                                  <div className="dropdown-menu dropdown-menu-end">
-                                    <button
-                                      className="dropdown-item text-success"
-                                      onClick={() =>
-                                        handleApproveClick(overtime)
-                                      }
-                                    >
-                                      {loadingSend ? (
-                                        <ClipLoader
-                                          size={20}
-                                          color={"#ffffff"}
-                                          loading={true}
-                                        />
-                                      ) : (
-                                        "Reject"
-                                      )}
-                                    </button>
-                                    <button
-                                      className="dropdown-item text-danger"
-                                      onClick={() =>
-                                        handleRejectClick(overtime)
-                                      }
-                                    >
-                                      Reject
-                                    </button>
-                                  </div>
+                                  </Link>
+                                  {overtime.status === "Pending" && (
+                                    <div className="dropdown-menu dropdown-menu-right">
+                                      <p
+                                        className="dropdown-item text-success"
+                                        onClick={() =>
+                                          handleApproveClick(overtime)
+                                        }
+                                      >
+                                        {loadingSend ? (
+                                          <ClipLoader
+                                            size={20}
+                                            color={"#ffffff"}
+                                            loading={true}
+                                          />
+                                        ) : (
+                                          "Approve"
+                                        )}
+                                      </p>
+                                      <p
+                                        className="dropdown-item text-danger"
+                                        onClick={() =>
+                                          handleRejectClick(overtime)
+                                        }
+                                      >
+                                        Reject
+                                      </p>
+                                    </div>
+                                  )}
                                 </div>
                               </td>
                             </tr>

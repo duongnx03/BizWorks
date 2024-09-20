@@ -78,6 +78,7 @@ const LeaderAddEmployeeModelPopup = ({ refreshEmployeeList }) => {
 
   const validateField = (field, value) => {
     const newErrors = { ...errors };
+    const today = new Date();
     switch (field) {
       case "fullname":
         if (!value) newErrors.fullname = "Full Name is required.";
@@ -91,6 +92,8 @@ const LeaderAddEmployeeModelPopup = ({ refreshEmployeeList }) => {
         break;
       case "startDate":
         if (!value) newErrors.startDate = "Joining Date is required.";
+        else if (value < today.setHours(0, 0, 0, 0))
+          newErrors.startDate = "Joining Date cannot be in the past.";
         else delete newErrors.startDate;
         break;
       case "image":

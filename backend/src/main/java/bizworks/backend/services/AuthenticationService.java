@@ -20,9 +20,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -51,7 +49,6 @@ public class AuthenticationService {
     private final ForgotPasswordRepository forgotPasswordRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-    private final RefreshTokenService refreshTokenService;
     private final PositionRepository positionRepository;
     private final DepartmentRepository departmentRepository;
     private final EmployeeApprovalQueueService employeeApprovalQueueService;
@@ -236,12 +233,6 @@ public class AuthenticationService {
             var jwtToken = jwtService.generateToken(user);
             var refreshToken = jwtService.createRefreshToken(user);
 
-            RefreshToken refreshTokenSave = new RefreshToken();
-            refreshTokenSave.setToken(refreshToken);
-            refreshTokenSave.setUser(user);
-            refreshTokenSave.setExpiryDate(Instant.now().plusMillis(86400000));
-            refreshTokenService.save(refreshTokenSave);
-
             Cookie accessTokenCookie = new Cookie("access_token", jwtToken);
             accessTokenCookie.setHttpOnly(true);
             accessTokenCookie.setSecure(true);
@@ -299,14 +290,6 @@ public class AuthenticationService {
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
-        Cookie[] cookies = request.getCookies();
-        String refreshToken = Arrays.stream(cookies)
-                .filter(cookie -> "refresh_token".equals(cookie.getName()))
-                .map(Cookie::getValue)
-                .findAny()
-                .orElse(null);
-        refreshTokenService.removeToken(refreshToken);
-
         Cookie accessTokenCookie = new Cookie("access_token", null);
         accessTokenCookie.setHttpOnly(true);
         accessTokenCookie.setSecure(true);

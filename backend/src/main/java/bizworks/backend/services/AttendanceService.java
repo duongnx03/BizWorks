@@ -37,9 +37,9 @@ public class AttendanceService {
     private final MissedCheckOutHandlingService missedCheckOutHandlingService;
 
     // Địa điểm yêu cầu chấm công
-    private static final double REQUIRED_LATITUDE = 10.80766371098707; // Vĩ độ
-    private static final double REQUIRED_LONGITUDE =  106.71900364124757; // Kinh độ
-    private static final double ACCEPTABLE_RADIUS = 100; // Bán kính chấp nhận tính bằng mét
+    private static final double REQUIRED_LATITUDE = 11.879387995504702; // Vĩ độ
+    private static final double REQUIRED_LONGITUDE =  108.55061899971506; // Kinh độ
+    private static final double ACCEPTABLE_RADIUS = 5000; // Bán kính chấp nhận tính bằng mét
 
     public void checkLocation(double latitude, double longitude){
         double distance = GeoToolsDistanceCalculator.calculateDistance(

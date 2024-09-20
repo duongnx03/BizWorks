@@ -1,8 +1,6 @@
 package bizworks.backend.configs;
 
-import bizworks.backend.models.RefreshToken;
 import bizworks.backend.services.JwtService;
-import bizworks.backend.services.RefreshTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -20,14 +18,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-    private final RefreshTokenService refreshTokenService;
 
     @Override
     protected void doFilterInternal(
@@ -85,9 +81,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     String refreshTokenFromCookie = getRefreshTokenFromCookies(request);
 
                     if (refreshTokenFromCookie != null) {
-                        Optional<RefreshToken> refreshTokenOptional = refreshTokenService.findByToken(refreshTokenFromCookie);
-
-                        if (refreshTokenOptional.isPresent() && jwtService.isRefreshTokenValid(refreshTokenFromCookie)) {
+                        if (jwtService.isRefreshTokenValid(refreshTokenFromCookie)) {
                             String newAccessToken = jwtService.generateToken(userDetails);
 
                             Cookie newAccessTokenCookie = new Cookie("access_token", newAccessToken);

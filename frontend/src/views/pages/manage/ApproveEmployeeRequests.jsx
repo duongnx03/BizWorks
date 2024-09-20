@@ -283,35 +283,53 @@ const ApproveEmployeeRequests = () => {
                                     className="action-icon dropdown-toggle"
                                     data-bs-toggle="dropdown"
                                     aria-expanded="false"
+                                    onClick={() => {
+                                      if (employee.status !== "Pending") {
+                                        // Hiển thị thông báo nếu đã Approved hoặc Rejected
+                                        toast.info(
+                                          "This request has already been processed."
+                                        );
+                                      }
+                                    }}
+                                    style={{
+                                      pointerEvents:
+                                        employee.status !== "Pending"
+                                          ? "none"
+                                          : "auto",
+                                      opacity:
+                                        employee.status !== "Pending" ? 0.5 : 1, // Làm mờ nút khi vô hiệu hóa
+                                    }}
                                   >
                                     <i className="material-icons">more_vert</i>
                                   </Link>
-                                  <div className="dropdown-menu dropdown-menu-right">
-                                    <p
-                                      className="dropdown-item text-success"
-                                      onClick={() =>
-                                        handleApproveClick(employee)
-                                      }
-                                    >
-                                      {loadingSend ? (
-                                        <ClipLoader
-                                          size={20}
-                                          color={"#ffffff"}
-                                          loading={true}
-                                        />
-                                      ) : (
-                                        "Approve"
-                                      )}
-                                    </p>
-                                    <p
-                                      className="dropdown-item text-danger"
-                                      onClick={() =>
-                                        handleRejectClick(employee)
-                                      }
-                                    >
-                                      Reject
-                                    </p>
-                                  </div>
+                                  {employee.status === "Pending" && (
+                                    <div className="dropdown-menu dropdown-menu-right">
+                                      <p
+                                        className="dropdown-item text-success"
+                                        onClick={() =>
+                                          handleApproveClick(employee)
+                                        }
+                                      >
+                                        {loadingSend ? (
+                                          <ClipLoader
+                                            size={20}
+                                            color={"#ffffff"}
+                                            loading={true}
+                                          />
+                                        ) : (
+                                          "Approve"
+                                        )}
+                                      </p>
+                                      <p
+                                        className="dropdown-item text-danger"
+                                        onClick={() =>
+                                          handleRejectClick(employee)
+                                        }
+                                      >
+                                        Reject
+                                      </p>
+                                    </div>
+                                  )}
                                 </div>
                               </td>
                             </tr>
