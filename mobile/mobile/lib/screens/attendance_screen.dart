@@ -84,6 +84,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     final hasCheckedOut = attendanceProvider.hasCheckedOutToday();
     final checkInTime = attendanceProvider.checkInTime;
     final checkOutTime = attendanceProvider.checkOutTime;
+    final isLoading = attendanceProvider.isLoading;
 
     String displayTime = '00:00';
     if (hasCheckedIn && checkInTime != null) {
@@ -218,76 +219,70 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     ),
               const SizedBox(height: 32),
               hasCheckedIn
-                  ? hasCheckedOut
-                      ? ElevatedButton(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey,
-                            minimumSize: const Size(double.infinity, 50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                ? hasCheckedOut
+                    ? ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey,
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Text(
-                            'Checked',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                        )
-                      : ElevatedButton(
-                          onPressed: _canCheckOut()
-                              ? () async {
-                                  await Provider.of<AttendanceProvider>(context,
-                                          listen: false)
-                                      .openCameraAndCheckOut(context);
-                                }
-                              : () {
-                                  _showSnackBar(
-                                      'Check Out is only allowed after 4:55 PM');
-                                },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF902F),
-                            minimumSize: const Size(double.infinity, 50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Check Out',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                        )
-                  : ElevatedButton(
-                      onPressed: _canCheckIn()
-                          ? () async {
-                              await Provider.of<AttendanceProvider>(context,
-                                      listen: false)
-                                  .openCameraAndCheckIn(context);
-                            }
-                          : () {
-                              _showSnackBar(
-                                  'Check In is only allowed after 7:55 AM');
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF902F),
-                        minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ),
-                      child: const Text(
-                        'Check In',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
+                        child: const Text(
+                          'Checked',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
                         ),
+                      )
+                    : ElevatedButton(
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                await attendanceProvider.openCameraAndCheckOut(context);
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF902F),
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: isLoading
+                            ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                            : const Text(
+                                'Check Out',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      )
+                : ElevatedButton(
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            await attendanceProvider.openCameraAndCheckIn(context);
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF902F),
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
+                    child: isLoading
+                        ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                        : const Text(
+                            'Check In',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
               const SizedBox(height: 20),
               FutureBuilder<void>(
                 future: _futureWorkAndOvertime,

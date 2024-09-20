@@ -4,6 +4,7 @@ import 'package:mobile/providers/attendance_complaint_provider.dart';
 import 'package:mobile/providers/attendance_provider.dart';
 import 'package:mobile/providers/auth_provider.dart';
 import 'package:mobile/providers/employee_provider.dart';
+import 'package:mobile/providers/overtime_provider.dart';
 import 'package:mobile/screens/LoginForm.dart';
 import 'package:mobile/screens/attendance_complaint_detail_screen.dart';
 import 'package:mobile/screens/attendance_complaint_screen.dart';
@@ -12,6 +13,8 @@ import 'package:mobile/screens/attendancedata_details_screen.dart';
 import 'package:mobile/screens/attendancedata_screen.dart';
 import 'package:mobile/screens/complaint_list_screen.dart';
 import 'package:mobile/screens/home_screen.dart';
+import 'package:mobile/screens/overtime_details_screen.dart';
+import 'package:mobile/screens/overtime_list_screen.dart';
 import 'package:mobile/screens/overtime_screen.dart';
 import 'package:mobile/screens/profile_screen.dart';
 import 'package:mobile/services/dio_client.dart';
@@ -29,8 +32,12 @@ void main() {
             create: (context) => EmployeeProvider(dioClient: dioClient)),
         ChangeNotifierProvider(
             create: (context) => AttendanceProvider(dioClient: dioClient)),
-         ChangeNotifierProvider(
-            create: (context) => AttendanceComplaintProvider(dioClient: dioClient)),
+        ChangeNotifierProvider(
+            create: (context) =>
+                AttendanceComplaintProvider(dioClient: dioClient)),
+        ChangeNotifierProvider(
+            create: (context) =>
+                OvertimeProvider(dioClient: dioClient)),
       ],
       child: const MyApp(),
     ),
@@ -56,25 +63,43 @@ class MyApp extends StatelessWidget {
           case '/home':
             return MaterialPageRoute(builder: (context) => const HomeScreen());
           case '/attendance':
-            return MaterialPageRoute(builder: (context) => const AttendanceScreen());
-          case '/attendance-data':
-            return MaterialPageRoute(builder: (context) => AttendanceDataScreen());
-          case '/profile':
-            return MaterialPageRoute(builder: (context) => const ProfileScreen());
-          case '/attendance-data-details':
-            final data = settings.arguments as AttendanceDTO; // Retrieve the arguments
             return MaterialPageRoute(
-              builder: (context) => AttendanceDataDetailsScreen(attendance: data),
+                builder: (context) => const AttendanceScreen());
+          case '/attendance-data':
+            return MaterialPageRoute(
+                builder: (context) => AttendanceDataScreen());
+          case '/profile':
+            return MaterialPageRoute(
+                builder: (context) => const ProfileScreen());
+          case '/attendance-data-details':
+            final data =
+                settings.arguments as AttendanceDTO; // Retrieve the arguments
+            return MaterialPageRoute(
+              builder: (context) =>
+                  AttendanceDataDetailsScreen(attendance: data),
             );
           case '/overtime':
-            return MaterialPageRoute(builder: (context) => const OvertimeRequestScreen());
+            final data = settings.arguments as AttendanceDTO;
+            return MaterialPageRoute(
+                builder: (context) => OvertimeRequestScreen(attendance: data,));
           case '/attendance-complaint':
             final data = settings.arguments as AttendanceDTO;
-            return MaterialPageRoute(builder: (context) => AttendanceComplaintScreen(attendance: data,));
+            return MaterialPageRoute(
+                builder: (context) => AttendanceComplaintScreen(
+                      attendance: data,
+                    ));
           case '/attendance-complaint-list':
-            return MaterialPageRoute(builder: (context) => ComplaintListScreen());
+            return MaterialPageRoute(
+                builder: (context) => ComplaintListScreen());
           case '/attendance-complaint-detail':
-            return MaterialPageRoute(builder: (context) => const ComplaintDetailScreen());
+            return MaterialPageRoute(
+                builder: (context) => const ComplaintDetailScreen());
+          case '/overtime-list':
+            return MaterialPageRoute(
+                builder: (context) => OvertimeListScreen());
+          case '/overtime-detail':
+            return MaterialPageRoute(
+                builder: (context) => const OvertimeDetailsScreen());
           default:
             return MaterialPageRoute(builder: (context) => const LoginForm());
         }

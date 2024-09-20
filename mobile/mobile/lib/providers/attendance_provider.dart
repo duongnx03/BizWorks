@@ -27,10 +27,13 @@ class AttendanceProvider with ChangeNotifier {
   String get successMessage => _successMessage;
   List<AttendanceDTO> _attendanceList = [];
   List<AttendanceDTO> get attendanceList => _attendanceList;
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
 
-   Future<void> fetchAttendancesForMonth(int month, int year) async {
+  Future<void> fetchAttendancesForMonth(int month, int year) async {
     try {
-      final response = await _dioClient.dio.get('/api/attendance/getForMonth', queryParameters: {
+      final response = await _dioClient.dio
+          .get('/api/attendance/getForMonth', queryParameters: {
         'month': month,
         'year': year,
       });
@@ -38,9 +41,14 @@ class AttendanceProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = response.data['data'];
-        _attendanceList = (data as List<dynamic>)
+        List<AttendanceDTO> sortedList = (data as List<dynamic>)
             .map((item) => AttendanceDTO.fromJson(item))
             .toList();
+
+        // Sắp xếp danh sách theo ID (có thể thay đổi theo yêu cầu của bạn)
+        sortedList.sort((a, b) => b.id.compareTo(a.id));
+
+        _attendanceList = sortedList;
         notifyListeners(); // Thông báo UI cập nhật dữ liệu
       } else {
         throw Exception('Failed to load attendances for month');
@@ -57,7 +65,7 @@ class AttendanceProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         final data = response.data['data'];
         _attendanceToday = AttendanceDTO.fromJson(data);
-        notifyListeners(); 
+        notifyListeners();
       } else {
         throw Exception('Failed to load attendance record');
       }
@@ -240,6 +248,9 @@ class AttendanceProvider with ChangeNotifier {
 
   Future<void> _checkIn(String filePath) async {
     try {
+      _isLoading = true;
+      notifyListeners();
+
       final formData = FormData.fromMap({
         'faceImage':
             await MultipartFile.fromFile(filePath, filename: 'faceImage.jpg'),
@@ -258,11 +269,17 @@ class AttendanceProvider with ChangeNotifier {
     } on DioError catch (e) {
       _errorMessage = e.response?.data['message'];
       notifyListeners();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
   Future<void> _checkOut(String filePath) async {
     try {
+      _isLoading = true;
+      notifyListeners();
+
       final formData = FormData.fromMap({
         'faceImage':
             await MultipartFile.fromFile(filePath, filename: 'faceImage.jpg'),
@@ -280,6 +297,9 @@ class AttendanceProvider with ChangeNotifier {
       }
     } on DioError catch (e) {
       _errorMessage = e.response?.data['message'];
+      notifyListeners();
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }

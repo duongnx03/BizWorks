@@ -204,8 +204,9 @@ class AttendanceDataDetailsScreen extends StatelessWidget {
                       // Thực hiện hành động đăng ký tăng ca
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                            builder: (context) =>
-                                const OvertimeRequestScreen()),
+                            builder: (context) => OvertimeRequestScreen(
+                                  attendance: attendance,
+                                )),
                       );
                     },
                     style: ElevatedButton.styleFrom(

@@ -2,7 +2,7 @@ import 'package:mobile/models/EmployeeResponseDTO.dart';
 import 'package:mobile/models/OvertimeResponseDTO.dart';
 
 class AttendanceDTO {
-  final int? id;
+  final int id;
   final DateTime? checkInTime;
   final DateTime? breakTimeStart;
   final DateTime? breakTimeEnd;
@@ -17,7 +17,7 @@ class AttendanceDTO {
   final int? attendanceComplaintId;
 
   AttendanceDTO({
-    this.id,
+    required this.id,
     this.checkInTime,
     this.breakTimeStart,
     this.breakTimeEnd,
@@ -34,7 +34,7 @@ class AttendanceDTO {
 
   factory AttendanceDTO.fromJson(Map<String, dynamic> json) {
     return AttendanceDTO(
-      id: json['id'] != null ? json['id'] as int : null,
+      id: json['id'] as int,
       checkInTime: json['checkInTime'] != null
           ? DateTime.parse(json['checkInTime'])
           : null,

@@ -3,7 +3,7 @@ import 'package:mobile/models/OvertimeNotAttendanceDTO.dart';
 import 'package:mobile/models/UserResponseDTO.dart';
 
 class AttendanceComplaintDTO {
-  final int? id;
+  final int id;
   final DateTime? checkInTime;
   final DateTime? breakTimeStart;
   final DateTime? breakTimeEnd;
@@ -24,7 +24,7 @@ class AttendanceComplaintDTO {
   final OvertimeNotAttendanceDTO? overTimes;
 
   AttendanceComplaintDTO({
-    this.id,
+    required this.id,
     this.checkInTime,
     this.breakTimeStart,
     this.breakTimeEnd,
@@ -49,7 +49,7 @@ class AttendanceComplaintDTO {
   factory AttendanceComplaintDTO.fromJson(Map<String, dynamic> json) {
     try {
       return AttendanceComplaintDTO(
-        id: json['id'] as int?,
+        id: json['id'] as int,
         checkInTime: json['checkInTime'] != null
             ? DateTime.parse(json['checkInTime'])
             : null,

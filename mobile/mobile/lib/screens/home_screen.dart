@@ -153,7 +153,7 @@ class HomeScreen extends StatelessWidget {
           title: 'Overtime',
           color: const Color(0xFFFF902F),
           onTap: () {
-            // Xử lý đăng ký tăng ca
+            Navigator.pushNamed(context, "/overtime-list");
           },
         ),
       ],

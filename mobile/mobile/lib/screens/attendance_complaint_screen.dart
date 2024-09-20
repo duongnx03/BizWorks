@@ -328,7 +328,7 @@ class _AttendanceComplaintScreenState extends State<AttendanceComplaintScreen> {
         overtime: widget.attendance.overtime!,
         attendanceDate: widget.attendance.attendanceDate!,
         complaintReason: _reasonController.text,
-        attendanceId: widget.attendance.id!,
+        attendanceId: widget.attendance.id,
         images: imageFiles,
       );
 
@@ -336,7 +336,7 @@ class _AttendanceComplaintScreenState extends State<AttendanceComplaintScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Complaint submitted successfully')),
       );
-      Navigator.pushNamed(context, "/home");
+      Navigator.pushNamed(context, "/attendance-complaint-list");
     } catch (error) {
       // Xử lý lỗi khi gửi không thành công
       ScaffoldMessenger.of(context).showSnackBar(

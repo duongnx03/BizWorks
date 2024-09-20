@@ -92,14 +92,21 @@ class AttendanceComplaintProvider with ChangeNotifier {
   Future<void> fetchComplaintByEmail() async {
     try {
       final response = await _dioClient.dio.get('/api/complaint/getByEmail');
+
       if (response.statusCode == 200) {
         final data = response.data['data'];
-        _complaints = (data as List<dynamic>)
+        List<AttendanceComplaintDTO> sortedComplaints = (data as List<dynamic>)
             .map((item) => AttendanceComplaintDTO.fromJson(item))
             .toList();
+
+        // Sắp xếp danh sách theo ID (có thể thay đổi theo yêu cầu của bạn)
+        sortedComplaints.sort((a, b) => b.id.compareTo(a.id));
+
+        _complaints = sortedComplaints;
+
         notifyListeners(); // Thông báo UI cập nhật dữ liệu
       } else {
-        throw Exception('Failed to load attendance data');
+        throw Exception('Failed to load complaints data');
       }
     } on DioError catch (e) {
       print('DioError: ${e.message}');
