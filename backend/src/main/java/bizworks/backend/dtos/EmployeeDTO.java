@@ -53,6 +53,7 @@ public class EmployeeDTO {
     public static EmployeeDTO from(Employee employee) {
         EmployeeDTO dto = new EmployeeDTO();
         dto.setId(employee.getId());
+        dto.setEmpCode(employee.getEmpCode());
         dto.setFullname(employee.getFullname());
         dto.setDob(employee.getDob());
         dto.setAddress(employee.getAddress());

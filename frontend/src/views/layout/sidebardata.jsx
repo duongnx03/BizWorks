@@ -74,10 +74,6 @@ export const SidebarData = [
           //   route: "/holidays",
           // },
           {
-            menuValue: "Leaves",
-            route: "/adminleaves",
-          },
-          {
             menuValue: "Departments",
             route: "/departments",
           },
@@ -86,7 +82,7 @@ export const SidebarData = [
             route: "/violation-types",
           },
           {
-            menuValue: "Violation",
+            menuValue: "List Violation",
             route: "/violations",
           },
           {
@@ -159,10 +155,6 @@ export const SidebarData = [
             route: "/leave-requests",
           },
           {
-            menuValue: "Leaves",
-            route: "/adminleaves",
-          },
-          {
             menuValue: "Departments",
             route: "/departments",
           },
@@ -171,8 +163,12 @@ export const SidebarData = [
             route: "/violation-types",
           },
           {
-            menuValue: "Violation",
+            menuValue: "List Violation",
             route: "/violations",
+          },
+          {
+            menuValue: "All Violation Complaints",
+            route: "/violation_complaints",
           },
           {
             menuValue: 'Training Programs',
@@ -235,10 +231,6 @@ export const SidebarData = [
             route: "/leave-requests",
           },
           {
-            menuValue: "Leaves",
-            route: "/adminleaves",
-          },
-          {
             menuValue: "Departments",
             route: "/departments",
           },
@@ -247,8 +239,12 @@ export const SidebarData = [
             route: "/violation-types",
           },
           {
-            menuValue: "Violation",
+            menuValue: "List Violation",
             route: "/violations",
+          },
+          {
+            menuValue: "All Violation Complaints",
+            route: "/violation_complaints",
           },
           {
             menuValue: 'Training Programs',
@@ -293,6 +289,10 @@ export const SidebarData = [
           {
             menuValue: "Overtime",
             route: "/overtime",
+          },
+          {
+            menuValue: "My Violation",
+            route: "/violations_user",
           },
           // {
           //   menuValue: 'Holidays',

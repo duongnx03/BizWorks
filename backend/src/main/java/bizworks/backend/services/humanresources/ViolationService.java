@@ -16,6 +16,8 @@ import bizworks.backend.services.MailService;
 import jakarta.mail.MessagingException;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -90,9 +92,9 @@ public class ViolationService {
         Violation saved = violationRepository.save(violation);
 
         // Gửi email nếu là MANAGE hoặc ADMIN
-        if ("LEADER".equals(currentUser.getRole()) ||"MANAGE".equals(currentUser.getRole()) || "ADMIN".equals(currentUser.getRole())) {
-            sendViolationEmail(saved, "created");
-        }
+//        if ("LEADER".equals(currentUser.getRole()) ||"MANAGE".equals(currentUser.getRole()) || "ADMIN".equals(currentUser.getRole())) {
+//            sendViolationEmail(saved, "created");
+//        }
 
         // Cập nhật lương cho employee
         updateSalaryForEmployee(saved.getEmployee().getId());
@@ -176,7 +178,19 @@ public class ViolationService {
                 .orElse(null);
     }
 
+    public List<ViolationDTO> getAllViolationsByUser() {
+        // Lấy thông tin user đang đăng nhập
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
+        // Tìm employee dựa trên email (username)
+        Employee employee = employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        // Trả về các violation của employee
+        return violationRepository.findByEmployeeId(employee.getId()).stream()
+                .map(this::convertToViolationDTO)
+                .collect(Collectors.toList());
+    }
 
     private void checkRole(User user, List<String> allowedRoles) {
         if (user == null) {
