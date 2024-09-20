@@ -5,14 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "status_change_requests")
+@Table(name = "interview_schedules")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class StatusChangeRequest {
+public class InterviewSchedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,14 +21,7 @@ public class StatusChangeRequest {
     @JoinColumn(name = "job_application_id")
     private JobApplication jobApplication;
 
-    private String newStatus;
-    private String reason;
-
-    private LocalDate requestDate;
-    private Boolean approved;
-
-    @Column(name = "approval_date")
-    private LocalDate approvalDate;
-
-
+    private LocalDateTime interviewDate;
+    private String interviewers;
+    private String location;
 }

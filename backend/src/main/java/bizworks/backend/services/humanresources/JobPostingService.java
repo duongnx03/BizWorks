@@ -22,7 +22,6 @@ public class JobPostingService {
     private final JobPostingRepository jobPostingRepository;
     private final DepartmentRepository departmentRepository;
     private final PositionRepository positionRepository;
-    private final EmployeeService employeeService;
 
     public JobPostingDTO createJobPosting(JobPostingDTO jobPostingDTO) {
         validateJobPostingDTO(jobPostingDTO); // Validate before saving

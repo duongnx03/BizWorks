@@ -45,7 +45,16 @@ public class JobApplicationController {
                     .body(ApiResponse.errorServer(e.getMessage(), "ERROR_FETCHING_APPROVED_REQUESTS"));
         }
     }
-
+    @GetMapping("/accepted")
+    public ResponseEntity<ApiResponse<?>> getAcceptedApplications() {
+        try {
+            List<JobApplicationDTO> acceptedApplications = jobApplicationService.getAcceptedApplications();
+            return ResponseEntity.ok(ApiResponse.success(acceptedApplications, "List of accepted applications fetched successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.errorServer(e.getMessage(), "ERROR_FETCHING_ACCEPTED_APPLICATIONS"));
+        }
+    }
     @PatchMapping("/request-status-change/{id}")
     public ResponseEntity<ApiResponse<?>> requestStatusChange(
             @PathVariable Long id,

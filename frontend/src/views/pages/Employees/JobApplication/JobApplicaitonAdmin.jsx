@@ -21,10 +21,10 @@ const JobApplicationAdmin = () => {
     }
     fetchRequests();
   }, [isLoggedIn, userRole, navigate]);
-
   const fetchRequests = async () => {
     try {
       const response = await axios.get(`${base_url}/api/job-applications/pending-status-change-requests`, { withCredentials: true });
+      console.log(response.data); // Kiểm tra dữ liệu API
       if (response.data?.data) {
         setRequests(response.data.data);
       } else {
@@ -38,7 +38,6 @@ const JobApplicationAdmin = () => {
       setLoading(false);
     }
   };
-
   const openApprovalModal = (requestId) => {
     setRequestToApprove(requestId);
     setApprovalModalOpen(true);
@@ -48,7 +47,20 @@ const JobApplicationAdmin = () => {
     setApprovalModalOpen(false);
     setRequestToApprove(null);
   };
-
+  const viewResume = (fileName) => {
+    console.log("Resume URL:", fileName); // Log để kiểm tra giá trị
+    const url = `${base_url}/api/files/view/${fileName}`;
+    window.open(url, '_blank');
+  };
+  const downloadResume = (fileName) => {
+    const url = `${base_url}/api/files/download/${fileName}`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   const approveRequest = async () => {
     try {
       if (requestToApprove) {
@@ -64,7 +76,6 @@ const JobApplicationAdmin = () => {
       message.error("Failed to approve status change request");
     }
   };
-
   const columns = [
     {
       title: "ID",
@@ -92,6 +103,28 @@ const JobApplicationAdmin = () => {
       width: "15%",
     },
     {
+      title: "Resume",
+      render: (_, record) => {
+        const resumeUrl = record.jobApplication?.resumeUrl; // Đảm bảo truy cập đúng
+        return (
+          <div>
+            <Button onClick={() => {
+              if (resumeUrl) {
+                viewResume(resumeUrl);
+              } else {
+                message.error("No resume available");
+              }
+            }} style={{ marginRight: '8px' }}>
+              View Resume
+            </Button>
+            <Button onClick={() => downloadResume(resumeUrl)} disabled={!resumeUrl}>
+              Download Resume
+            </Button>
+          </div>
+        );
+      },
+    },
+    {
       title: "Actions",
       key: "actions",
       width: "10%",
@@ -108,7 +141,6 @@ const JobApplicationAdmin = () => {
       ),
     },
   ];
-
   return (
     <div className="page-wrapper">
       <div className="content container-fluid">
@@ -120,6 +152,11 @@ const JobApplicationAdmin = () => {
                   View Approved Requests
                 </Button>
               </Link>
+              <Link to="/job-application-list/approved/admin">
+    <Button type="primary" style={{ marginRight: '8px' }}>
+      View Approved Requests
+    </Button>
+  </Link>
             </div>
             <div className="table-responsive">
               <Table

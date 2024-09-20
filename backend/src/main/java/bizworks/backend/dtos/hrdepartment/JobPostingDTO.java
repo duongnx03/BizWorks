@@ -23,4 +23,5 @@ public class JobPostingDTO {
     private String positionName;
     private Double salaryRangeMin;
     private Double salaryRangeMax;
+
 }

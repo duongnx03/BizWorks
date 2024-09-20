@@ -19,6 +19,7 @@ const JobApplicationManage = () => {
 
   useEffect(() => {
     fetchApplications();
+
   }, []);
 
   const fetchApplications = async () => {
@@ -79,6 +80,7 @@ const JobApplicationManage = () => {
         const data = {
           newStatus: status,
           reason: status === "REJECTED" ? rejectionReason : null,
+          
         };
 
         await axios.patch(`${base_url}/api/job-applications/request-status-change/${applicationToUpdate.id}`, null, {

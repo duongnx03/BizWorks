@@ -1,5 +1,6 @@
 package bizworks.backend.models.hrdepartment;
 
+import bizworks.backend.models.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,4 +31,9 @@ public class JobApplication {
 
     @Column(name = "rejection_reason")
     private String rejectionReason;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user; // Add this line to your JobApplication model
+
 }

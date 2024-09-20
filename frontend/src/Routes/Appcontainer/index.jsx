@@ -229,6 +229,8 @@ import ExamResultPage from "../../views/pages/Employees/ExamResultPage.jsx";
 import JobApplicationAdmin from "../../views/pages/Employees/JobApplication/JobApplicaitonAdmin.jsx";
 import JobApplicationManage from "../../views/pages/Employees/JobApplication/JobApplicationManage.jsx";
 import ApprovedRequestsPage from "../../views/pages/Employees/JobApplication/ApprovedRequestsPage.jsx";
+import JobApplicationApproved from "../../views/pages/Employees/JobApplication/JobApplicationApproved.jsx";
+import InterviewScheduleList from "../../views/pages/Employees/JobApplication/InterviewScheduleList.jsx";
 const AppContainer = () => {
   useEffect(() => {
     localStorage.setItem("colorschema", "orange");
@@ -1126,6 +1128,16 @@ const AppContainer = () => {
       id: 154,
       path: "job-application-list/approve/admin",      
       element: <ApprovedRequestsPage  />
+    }, 
+    {
+      id: 155,
+      path: "job-application-list/approved/admin",      
+      element: <JobApplicationApproved   />
+    },
+    {
+      id: 156,
+      path: "interview-schedule-list",      
+      element: <InterviewScheduleList   />
     },
   ];
 
