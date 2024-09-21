@@ -20,9 +20,12 @@ const PersonalInformationModelPopup = ({ onSave }) => {
 
   const fetchEmployee = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/employee/getEmployee", {
-        withCredentials: true,
-      });
+      const response = await axios.get(
+        "http://localhost:8080/api/employee/getEmployee",
+        {
+          withCredentials: true,
+        }
+      );
       setEmployee(response.data.data);
     } catch (error) {
       setError(error.message);
@@ -39,14 +42,17 @@ const PersonalInformationModelPopup = ({ onSave }) => {
     const errors = { ...validationErrors };
 
     switch (name) {
-      case 'dob':
+      case "dob":
         const today = new Date();
         const dob = new Date(value);
         let age = today.getFullYear() - dob.getFullYear();
         const monthDifference = today.getMonth() - dob.getMonth();
         const dayDifference = today.getDate() - dob.getDate();
 
-        if (monthDifference < 0 || (monthDifference === 0 && dayDifference < 0)) {
+        if (
+          monthDifference < 0 ||
+          (monthDifference === 0 && dayDifference < 0)
+        ) {
           age--;
         }
 
@@ -57,7 +63,7 @@ const PersonalInformationModelPopup = ({ onSave }) => {
         }
         break;
 
-      case 'gender':
+      case "gender":
         if (!value) {
           errors.gender = "Gender is required.";
         } else {
@@ -65,7 +71,7 @@ const PersonalInformationModelPopup = ({ onSave }) => {
         }
         break;
 
-      case 'phone':
+      case "phone":
         const phoneRegex = /^\d{10}$/;
         if (!value || !phoneRegex.test(value)) {
           errors.phone = "Phone number must be exactly 10 digits.";
@@ -74,7 +80,7 @@ const PersonalInformationModelPopup = ({ onSave }) => {
         }
         break;
 
-      case 'address':
+      case "address":
         const addressRegex = /^[\w\s/-]+$/;
         if (!value || !addressRegex.test(value)) {
           errors.address = "Address contains invalid characters.";
@@ -102,38 +108,37 @@ const PersonalInformationModelPopup = ({ onSave }) => {
       ...prevEmployee,
       gender: selectedGender || "Male",
     }));
-    validateField('gender', selectedGender); // Validate gender on change
+    validateField("gender", selectedGender); // Validate gender on change
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validate all fields before submission
-    validateField('dob', employee.dob);
-    validateField('gender', employee.gender);
-    validateField('phone', employee.phone);
-    validateField('address', employee.address);
+    validateField("dob", employee.dob);
+    validateField("gender", employee.gender);
+    validateField("phone", employee.phone);
+    validateField("address", employee.address);
 
-    if (Object.values(validationErrors).some(error => error)) {
+    if (Object.values(validationErrors).some((error) => error)) {
       return; // If there are validation errors, prevent submission
     }
 
     const genderToSubmit = employee.gender || "Male";
 
-    const formData = {
-      dob: employee.dob,
-      address: employee.address,
-      gender: genderToSubmit,
-      phone: employee.phone,
-    };
-
     try {
-      const response = await axios.put("http://localhost:8080/api/employee/updateEmployee", formData, {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "application/json",
+      const response = await axios.put(
+        "http://localhost:8080/api/employee/updateEmployee",
+        {
+          dob: employee.dob,
+          address: employee.address,
+          gender: genderToSubmit,
+          phone: employee.phone,
         },
-      });
+        {
+          withCredentials: true,
+        }
+      );
       console.log(response.data);
       onSave();
     } catch (error) {
@@ -154,11 +159,21 @@ const PersonalInformationModelPopup = ({ onSave }) => {
         aria-labelledby="profileInfoLabel"
         aria-hidden="true"
       >
-        <div className="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div
+          className="modal-dialog modal-dialog-centered modal-lg"
+          role="document"
+        >
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title" id="profileInfoLabel">Profile Information</h5>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close">
+              <h5 className="modal-title" id="profileInfoLabel">
+                Profile Information
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              >
                 <span aria-hidden="true">×</span>
               </button>
             </div>
@@ -167,7 +182,11 @@ const PersonalInformationModelPopup = ({ onSave }) => {
                 <div className="row">
                   <div className="col-md-12">
                     <div className="profile-img-wrap edit-img">
-                      <img className="inline-block" src={employee.avatar} alt="User Avatar" />
+                      <img
+                        className="inline-block"
+                        src={employee.avatar}
+                        alt="User Avatar"
+                      />
                     </div>
                     <div className="row">
                       <div className="col-md-6">
@@ -235,7 +254,11 @@ const PersonalInformationModelPopup = ({ onSave }) => {
                             value={employee.dob}
                             onChange={handleInputChange}
                           />
-                          {validationErrors.dob && <div className="text-danger">{validationErrors.dob}</div>}
+                          {validationErrors.dob && (
+                            <div className="text-danger">
+                              {validationErrors.dob}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="col-md-6">
@@ -251,7 +274,11 @@ const PersonalInformationModelPopup = ({ onSave }) => {
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
                           </select>
-                          {validationErrors.gender && <div className="text-danger">{validationErrors.gender}</div>}
+                          {validationErrors.gender && (
+                            <div className="text-danger">
+                              {validationErrors.gender}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="col-md-6">
@@ -264,7 +291,11 @@ const PersonalInformationModelPopup = ({ onSave }) => {
                             value={employee.phone}
                             onChange={handleInputChange}
                           />
-                          {validationErrors.phone && <div className="text-danger">{validationErrors.phone}</div>}
+                          {validationErrors.phone && (
+                            <div className="text-danger">
+                              {validationErrors.phone}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="col-md-12">
@@ -277,7 +308,11 @@ const PersonalInformationModelPopup = ({ onSave }) => {
                             value={employee.address}
                             onChange={handleInputChange}
                           />
-                          {validationErrors.address && <div className="text-danger">{validationErrors.address}</div>}
+                          {validationErrors.address && (
+                            <div className="text-danger">
+                              {validationErrors.address}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
