@@ -583,14 +583,14 @@ const AppContainer = () => {
       id: 52,
       path: "client-profile/:id",
       element: (
-        <PrivateRoute element={ClientProfile} allowedRoles={["ADMIN"]} />
+        <PrivateRoute element={ClientProfile} allowedRoles={["ADMIN", "LEADER", "MANAGE"]} />
       ),
     },
     {
       id: 53,
       path: "profile",
       element: (
-        <PrivateRoute element={Profile} allowedRoles={["EMPLOYEE", "LEADER"]} />
+        <PrivateRoute element={Profile} allowedRoles={["EMPLOYEE", "LEADER", "MANAGE"]} />
       ),
     },
     {
@@ -773,7 +773,7 @@ const AppContainer = () => {
     {
       id: 88,
       path: "daily-reports",
-      element: <PrivateRoute element={DailyReports} allowedRoles={["ADMIN"]} />,
+      element: <PrivateRoute element={DailyReports} allowedRoles={["ADMIN", "MANAGE"]} />,
     },
     {
       id: 89,
