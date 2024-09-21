@@ -7,12 +7,9 @@ const PersonalInformationModelPopup = ({ onSave }) => {
     address: "",
     gender: "",
     phone: "",
-    avatar: "",
-    fileImage: null,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null);
 
   const [validationErrors, setValidationErrors] = useState({
     dob: "",
@@ -99,14 +96,6 @@ const PersonalInformationModelPopup = ({ onSave }) => {
     validateField(name, value); // Validate field on change
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setEmployee({ ...employee, fileImage: file });
-      setPreviewImage(URL.createObjectURL(file));
-    }
-  };
-
   const handleGenderChange = (e) => {
     const selectedGender = e.target.value;
     setEmployee((prevEmployee) => ({
@@ -129,23 +118,20 @@ const PersonalInformationModelPopup = ({ onSave }) => {
       return; // If there are validation errors, prevent submission
     }
 
-    // Đảm bảo rằng nếu người dùng không chọn gender thì giá trị được đặt là "Male"
     const genderToSubmit = employee.gender || "Male";
 
-    const formData = new FormData();
-    formData.append("dob", employee.dob);
-    formData.append("address", employee.address);
-    formData.append("gender", genderToSubmit);
-    formData.append("phone", employee.phone);
-    if (employee.fileImage) {
-      formData.append("fileImage", employee.fileImage);
-    }
+    const formData = {
+      dob: employee.dob,
+      address: employee.address,
+      gender: genderToSubmit,
+      phone: employee.phone,
+    };
 
     try {
       const response = await axios.put("http://localhost:8080/api/employee/updateEmployee", formData, {
         withCredentials: true,
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
         },
       });
       console.log(response.data);
@@ -181,16 +167,7 @@ const PersonalInformationModelPopup = ({ onSave }) => {
                 <div className="row">
                   <div className="col-md-12">
                     <div className="profile-img-wrap edit-img">
-                      <img className="inline-block" src={previewImage || employee.avatar} alt="User Avatar" />
-                      <div className="fileupload btn">
-                        <span className="btn-text">Edit</span>
-                        <input
-                          className="upload"
-                          type="file"
-                          name="fileImage"
-                          onChange={handleFileChange}
-                        />
-                      </div>
+                      <img className="inline-block" src={employee.avatar} alt="User Avatar" />
                     </div>
                     <div className="row">
                       <div className="col-md-6">
