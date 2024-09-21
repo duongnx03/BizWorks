@@ -18,7 +18,7 @@ public class ViolationDTO {
     private LocalDate violationDate;
     private String description;
     private String status;
-    private LocalDateTime createdDate;
+    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public static ViolationDTO from(Violation violation) {
@@ -29,7 +29,7 @@ public class ViolationDTO {
                 violation.getViolationDate(),
                 violation.getDescription(),
                 violation.getStatus(),
-                violation.getCreatedDate(),
+                violation.getCreatedAt(),
                 violation.getUpdatedAt()
         );
     }

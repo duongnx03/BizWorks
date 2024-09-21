@@ -25,4 +25,5 @@
         List<Violation> findByEmployeeUserRoleIn(@Param("roles") List<String> roles);
 
         List<Violation> findByEmployeeIdAndViolationDateBetween(Long employeeId, LocalDateTime startDate, LocalDateTime endDate);
+        List<Violation> findByStatus(String status);
     }
