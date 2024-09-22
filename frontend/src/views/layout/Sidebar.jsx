@@ -2,13 +2,14 @@
 /* eslint-disable no-unused-vars */
 
 /* eslint-disable react/prop-types */
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Scrollbars from "react-custom-scrollbars-2";
 import { useTranslation } from "react-i18next";
 // import { withRouter } from "react-router-dom";
 import { Link, useLocation } from "react-router-dom";
 import { SidebarData } from "./sidebardata";
 import * as Icon from 'react-feather';
+import { AuthContext } from "../../Routes/AuthContext";
 
 
 const Sidebar = () => {
@@ -17,7 +18,6 @@ const Sidebar = () => {
   const pathname = location.pathname;
   // console.log("pageurl", pathname);
 
-  const [sidebarData, setSidebarData] = useState(SidebarData); 
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
   const [isMouseOverSidebar, setMouseOverSidebar] = useState(false);
   const [submenuDrop ,setSubmenudrop,] = useState(false);
@@ -26,7 +26,11 @@ const Sidebar = () => {
   const [level2Menu, setLevel2Menu] = useState("");
   const [level3Menu, setLevel3Menu] = useState("");
   const [isSideMenunew, setSideMenuNew] = useState("dashboard");
-  const [userRole, setUserRole] = useState(() => sessionStorage.getItem('userRole'));
+  const { userRole } = useContext(AuthContext);
+  const filteredSidebarData = SidebarData.filter((section) =>
+    section.role && section.role.includes(userRole) // Kiểm tra nếu role tồn tại trước khi gọi includes
+  );
+  const [sidebarData, setSidebarData] = useState(filteredSidebarData);
 
   
 
@@ -56,10 +60,10 @@ const Sidebar = () => {
 
   const expandSubMenus = (menu) => {
     sessionStorage.setItem('menuValue', menu.menuValue);
-    const updatedAdminSidebar = sidebarData.map((section) => {
+    const updatedSidebar = sidebarData.map((section) => {
       const updatedSection = { ...section };
       updatedSection.menu = section.menu.map((menuItem) =>
-        menu.menuValue != menuItem.menuValue
+        menu.menuValue !== menuItem.menuValue
           ? {
               ...menuItem,
               showSubRoute: false,
@@ -67,11 +71,11 @@ const Sidebar = () => {
           : {
               ...menuItem,
               showSubRoute: !menu.showSubRoute,
-            },
+            }
       );
       return updatedSection;
     });
-    setSidebarData(updatedAdminSidebar);
+    setSidebarData(updatedSidebar);
   };
 
   const activeRouterPath = (routesArray) => {

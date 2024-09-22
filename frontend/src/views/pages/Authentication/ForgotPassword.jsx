@@ -114,8 +114,13 @@ const ForgotPassword = () => {
       setErrorMessage(prev => ({ ...prev, email: "Invalid email." }));
     }
 
-    if (field === "verificationCode" && value.length !== 6) {
-      setErrorMessage(prev => ({ ...prev, verificationCode: "Verification code must be 6 digits." }));
+    if (field === "verificationCode") {
+      const isNumeric = /^\d+$/.test(value);
+      if (!isNumeric) {
+        setErrorMessage(prev => ({ ...prev, verificationCode: "Verification code must contain only numbers." }));
+      } else if (value.length !== 6) {
+        setErrorMessage(prev => ({ ...prev, verificationCode: "Verification code must be 6 digits." }));
+      }
     }
 
     if (field === "newPassword" && value.length < 6) {
@@ -173,6 +178,7 @@ const ForgotPassword = () => {
                           className="form-control"
                           type="text"
                           value={verificationCode}
+                          pattern="\d*"
                           onChange={handleInputChange(setVerificationCode, 'verificationCode')}
                           onBlur={() => handleBlur('verificationCode', verificationCode)}
                           maxLength={6}
