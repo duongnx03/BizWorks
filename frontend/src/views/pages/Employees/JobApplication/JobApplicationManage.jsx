@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Table, Button, message, Modal, Select, Form, Input } from "antd";
 import axios from "axios";
 import DeleteModal from "../../../../components/modelpopup/DeleteModal";
 import SearchBox from "../../../../components/SearchBox";
 import { base_url } from "../../../../base_urls";
+import { AuthContext } from "../../../../Routes/AuthContext"; // Thêm import này
 
 const { Option } = Select;
 
 const JobApplicationManage = () => {
+  const { isLoggedIn, userRole, logout } = useContext(AuthContext); // Lấy giá trị từ AuthContext
+
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -17,10 +20,16 @@ const JobApplicationManage = () => {
   const [status, setStatus] = useState('');
   const [rejectionReason, setRejectionReason] = useState("");
 
-  useEffect(() => {
-    fetchApplications();
 
-  }, []);
+  useEffect(() => {
+    // Kiểm tra quyền truy cập
+    if (!isLoggedIn || userRole !== "MANAGE") {
+      message.error("You do not have permission to access this page.");
+      logout(); // Đăng xuất nếu không có quyền
+    } else {
+      fetchApplications();
+    }
+  }, [isLoggedIn, userRole, logout]);
 
   const fetchApplications = async () => {
     try {

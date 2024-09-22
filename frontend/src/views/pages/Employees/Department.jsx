@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Table, message, Button } from "antd";
+import { Table, message, Button, Input } from "antd"; // Thêm Input vào imports
 import axios from "axios";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import DeleteModal from "../../../components/modelpopup/DeleteModal";
@@ -15,18 +15,22 @@ const Department = () => {
   const [departmentToDelete, setDepartmentToDelete] = useState(null);
   const [departmentModalOpen, setDepartmentModalOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(""); // Thêm state cho từ khóa tìm kiếm
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchDepartments();
   }, []);
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = async (search = "") => {
     setLoading(true);
     try {
       const response = await axios.get(`${base_url}/api/departments`, { withCredentials: true });
       if (Array.isArray(response.data)) {
-        setDepartments(response.data);
+        const filteredDepartments = response.data.filter(department =>
+          department.name.toLowerCase().includes(search.toLowerCase())
+        );
+        setDepartments(filteredDepartments);
       } else {
         message.error("Invalid data format received from API");
         setDepartments([]);
@@ -56,6 +60,11 @@ const Department = () => {
     }
   };
 
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    fetchDepartments(value); // Gọi lại fetchDepartments với từ khóa tìm kiếm
+  };
+
   const handleDepartmentCreated = () => {
     fetchDepartments();
     setDepartmentModalOpen(false);
@@ -74,7 +83,7 @@ const Department = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${base_url}/api/departments/${departmentToDelete}`, {withCredentials: true});
+      await axios.delete(`${base_url}/api/departments/${departmentToDelete}`, { withCredentials: true });
       // Update the department list immediately
       setDepartments(departments.filter(department => department.id !== departmentToDelete));
       handleDeleteModalClose();
@@ -163,6 +172,12 @@ const Department = () => {
           />
           <div className="row mb-3">
             <div className="col-md-12 text-end">
+              <Input 
+                placeholder="Tìm kiếm theo tên phòng ban" 
+                value={searchTerm} 
+                onChange={e => handleSearch(e.target.value)} 
+                style={{ width: '300px' }} 
+              />
             </div>
           </div>
           <div className="row">
