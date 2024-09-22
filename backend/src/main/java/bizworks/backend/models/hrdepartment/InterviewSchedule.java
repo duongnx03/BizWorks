@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "interview_schedules")
@@ -22,6 +23,7 @@ public class InterviewSchedule {
     private JobApplication jobApplication;
 
     private LocalDateTime interviewDate;
-    private String interviewers;
+    @ElementCollection // Sử dụng ElementCollection để lưu danh sách ID
+    private List<Long> interviewers;
     private String location;
 }

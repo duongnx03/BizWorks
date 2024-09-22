@@ -1,5 +1,6 @@
 package bizworks.backend.controllers;
 
+import bizworks.backend.dtos.EmployeeDTO;
 import bizworks.backend.dtos.EmployeeResponseDTO;
 import bizworks.backend.dtos.EmployeeUpdateDTO;
 import bizworks.backend.helpers.ApiResponse;
@@ -22,6 +23,14 @@ import java.util.stream.Collectors;
 public class EmployeeController {
     private final EmployeeService employeeService;
 
+    @GetMapping("/human-resources")
+    public ResponseEntity<List<EmployeeDTO>> getHumanResourcesEmployees() {
+        List<Employee> employees = employeeService.getEmployeesByDepartment("Human Resources");
+        List<EmployeeDTO> employeeDTOs = employees.stream()
+                .map(employee -> new EmployeeDTO(employee.getId(), employee.getFullname()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(employeeDTOs);
+    }
     @GetMapping("/getAllEmployees")
     public ResponseEntity<ApiResponse<?>> findAll() {
         try {

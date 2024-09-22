@@ -45,6 +45,7 @@ public class JobApplicationController {
                     .body(ApiResponse.errorServer(e.getMessage(), "ERROR_FETCHING_APPROVED_REQUESTS"));
         }
     }
+
     @GetMapping("/accepted")
     public ResponseEntity<ApiResponse<?>> getAcceptedApplications() {
         try {
