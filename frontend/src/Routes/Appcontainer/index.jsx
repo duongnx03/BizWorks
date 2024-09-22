@@ -1140,11 +1140,7 @@ const AppContainer = () => {
       path: "interview-schedule-list",      
       element: <InterviewScheduleList   />
     },
-    {
-      id: 157,
-      path: "favorites",      
-      element: <FavoriteJobPostings   />
-    },
+  
   ];
 
   const ChatRoutingeObjects = [

@@ -81,6 +81,12 @@ const AttendanceEmployee = () => {
   const [modalShow, setModalShow] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const webcamRef = useRef(null);
+  const [location, setLocation] = useState({
+    latitude: null,
+    longitude: null,
+    accuracy: null,
+    error: null,
+  });
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -111,33 +117,59 @@ const AttendanceEmployee = () => {
     fetchTotalWorkTime();
   }, []);
 
-  const getLocation = () => {
-    return new Promise((resolve, reject) => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            resolve({
+  const [lastUpdateTime, setLastUpdateTime] = useState(0);
+
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      const options = {
+        enableHighAccuracy: true, // Yêu cầu GPS
+        maximumAge: 0,
+        timeout: 5000, // Thời gian tối đa chờ để lấy vị trí
+      };
+
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const currentTime = Date.now();
+          // Kiểm tra xem đã đủ 5 giây kể từ lần cập nhật cuối chưa
+          if (currentTime - lastUpdateTime >= 5000) {
+            console.log('Latitude:', position.coords.latitude);
+            console.log('Longitude:', position.coords.longitude);
+            console.log('Accuracy:', position.coords.accuracy, 'meters');
+
+            setLocation({
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+              error: null,
             });
-          },
-          (error) => {
-            reject(new Error("Failed to get location: " + error.message));
-          },
-          {
-            enableHighAccuracy: true, // Yêu cầu độ chính xác cao hơn
-            timeout: 10000, // Thời gian chờ lâu hơn (10 giây)
-            maximumAge: 0, // Không sử dụng thông tin vị trí đã lưu
+
+            // Cập nhật thời gian lần cập nhật gần nhất
+            setLastUpdateTime(currentTime);
           }
-        );
-      } else {
-        reject(new Error("Geolocation is not supported by this browser."));
-      }
-    });
-  };
+        },
+        (error) => {
+          console.log('Error:', error.message);
+
+          setLocation({
+            latitude: null,
+            longitude: null,
+            accuracy: null,
+            error: error.message,
+          });
+        },
+        options
+      );
+
+      // Dọn dẹp watchPosition khi component unmount
+      return () => {
+        navigator.geolocation.clearWatch(watchId);
+      };
+    } else {
+      setLocation({ error: 'Geolocation is not supported by this browser.' });
+    }
+  }, [lastUpdateTime]); 
 
   const handleCheckIn = async () => {
-    const position = await getLocation();
     const now = new Date();
     const checkInTime = new Date();
     checkInTime.setHours(7, 55, 0);
@@ -153,8 +185,8 @@ const AttendanceEmployee = () => {
     axios
       .post("http://localhost:8080/api/attendance/checkLocation", null, {
         params: {
-          latitude: position.latitude,
-          longitude: position.longitude,
+          latitude: location.latitude,
+          longitude: location.longitude,
         },
         withCredentials: true,
       })
@@ -197,7 +229,6 @@ const AttendanceEmployee = () => {
   };
 
   const handleCheckOut = async () => {
-    const position = await getLocation();
     const now = new Date();
     const checkOutTime = new Date();
     checkOutTime.setHours(16, 55, 0);
@@ -213,8 +244,8 @@ const AttendanceEmployee = () => {
     axios
       .post("http://localhost:8080/api/attendance/checkLocation", null, {
         params: {
-          latitude: position.latitude,
-          longitude: position.longitude,
+          latitude: location.latitude,
+          longitude: location.longitude,
         },
         withCredentials: true,
       })

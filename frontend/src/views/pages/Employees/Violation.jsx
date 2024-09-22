@@ -1,13 +1,45 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Table } from "antd";
+import { Table, notification } from "antd";
+import { CloseCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import axios from "axios";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import AddViolation from "../../../components/modelpopup/AddViolation";
 import EditViolation from "../../../components/modelpopup/EditViolation";
-import DeleteModal from "../../../components/modelpopup/DeleteModal";
 import { base_url } from "../../../base_urls";
 import { Avatar_02 } from "../../../Routes/ImagePath";
+const openNotificationWithError = (message) => {
+  notification.error({
+    message: 'Error',
+    description: <span style={{ color: '#ed2d33' }}>{message}</span>,
+    placement: 'topRight',
+  });
+};
+
+const openNotificationWithSuccess = (message) => {
+  notification.success({
+    message: 'Success',
+    description: (
+      <div>
+        <span style={{ color: '#09b347' }}>{message}</span>
+        <button
+          onClick={() => notification.destroy()}
+          style={{
+            border: 'none',
+            background: 'transparent',
+            float: 'right',
+            cursor: 'pointer',
+          }}
+        >
+          <CloseCircleOutlined style={{ color: '#09b347' }} />
+        </button>
+      </div>
+    ),
+    placement: 'topRight',
+    icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
+  });
+};
+
 
 const Violation = () => {
   const [violations, setViolations] = useState([]);
@@ -32,13 +64,12 @@ const Violation = () => {
       setViolations(sortedViolations);
       await updateStats(sortedViolations);
     } catch (error) {
-      console.error("Error fetching violations:", error.response?.data || error.message);
+      openNotificationWithError(`Error fetching violations: ${error.response?.data || error.message}`);
     } finally {
       setLoading(false);
     }
   };
   
-
   const fetchEmployees = async () => {
     try {
       const response = await axios.get(
@@ -47,36 +78,27 @@ const Violation = () => {
       );
       return response.data.data;
     } catch (error) {
-      console.error("Error fetching employees:", error);
+      openNotificationWithError(`Error fetching employees: ${error}`);
       return [];
     }
   };
 
   const updateStats = async (violationsData) => {
     try {
-      // Fetch tất cả các nhân viên
       const allEmployees = await fetchEmployees();
-  
-      // Lấy tháng và năm hiện tại
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth(); // Tháng hiện tại (0-11)
       const currentYear = currentDate.getFullYear(); // Năm hiện tại
-  
-      // Lọc các vi phạm trong tháng hiện tại
-      const violationsThisMonth = violationsData.filter((v) => {
+      const violationsThisMonth = violationsData.filter((v) => { //filter violation this month
         const violationDate = new Date(v.violationDate); // Chuyển đổi chuỗi ngày thành đối tượng Date
         return (
           violationDate.getMonth() === currentMonth &&
           violationDate.getFullYear() === currentYear
         );
       });
-  
-      // Tạo tập hợp để lưu trữ ID nhân viên duy nhất
       const employeeIdsWithViolations = new Set(
         violationsThisMonth.map((v) => v.employee?.id).filter((id) => id != null)
       );
-  
-      // Đếm tổng số nhân viên có vi phạm và tổng số vi phạm trong tháng hiện tại
       const totalEmployeesWithViolations = employeeIdsWithViolations.size;
       const totalViolations = violationsThisMonth.length;
       const pendingViolations = violationsThisMonth.filter(
@@ -100,24 +122,25 @@ const Violation = () => {
         {
           title: "Pending Request",
           value: pendingViolations, // Vi phạm đang chờ xử lý trong tháng hiện tại
+          month: "this month",
         },
         {
           title: "Rejected",
           value: rejectedViolations, // Vi phạm bị từ chối trong tháng hiện tại
+          month: "this month",
         },
       ]);
     } catch (error) {
-      console.error("Error updating stats:", error);
+      openNotificationWithError(`Error updating stats: ${error}`);
     }
   };
   
-
   useEffect(() => {
     fetchViolations();
   }, []);
 
   const handleAdd = async (data) => {
-    if (isSubmitting) return false; // Trả về false nếu đang gửi dữ liệu
+    if (isSubmitting) return false; 
   
     setIsSubmitting(true);
   
@@ -125,11 +148,12 @@ const Violation = () => {
       await axios.post(`${base_url}/api/violations`, data, {
         withCredentials: true,
       });
-      await fetchViolations(); // Đảm bảo rằng fetchViolations hoàn tất
-      return true; // Trả về true nếu thành công
+      await fetchViolations(); 
+      openNotificationWithSuccess('Violation added successfully.');
+      return true; 
     } catch (error) {
-      console.error("Error adding violation:", error.response?.data || error.message);
-      return false; // Trả về false nếu có lỗi
+      openNotificationWithError(`Error adding violation: ${error.response?.data || error.message}`);
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -147,61 +171,35 @@ const Violation = () => {
         setEditViolationData(response.data); // Đảm bảo rằng dữ liệu đúng
         setShowEditModal(true);
       } else {
-        console.error("Invalid violation data", response.data.data);
+        openNotificationWithError(`Invalid violation data: ${response.data.data}`);
       }
     } catch (error) {
-      console.error("Error fetching violation data:", error);
+      openNotificationWithError(`Error fetching violation data: ${error}`);
     }
   };
   
 
   const handleSaveEdit = async (data) => {
     if (!data.id) {
-      console.error("Violation ID is missing");
+      openNotificationWithError("Violation ID is missing");
       return;
     }
   
     try {
-      // Kiểm tra dữ liệu trước khi gửi
-      console.log("Saving data:", data);
-  
-      // Gọi API để cập nhật vi phạm
       const response = await axios.put(`${base_url}/api/violations/${data.id}`, data, {
         withCredentials: true,
       });
-  
-      // Kiểm tra kết quả trả về từ API
       if (response.data.status === "SUCCESS") {
         fetchViolations();
-        // Đóng modal sau khi cập nhật thành công
+        openNotificationWithSuccess('Violation updated successfully.');
         setShowEditModal(false);
       } else {
-        console.error("Error updating violation:", response.data.message || "Unknown error");
+        openNotificationWithError(`Error updating violation: ${response.data.message || "Unknown error"}`);
       }
     } catch (error) {
-      console.error("Error updating violation:", error);
+      openNotificationWithError(`Error updating violation: ${error}`);
     }
   };
-  
-
-  const handleDelete = async () => {
-    if (deleteId === null) {
-      console.error("No violation ID to delete");
-      return;
-    }
-    
-    try {
-      await axios.delete(`${base_url}/api/violations/${deleteId}`, {
-        withCredentials: true,
-      });
-      fetchViolations(); // Cập nhật danh sách sau khi xóa
-      setDeleteId(null);
-      setShowDeleteModal(false);
-    } catch (error) {
-      console.error("Error deleting violation:", error);
-    }
-  };
-  
 
   const handleStatusChange = async (violationId, newStatus) => {
     try {
@@ -213,9 +211,9 @@ const Violation = () => {
           withCredentials: true,
         }
       );
-      fetchViolations(); // Cập nhật lại danh sách vi phạm sau khi thay đổi trạng thái
+      fetchViolations(); 
     } catch (error) {
-      console.error("Error updating status:", error);
+      openNotificationWithError(`Error updating status: ${error}`);
     }
   };
 
@@ -366,21 +364,10 @@ const Violation = () => {
               to="#"
               data-bs-toggle="modal"
               data-bs-target="#edit_violation"
-              onClick={() => handleEdit(record.id)} // Gọi handleEdit khi click
+              onClick={() => handleEdit(record.id)} 
             >
               <i className="fa fa-pencil m-r-5" /> Edit
             </Link>
-            {/* <Link
-              className="dropdown-item"
-              to="#"
-              data-bs-toggle="modal"
-              data-bs-target="#delete"
-              onClick={() => {
-                setDeleteId(record.id); // Đặt ID để xóa
-              }}
-            >
-              <i className="fa fa-trash m-r-5" /> Delete
-            </Link> */}
           </div>
         </div>
       ),
@@ -399,7 +386,6 @@ const Violation = () => {
             </div>
           ) : (
             <>
-              {/* Page Header */}
               <Breadcrumbs
                 maintitle="Violation"
                 title="Dashboard"
@@ -407,8 +393,6 @@ const Violation = () => {
                 modal="#add_violation"
                 name="Add Violation"
               />
-
-              {/* /Page Header */}
               <div className="row">
                 {statsData.map((data, index) => (
                   <div
@@ -447,12 +431,6 @@ const Violation = () => {
           onSave={handleSaveEdit}
           violationData={editViolationData}
           userRole={userRole}
-        />
-
-        <DeleteModal
-          show={showDeleteModal}
-          handleClose={handleClose}
-          handleDelete={handleDelete}
         />
       </div>
     </>

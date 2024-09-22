@@ -5,6 +5,7 @@ import Select from "react-select";
 import axios from "axios";
 import { base_url } from "../../base_urls";
 import { format } from "date-fns";
+import { Spin } from "antd"; // Import Spin component from Ant Design
 
 const EditViolation = ({ violationData, onSave, onClose, userRole }) => {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -15,6 +16,14 @@ const EditViolation = ({ violationData, onSave, onClose, userRole }) => {
   const [employees, setEmployees] = useState([]);
   const [violationTypes, setViolationTypes] = useState([]);
   const [originalData, setOriginalData] = useState({});
+  const [loading, setLoading] = useState(false); // Add loading state
+  const [errors, setErrors] = useState({
+    employee: "",
+    violationType: "",
+    date: "",
+    description: "",
+    status: "",
+  });
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -83,10 +92,41 @@ const EditViolation = ({ violationData, onSave, onClose, userRole }) => {
     setSelectedDate(date);
   };
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    let valid = true;
+    const newErrors = {
+      employee: "",
+      violationType: "",
+      date: "",
+      description: "",
+      status: "",
+    };
+
+    if (!selectedEmployee) {
+      newErrors.employee = "Employee is required.";
+      valid = false;
+    }
+    if (!selectedViolationType) {
+      newErrors.violationType = "Violation type is required.";
+      valid = false;
+    }
+    if (!selectedDate) {
+      newErrors.date = "Date is required.";
+      valid = false;
+    }
+    if (!description) {
+      newErrors.description = "Description is required.";
+      valid = false;
+    }
+    setErrors(newErrors);
+    return valid;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedEmployee || !selectedViolationType || !selectedDate || !description || !selectedStatus) {
-      console.error("All fields are required");
+    if (loading) return; // Prevent multiple submissions
+
+    if (!validateForm()) {
       return;
     }
 
@@ -102,10 +142,16 @@ const EditViolation = ({ violationData, onSave, onClose, userRole }) => {
 
     // Compare new data with original data
     if (JSON.stringify(updatedViolation) !== JSON.stringify(originalData)) {
-      console.log("Updated Violation:", updatedViolation);
-      onSave(updatedViolation);
-      onClose();
-      document.querySelector("#edit_violation .btn-close").click();
+      setLoading(true); // Set loading to true
+      try {
+        await onSave(updatedViolation); // Wait for onSave to complete
+        onClose(); // Close modal only after save is successful
+        document.querySelector("#edit_violation .btn-close").click(); // Close modal programmatically if needed
+      } catch (error) {
+        console.error("Error saving violation:", error);
+      } finally {
+        setLoading(false); // Set loading to false when done
+      }
     } else {
       console.log("No changes detected.");
     }
@@ -169,6 +215,7 @@ const EditViolation = ({ violationData, onSave, onClose, userRole }) => {
                   styles={customStyles}
                   onChange={setSelectedViolationType}
                 />
+                {errors.violationType && <div className="text-danger">{errors.violationType}</div>}
               </div>
               <div className="input-block mb-3">
                 <label className="col-form-label">
@@ -182,6 +229,7 @@ const EditViolation = ({ violationData, onSave, onClose, userRole }) => {
                     dateFormat="dd-MM-yyyy"
                   />
                 </div>
+                {errors.date && <div className="text-danger">{errors.date}</div>}
               </div>
               <div className="input-block mb-3">
                 <label className="col-form-label">
@@ -193,6 +241,7 @@ const EditViolation = ({ violationData, onSave, onClose, userRole }) => {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
+                {errors.description && <div className="text-danger">{errors.description}</div>}
               </div>
               <div className="input-block mb-3">
                 <label className="col-form-label">
@@ -209,11 +258,16 @@ const EditViolation = ({ violationData, onSave, onClose, userRole }) => {
                   onChange={userRole !== "LEADER" ? setSelectedStatus : null}
                   isDisabled={userRole === "LEADER"}
                 />
+                {errors.status && <div className="text-danger">{errors.status}</div>}
               </div>
 
               <div className="submit-section">
-                <button className="btn btn-primary submit-btn" type="submit">
-                  Save Changes
+                <button
+                  className="btn btn-primary submit-btn"
+                  type="submit"
+                  disabled={loading} // Disable button when loading
+                >
+                  {loading ? <Spin size="small" /> : "Save Changes"} {/* Show spinner when loading */}
                 </button>
               </div>
             </form>
