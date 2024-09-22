@@ -25,8 +25,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             _buildUserInfo(context),
             const SizedBox(height: 16),
-            _buildFunctionGrid(
-                context), // Truyền context vào _buildFunctionGrid
+            _buildFunctionGrid(context),
           ],
         ),
       ),
@@ -38,8 +37,7 @@ class HomeScreen extends StatelessWidget {
         Provider.of<EmployeeProvider>(context, listen: false);
 
     return FutureBuilder<void>(
-      future:
-          employeeProvider.fetchEmployeeData(), // Gọi API từ EmployeeProvider
+      future: employeeProvider.fetchEmployeeData(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -156,6 +154,15 @@ class HomeScreen extends StatelessWidget {
             Navigator.pushNamed(context, "/overtime-list");
           },
         ),
+        _buildFunctionCard(
+          icon: Icons.business,
+          title: 'Job Postings', // Tiêu đề cho Job Posting
+          color: const Color(0xFFFF902F),
+          onTap: () {
+            Navigator.pushNamed(
+                context, "/job-posting"); // Điều hướng đến JobPostingScreen
+          },
+        ),
       ],
     );
   }
@@ -180,7 +187,6 @@ class HomeScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: Center(
-                  // Đảm bảo icon nằm giữa phần trên của card
                   child: Icon(
                     icon,
                     size: 60,

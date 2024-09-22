@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Table, Button, message, Modal, Select, Form, Input } from "antd";
+import { Table, Button, message, Modal, Select, Form, Input, Tag } from "antd";
 import axios from "axios";
 import DeleteModal from "../../../../components/modelpopup/DeleteModal";
 import SearchBox from "../../../../components/SearchBox";
@@ -19,7 +19,6 @@ const JobApplicationManage = () => {
   const [applicationToUpdate, setApplicationToUpdate] = useState(null);
   const [status, setStatus] = useState('');
   const [rejectionReason, setRejectionReason] = useState("");
-
 
   useEffect(() => {
     // Kiểm tra quyền truy cập
@@ -89,7 +88,6 @@ const JobApplicationManage = () => {
         const data = {
           newStatus: status,
           reason: status === "REJECTED" ? rejectionReason : null,
-          
         };
 
         await axios.patch(`${base_url}/api/job-applications/request-status-change/${applicationToUpdate.id}`, null, {
@@ -177,6 +175,23 @@ const JobApplicationManage = () => {
       title: "Status",
       dataIndex: "status",
       width: "15%",
+      render: (status) => {
+        let color;
+        switch (status) {
+          case "PENDING":
+            color = "orange";
+            break;
+          case "ACCEPTED":
+            color = "green";
+            break;
+          case "REJECTED":
+            color = "red";
+            break;
+          default:
+            color = "default";
+        }
+        return <Tag color={color}>{status}</Tag>; // Sử dụng Tag để hiển thị
+      },
     },
     {
       title: "Actions",

@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, Spin, Typography, message, Button, Row, Col, Alert } from 'antd';
 import axios from 'axios';
-import { base_url } from '../../../base_urls'; // Đảm bảo bạn đã cấu hình base_url đúng
-import JobApplicationModal from '../../../components/modelpopup/JobApplicationModal'; // Điều chỉnh đường dẫn nếu cần
+import { base_url } from '../../../base_urls';
+import JobApplicationModal from '../../../components/modelpopup/JobApplicationModal';
 
 const { Title, Paragraph } = Typography;
 
 const JobBoardDetail = () => {
-  const { id } = useParams(); // Lấy id từ URL params
+  const { id } = useParams();
   const [jobPosting, setJobPosting] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -38,37 +38,59 @@ const JobBoardDetail = () => {
   };
 
   return (
-    <div className="job-posting-detail">
+    <div className="job-posting-detail" style={{ padding: '20px' }}>
       {loading ? (
         <Spin size="large" />
       ) : jobPosting ? (
-        <Row justify="center" style={{ padding: '20px' }}>
+        <Row justify="center">
           <Col xs={24} md={18} lg={14}>
-            <Card bordered={false}>
-              <Title level={2}>{jobPosting.title}</Title>
+            <Card bordered={false} style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', padding: '20px' }}>
+              <Title level={2} style={{ color: '#333' }}>{jobPosting.title}</Title>
+              
+              <Paragraph style={{ fontSize: '16px', marginBottom: '20px' }}><strong>Mô tả:</strong></Paragraph>
               <Paragraph>{jobPosting.description}</Paragraph>
-              <Paragraph>
-                <strong>Địa điểm:</strong> {jobPosting.location}
-              </Paragraph>
-              <Paragraph>
-                <strong>Loại hình công việc:</strong> {jobPosting.employmentType}
-              </Paragraph>
-              <Paragraph>
-                <strong>Vị trí:</strong> {jobPosting.positionName || 'N/A'}
-              </Paragraph>
-              <Paragraph>
-                <strong>Yêu cầu:</strong> {jobPosting.requirements}
-              </Paragraph>
-              <Paragraph>
-                <strong>Mức lương:</strong> {formatSalary(jobPosting.salaryRangeMin, jobPosting.salaryRangeMax)}
-              </Paragraph>
-              <Paragraph>
-                <strong>Ngày đăng:</strong> {new Date(jobPosting.postedDate).toLocaleDateString()}
-              </Paragraph>
-              <Paragraph>
-                <strong>Hạn nộp đơn:</strong> {new Date(jobPosting.deadline).toLocaleDateString()}
-              </Paragraph>
-              <Button type="primary" onClick={() => setIsModalVisible(true)}>
+              
+              <Row gutter={16} style={{ marginBottom: '16px' }}>
+                <Col span={12}>
+                  <Paragraph style={{ fontWeight: 'bold' }}>Địa điểm:</Paragraph>
+                  <Paragraph>{jobPosting.location}</Paragraph>
+                </Col>
+                <Col span={12}>
+                  <Paragraph style={{ fontWeight: 'bold' }}>Loại hình công việc:</Paragraph>
+                  <Paragraph>{jobPosting.employmentType}</Paragraph>
+                </Col>
+              </Row>
+              
+              <Row gutter={16} style={{ marginBottom: '16px' }}>
+                <Col span={12}>
+                  <Paragraph style={{ fontWeight: 'bold' }}>Vị trí:</Paragraph>
+                  <Paragraph>{jobPosting.positionName || 'N/A'}</Paragraph>
+                </Col>
+                <Col span={12}>
+                  <Paragraph style={{ fontWeight: 'bold' }}>Yêu cầu:</Paragraph>
+                  <Paragraph>{jobPosting.requirements}</Paragraph>
+                </Col>
+              </Row>
+              
+              <Row gutter={16} style={{ marginBottom: '16px' }}>
+                <Col span={12}>
+                  <Paragraph style={{ fontWeight: 'bold' }}>Mức lương:</Paragraph>
+                  <Paragraph>{formatSalary(jobPosting.salaryRangeMin, jobPosting.salaryRangeMax)}</Paragraph>
+                </Col>
+                <Col span={12}>
+                  <Paragraph style={{ fontWeight: 'bold' }}>Ngày đăng:</Paragraph>
+                  <Paragraph>{new Date(jobPosting.postedDate).toLocaleDateString()}</Paragraph>
+                </Col>
+              </Row>
+              
+              <Row gutter={16} style={{ marginBottom: '16px' }}>
+                <Col span={12}>
+                  <Paragraph style={{ fontWeight: 'bold' }}>Hạn nộp đơn:</Paragraph>
+                  <Paragraph>{new Date(jobPosting.deadline).toLocaleDateString()}</Paragraph>
+                </Col>
+              </Row>
+
+              <Button type="primary" onClick={() => setIsModalVisible(true)} style={{ marginTop: '20px', width: '100%' }}>
                 Ứng tuyển ngay
               </Button>
             </Card>
