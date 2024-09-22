@@ -118,7 +118,7 @@ const JobPostingModal = ({ isVisible, onJobPostingCreated, onCancel }) => {
         deadline: values.deadline.format("YYYY-MM-DD"),
         salaryRangeMin: currency === 'USD' ? values.salaryRangeMin : values.salaryRangeMin / exchangeRates['VND'],
         salaryRangeMax: currency === 'USD' ? values.salaryRangeMax : values.salaryRangeMax / exchangeRates['VND'],
-        images: imageList, // Add the list of image file names to the data
+        images: imageList,
       };
 
       console.log('Submitting Job Posting Data:', jobPostingData);
@@ -126,7 +126,7 @@ const JobPostingModal = ({ isVisible, onJobPostingCreated, onCancel }) => {
       await axios.post(`${base_url}/api/job-postings/create`, jobPostingData, { withCredentials: true });
       message.success('Job posting created successfully');
       form.resetFields();
-      setImageList([]); // Clear the image list
+      setImageList([]);
       onJobPostingCreated();
     } catch (error) {
       console.error('Error creating job posting:', error);
@@ -167,7 +167,7 @@ const JobPostingModal = ({ isVisible, onJobPostingCreated, onCancel }) => {
       form.resetFields();
       setSelectedDepartment(null);
       setPositions([]);
-      setImageList([]); // Clear the image list when modal is closed
+      setImageList([]);
     }
   }, [isVisible, form]);
 
@@ -190,19 +190,19 @@ const JobPostingModal = ({ isVisible, onJobPostingCreated, onCancel }) => {
         <Form.Item
           name="title"
           label="Job Title"
-          rules={[{ required: true, message: 'Please enter the job title' }]}>
+          rules={[{ required: true, message: 'Please enter the job title' }]} >
           <Input />
         </Form.Item>
         <Form.Item
           name="description"
           label="Description"
-          rules={[{ required: true, message: 'Please enter the job description' }]}>
+          rules={[{ required: true, message: 'Please enter the job description' }]} >
           <Input.TextArea rows={4} />
         </Form.Item>
         <Form.Item
           name="postedDate"
           label="Posted Date"
-          rules={[{ required: true, message: 'Please select the posted date' }]}>
+          rules={[{ required: true, message: 'Please select the posted date' }]} >
           <DatePicker
             format="YYYY-MM-DD"
             defaultValue={dayjs().startOf('day')}
@@ -212,7 +212,7 @@ const JobPostingModal = ({ isVisible, onJobPostingCreated, onCancel }) => {
         <Form.Item
           name="deadline"
           label="Application Deadline"
-          rules={[{ required: true, message: 'Please select the application deadline' }]}>
+          rules={[{ required: true, message: 'Please select the application deadline' }]} >
           <DatePicker
             format="YYYY-MM-DD"
             disabledDate={(current) => current && current < dayjs().startOf('day')}
@@ -221,13 +221,13 @@ const JobPostingModal = ({ isVisible, onJobPostingCreated, onCancel }) => {
         <Form.Item
           name="location"
           label="Location"
-          rules={[{ required: true, message: 'Please enter the job location' }]}>
+          rules={[{ required: true, message: 'Please enter the job location' }]} >
           <Input />
         </Form.Item>
         <Form.Item
           name="employmentType"
           label="Job Type"
-          rules={[{ required: true, message: 'Please select the job type' }]}>
+          rules={[{ required: true, message: 'Please select the job type' }]} >
           <Select>
             <Option value="full-time">Full-time</Option>
             <Option value="part-time">Part-time</Option>
@@ -237,11 +237,11 @@ const JobPostingModal = ({ isVisible, onJobPostingCreated, onCancel }) => {
         <Form.Item
           name="departmentId"
           label="Department"
-          rules={[{ required: true, message: 'Please select a department' }]}>
+          rules={[{ required: true, message: 'Please select a department' }]} >
           <Select
             onChange={value => {
               setSelectedDepartment(value);
-              form.setFieldsValue({ positionId: undefined }); // Clear selected position
+              form.setFieldsValue({ positionId: undefined });
             }}>
             {departments.map(department => (
               <Option key={department.id} value={department.id}>
@@ -253,7 +253,7 @@ const JobPostingModal = ({ isVisible, onJobPostingCreated, onCancel }) => {
         <Form.Item
           name="positionId"
           label="Position"
-          rules={[{ required: true, message: 'Please select a position' }]}>
+          rules={[{ required: true, message: 'Please select a position' }]} >
           <Select>
             {positions.map(position => (
               <Option key={position.id} value={position.id}>
@@ -265,62 +265,44 @@ const JobPostingModal = ({ isVisible, onJobPostingCreated, onCancel }) => {
         <Form.Item
           name="requirements"
           label="Requirements"
-          rules={[{ required: true, message: 'Please enter the job requirements' }]}>
+          rules={[{ required: true, message: 'Please enter the job requirements' }]} >
           <Input.TextArea rows={4} />
         </Form.Item>
         <Form.Item
           name="salaryRangeMin"
           label="Minimum Salary"
-          rules={[{ required: true, message: 'Please enter the minimum salary' }]}>
+          rules={[{ required: true, message: 'Please enter the minimum salary' }]} >
           <InputNumber
-            min={0}
-            step={1000}
-            style={{ width: '100%' }}
-            value={form.getFieldValue('salaryRangeMin')}
             formatter={value => formatSalary(value)}
-            parser={value => value.replace(/[^0-9.]/g, '')}
-            addonAfter={currency}
+            parser={value => value.replace(/[^\d]/g, '')}
           />
         </Form.Item>
         <Form.Item
           name="salaryRangeMax"
           label="Maximum Salary"
-          rules={[{ required: true, message: 'Please enter the maximum salary' }]}>
+          rules={[{ required: true, message: 'Please enter the maximum salary' }]} >
           <InputNumber
-            min={0}
-            step={1000}
-            style={{ width: '100%' }}
-            value={form.getFieldValue('salaryRangeMax')}
             formatter={value => formatSalary(value)}
-            parser={value => value.replace(/[^0-9.]/g, '')}
-            addonAfter={currency}
+            parser={value => value.replace(/[^\d]/g, '')}
           />
         </Form.Item>
         <Form.Item label="Currency">
-          <Select value={currency} onChange={handleCurrencyChange}>
+          <Select defaultValue="USD" onChange={handleCurrencyChange}>
             <Option value="USD">USD</Option>
             <Option value="VND">VND</Option>
           </Select>
         </Form.Item>
-        <Form.Item label="Upload Images">
+        <Form.Item label="Images">
           <Upload
             name="images"
-            action={`${base_url}/api/images/upload`} // URL to handle the image upload
+            action={`${base_url}/api/images/upload`}
             listType="picture"
-            onChange={handleImageUpload}
             multiple
+            onChange={handleImageUpload}
+            showUploadList={{ showPreviewIcon: true, showRemoveIcon: true }}
           >
             <Button icon={<UploadOutlined />}>Upload Images</Button>
           </Upload>
-        </Form.Item>
-        <Form.Item label="Uploaded Images">
-          {imageList.length > 0 && (
-            <div className="image-preview">
-              {imageList.map((img, index) => (
-                <img key={index} src={`${base_url}/uploads/${img.filename}`} alt={`uploaded-image-${index}`} style={{ width: 100, height: 100, marginRight: 8 }} />
-              ))}
-            </div>
-          )}
         </Form.Item>
       </Form>
     </Modal>
