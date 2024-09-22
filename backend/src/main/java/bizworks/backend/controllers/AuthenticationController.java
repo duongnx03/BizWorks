@@ -93,16 +93,6 @@ public class AuthenticationController {
         }
     }
 
-    @PostMapping("/change-password")
-    public ResponseEntity<ApiResponse<?>> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
-        try {
-            authenticationService.changePassword(changePasswordDTO);
-            return ResponseEntity.ok().body(ApiResponse.success(null, "Change password successfully"));
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
-        }
-    }
-
     @PostMapping("/approve/{id}")
     public ResponseEntity<ApiResponse<?>> approve(@PathVariable("id") Long id){
         try{

@@ -4,7 +4,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import Select from "react-select";
 import axios from "axios";
 import { base_url } from "../../base_urls";
-import { Spin } from "antd"; // Import Spin component from Ant Design
 
 const AddViolation = ({ onAdd }) => {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -136,6 +135,8 @@ const AddViolation = ({ onAdd }) => {
       setIsSubmitting(false); // Unlock form after submission
     }
   };
+  
+  
 
   const customStyles = {
     option: (provided, state) => ({
@@ -222,9 +223,9 @@ const AddViolation = ({ onAdd }) => {
                 <button
                   className="btn btn-primary submit-btn"
                   type="submit"
-                  disabled={isSubmitting} // Disable button when submitting
+                  disabled={isSubmitting}
                 >
-                  {isSubmitting ? <Spin size="small" /> : "Submit"} {/* Show spinner when submitting */}
+                  Submit
                 </button>
                 {errors.form && <div className="text-danger">{errors.form}</div>}
               </div>

@@ -53,12 +53,6 @@ public class ViolationController {
         }
     }
 
-    @GetMapping("/user")
-    public List<ViolationDTO> getAllViolationsByUser() {
-        // Gọi service để lấy danh sách violations của user đang đăng nhập
-        return violationService.getAllViolationsByUser();
-    }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ViolationDTO>> getViolationById(@PathVariable Long id) {

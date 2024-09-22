@@ -5,7 +5,6 @@ const Breadcrumbs = (props) => {
   const location = useLocation();
   let addButton = null;
   if (
-    location.pathname === "/daily-reports" ||
     location.pathname === "/approve-overtime-requests" ||
     location.pathname === "/approve-overtime-requests" ||
     location.pathname === "/approve-employee-requests" ||  
@@ -78,7 +77,7 @@ const Breadcrumbs = (props) => {
     location.pathname === "/leaves-setting" ||
     location.pathname === "/project-reports" ||
     location.pathname === "/request-create-employee" ||
-    location.pathname === "/client-profile"
+    location.pathname === "/client-profile/id"
   ) {
     addButton = (
       <div className="row">
@@ -206,7 +205,8 @@ const Breadcrumbs = (props) => {
     );
   } else if (
     location.pathname === "/employee-reports" ||
-    location.pathname === "/leave-reports"
+    location.pathname === "/leave-reports" ||
+    location.pathname === "/daily-reports"
   ) {
     addButton = (
       <div className="row align-items-center">

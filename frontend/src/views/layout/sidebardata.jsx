@@ -30,8 +30,7 @@ export const SidebarData = [
   },
 
   {
-    role: "ADMIN",
-    tittle: "Admin",
+    tittle: "ADMIN",
     showAsTab: false,
     separateRoute: false,
     menu: [
@@ -75,6 +74,10 @@ export const SidebarData = [
           //   route: "/holidays",
           // },
           {
+            menuValue: "Leaves",
+            route: "/adminleaves",
+          },
+          {
             menuValue: "Departments",
             route: "/departments",
           },
@@ -83,7 +86,7 @@ export const SidebarData = [
             route: "/violation-types",
           },
           {
-            menuValue: "List Violation",
+            menuValue: "Violation",
             route: "/violations",
           },
           {
@@ -104,7 +107,6 @@ export const SidebarData = [
     ],
   },
   {
-    role: "MANAGE",
     tittle: "Manager",
     showAsTab: false,
     separateRoute: false,
@@ -157,6 +159,10 @@ export const SidebarData = [
             route: "/leave-requests",
           },
           {
+            menuValue: "Leaves",
+            route: "/adminleaves",
+          },
+          {
             menuValue: "Departments",
             route: "/departments",
           },
@@ -165,12 +171,8 @@ export const SidebarData = [
             route: "/violation-types",
           },
           {
-            menuValue: "List Violation",
+            menuValue: "Violation",
             route: "/violations",
-          },
-          {
-            menuValue: "All Violation Complaints",
-            route: "/violation_complaints",
           },
           {
             menuValue: 'Training Programs',
@@ -184,16 +186,11 @@ export const SidebarData = [
             menuValue: 'Job Application',
             route: "/job-application-list/manage",
           },
-          {
-            menuValue: "Profile",
-            route: "/profile"
-          },
         ],
       },
     ],
   },
   {
-    role: "LEADER",
     tittle: "Leader",
     showAsTab: false,
     separateRoute: false,
@@ -238,6 +235,10 @@ export const SidebarData = [
             route: "/leave-requests",
           },
           {
+            menuValue: "Leaves",
+            route: "/adminleaves",
+          },
+          {
             menuValue: "Departments",
             route: "/departments",
           },
@@ -246,12 +247,8 @@ export const SidebarData = [
             route: "/violation-types",
           },
           {
-            menuValue: "List Violation",
+            menuValue: "Violation",
             route: "/violations",
-          },
-          {
-            menuValue: "All Violation Complaints",
-            route: "/violation_complaints",
           },
           {
             menuValue: 'Training Programs',
@@ -265,17 +262,12 @@ export const SidebarData = [
             menuValue: 'Job Application',
             route: "/job-application-list",
           },
-          {
-            menuValue: "Profile",
-            route: "/profile"
-          },
         ],
       },
     ],
   },
   {
-    role: "EMPLOYEE",
-    tittle: "Employee",
+    tittle: "EMPLOYEES",
     showAsTab: false,
     separateRoute: false,
     menu: [
@@ -302,10 +294,6 @@ export const SidebarData = [
             menuValue: "Overtime",
             route: "/overtime",
           },
-          {
-            menuValue: "My Violation",
-            route: "/violations_user",
-          },
           // {
           //   menuValue: 'Holidays',
           //   route: "/holidays",
@@ -321,10 +309,6 @@ export const SidebarData = [
           {
             menuValue: "Training Programs",
             route: "/training-programs",
-          },
-          {
-            menuValue: "Profile",
-            route: "/profile"
           },
         ],
       },
@@ -387,7 +371,6 @@ export const SidebarData = [
   //   ],
   // },
   {
-    role: ["ADMIN", "MANAGE"],
     tittle: "HR",
     showAsTab: false,
     separateRoute: false,
@@ -446,50 +429,50 @@ export const SidebarData = [
         showSubRoute: false,
         icon: "la la-chart-pie",
         subMenus: [
-          // {
-          //   menuValue: "Expense Report",
-          //   route: "/expense-reports",
-          // },
-          // {
-          //   menuValue: "Invoice Report",
-          //   route: "/invoice-reports",
-          // },
-          // {
-          //   menuValue: "Payments Report",
-          //   route: "/payments-reports",
-          // },
-          // {
-          //   menuValue: "Project Report",
-          //   route: "/project-reports",
-          // },
-          // {
-          //   menuValue: "Task Report",
-          //   route: "/task-reports",
-          // },
+          {
+            menuValue: "Expense Report",
+            route: "/expense-reports",
+          },
+          {
+            menuValue: "Invoice Report",
+            route: "/invoice-reports",
+          },
+          {
+            menuValue: "Payments Report",
+            route: "/payments-reports",
+          },
+          {
+            menuValue: "Project Report",
+            route: "/project-reports",
+          },
+          {
+            menuValue: "Task Report",
+            route: "/task-reports",
+          },
           {
             menuValue: "Attendance Report",
             route: "/attendance-reports",
           },
-          // {
-          //   menuValue: "Leave Report",
-          //   route: "/leave-reports",
-          // },
-          // {
-          //   menuValue: "Payslip Report",
-          //   route: "/payslip-reports",
-          // },
+          {
+            menuValue: "Leave Report",
+            route: "/leave-reports",
+          },
+          {
+            menuValue: "Payslip Report",
+            route: "/payslip-reports",
+          },
           {
             menuValue: "Daily Report",
             route: "/daily-reports",
           },
-          // {
-          //   menuValue: "User Report",
-          //   route: "/user-reports",
-          // },
-          // {
-          //   menuValue: "Employee Report",
-          //   route: "/employee-reports",
-          // },
+          {
+            menuValue: "User Report",
+            route: "/user-reports",
+          },
+          {
+            menuValue: "Employee Report",
+            route: "/employee-reports",
+          },
         ],
       },
     ],

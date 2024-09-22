@@ -71,7 +71,7 @@ public class EmployeeController {
 
     @PutMapping("/updateEmployee")
     public ResponseEntity<ApiResponse<?>> updateEmployee(
-            @RequestBody EmployeeUpdateDTO request,
+            @ModelAttribute EmployeeUpdateDTO request,
             BindingResult bindingResult) {
         try {
             if (bindingResult.hasErrors()) {

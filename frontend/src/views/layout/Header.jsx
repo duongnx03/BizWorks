@@ -2,7 +2,7 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable react/no-unescaped-entities */
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import notifications from "../../assets/json/notifications";
@@ -33,26 +33,6 @@ const Header = (props) => {
   const [profile, setProfile] = useState(false);
   const [flagImage, setFlagImage] = useState(lnEnglish);
   const navigate = useNavigate();
-  const [profileName, setProfileName] = useState("");
-  const { userRole, logout } = useContext(AuthContext);
-
-  useEffect(() => {
-    const fetchEmployeeData = async () => {
-      try {
-        const response = await axios.get('http://localhost:8080/api/employee/getEmployee', { withCredentials: true });
-        const employee = response.data.data;
-        setProfileName(employee.fullname);
-      } catch (error) {
-        console.error('Error fetching employee data:', error);
-      }
-    };
-
-    if (userRole !== "ADMIN") {
-      fetchEmployeeData(); // Gọi API nếu không phải là ADMIN
-    } else {
-      setProfileName("Admin"); // Nếu là ADMIN, đặt ProfileName là "Admin"
-    }
-  }, [userRole]);
 
   const handlesidebar = () => {
     document.body.classList.toggle("mini-sidebar");
@@ -95,6 +75,7 @@ const Header = (props) => {
   const Credencial = localStorage.getItem("credencial");
   const Value = JSON.parse(Credencial);
   const UserName = Value?.email?.split("@")[0];
+  const ProfileName = UserName?.charAt(0).toUpperCase() + UserName?.slice(1);
 
   const { t, i18n } = useTranslation();
 
@@ -111,6 +92,8 @@ const Header = (props) => {
             : lnGerman
     );
   };
+
+  const { logout } = useContext(AuthContext);
 
   const handleLogout = async () => {
     try {
@@ -129,6 +112,15 @@ const Header = (props) => {
 
   return (
     <div className="header" style={{ right: "0px" }}>
+      {/* Logo */}
+      <div className="header-left">
+        <Link to="/admin-dashboard" className="logo">
+          <img src={headerlogo}  alt="img" />
+        </Link>
+        <Link to="/admin-dashboard" className="logo2">
+          <img src={Applogo} width={40} height={40} alt="img" />
+        </Link>
+      </div>
       {/* /Logo */}
       <Link
         id="toggle_btn"
@@ -162,7 +154,210 @@ const Header = (props) => {
         <i className="fa fa-bars" />
       </Link>
       {/* Header Menu */}
-      <ul className="nav user-menu">   
+      <ul className="nav user-menu">
+        {/* Search */}
+        <li className="nav-item">
+          <div className="top-nav-search">
+            <Link to="#" className="responsive-search">
+              <i className="fa fa-search" />
+            </Link>
+            <form>
+              <input
+                className="form-control"
+                type="text"
+                placeholder="Search here"
+              />
+              <button className="btn" type="submit">
+                <i className="fa fa-search" />
+              </button>
+            </form>
+          </div>
+        </li>
+        {/* /Search */}
+        {/* Flag */}
+
+        <li className="nav-item dropdown has-arrow flag-nav">
+          <Link
+            className="nav-link dropdown-toggle"
+            data-bs-toggle="dropdown"
+            to="#"
+            role="button"
+          >
+            <img src={flagImage} alt="Flag" height="20" /> {t(i18n.language)}
+          </Link>
+          <div className="dropdown-menu dropdown-menu-right">
+            <Link
+              to="#"
+              className="dropdown-item"
+              onClick={() => changeLanguage("en")}
+            >
+              <img src={lnEnglish} alt="Flag" height="16" /> English
+            </Link>
+            <Link
+              to="#"
+              className="dropdown-item"
+              onClick={() => changeLanguage("fr")}
+            >
+              <img src={lnFrench} alt="Flag" height="16" /> French
+            </Link>
+            <Link
+              to="#"
+              className="dropdown-item"
+              onClick={() => changeLanguage("es")}
+            >
+              <img src={lnSpanish} alt="Flag" height="16" /> Spanish
+            </Link>
+            <Link
+              to="#"
+              className="dropdown-item"
+              onClick={() => changeLanguage("de")}
+            >
+              <img src={lnGerman} alt="Flag" height="16" /> German
+            </Link>
+          </div>
+        </li>
+        {/* /Flag */}
+        {/* Notifications */}
+        <li className="nav-item dropdown">
+          <Link
+            to="#"
+            className="dropdown-toggle nav-link"
+            data-bs-toggle="dropdown"
+            onClick={handleNotification}
+          >
+            <i>
+              <FaRegBell />
+            </i>{" "}
+            <span className="badge badge-pill">3</span>
+          </Link>
+          <div
+            className={`dropdown-menu dropdown-menu-end notifications ${notification ? "show" : ""
+              }`}
+          >
+            <div className="topnav-dropdown-header">
+              <span className="notification-title">Notifications</span>
+              <Link
+                to="#"
+                onClick={() => setNotifications(false)}
+                className="clear-noti"
+              >
+                {" "}
+                Clear All{" "}
+              </Link>
+            </div>
+            <div className="noti-content">
+              <ul className="notification-list">
+                {data.map((val, index) => {
+                  return (
+                    <li className="notification-message" key={index}>
+                      <Link
+                        onClick={() =>
+                          localStorage.setItem("minheight", "true")
+                        }
+                        to="/app/administrator/activities"
+                      >
+                        <div className="media d-flex">
+                          <span className="avatar flex-shrink-0">
+                            <img alt="" src={val.image} />
+                          </span>
+                          <div className="media-body">
+                            <p className="noti-details">
+                              <span className="noti-title">{val.name}</span>{" "}
+                              {val.contents}{" "}
+                              <span className="noti-title">
+                                {val.contents_2}
+                              </span>
+                            </p>
+                            <p className="noti-time">
+                              <span className="notification-time">
+                                {val.time}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            <div className="topnav-dropdown-footer">
+              <Link
+                onClick={() => localStorage.setItem("minheight", "true")}
+                to="/app/administrator/activities"
+              >
+                View all Notifications
+              </Link>
+            </div>
+          </div>
+        </li>
+        {/* /Notifications */}
+        {/* Message Notifications */}
+        <li className={`nav-item dropdown ${isOpen ? "show" : ""}`}>
+          <Link
+            to="#"
+            className="dropdown-toggle nav-link"
+            data-bs-toggle="dropdown"
+            onClick={toggleDropdown}
+          >
+            <i>
+              <FaRegComment />
+            </i>{" "}
+            <span className="badge badge-pill">8</span>
+          </Link>
+          <div
+            className={`dropdown-menu dropdown-menu-end notifications ${isOpen ? "show" : ""
+              }`}
+          >
+            <div className="topnav-dropdown-header">
+              <span className="notification-title">Messages</span>
+              <Link to="#" className="clear-noti">
+                {" "}
+                Clear All{" "}
+              </Link>
+            </div>
+            <div className="noti-content">
+              <ul className="notification-list">
+                {datas.map((value, index) => {
+                  return (
+                    <li className="notification-message" key={index}>
+                      <Link
+                        onClick={() =>
+                          localStorage.setItem("minheight", "true")
+                        }
+                        to="/conversation/chat"
+                      >
+                        <div className="list-item">
+                          <div className="list-left">
+                            <span className="avatar">
+                              <img alt="" src={value.image} />
+                            </span>
+                          </div>
+                          <div className="list-body">
+                            <span className="message-author">{value.name}</span>
+                            <span className="message-time">{value.time}</span>
+                            <div className="clearfix" />
+                            <span className="message-content">
+                              {value.contents}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            <div className="topnav-dropdown-footer">
+              <Link
+                onClick={() => localStorage.setItem("minheight", "true")}
+                to="/conversation/chat"
+              >
+                View all Messages
+              </Link>
+            </div>
+          </div>
+        </li>
         {/* /Message Notifications */}
         <li className="nav-item dropdown has-arrow main-drop">
           <Link
@@ -176,7 +371,7 @@ const Header = (props) => {
               <img src={Avatar_02} alt="img" />
               <span className="status online" />
             </span>
-            <span>{profileName ? profileName : "Loading..."}</span>
+            <span>{ProfileName ? `${ProfileName}` : "Admin"}</span>
           </Link>
           <div
             className={`dropdown-menu dropdown-menu-end ${profile ? "show" : ""
@@ -184,6 +379,9 @@ const Header = (props) => {
           >
             <Link className="dropdown-item" to="/profile">
               My Profile
+            </Link>
+            <Link className="dropdown-item" to="/settings/companysetting">
+              Settings
             </Link>
             <button className="dropdown-item" onClick={handleLogout}>Logout</button>
           </div>
@@ -204,7 +402,12 @@ const Header = (props) => {
           <Link className="dropdown-item" to="/profile">
             My Profile
           </Link>
-          <button className="dropdown-item" onClick={handleLogout}>Logout</button>
+          <Link className="dropdown-item" to="/settings/companysetting">
+            Settings
+          </Link>
+          <Link className="dropdown-item" to="/login">
+            Logout
+          </Link>
         </div>
       </div>
       {/* /Mobile Menu */}

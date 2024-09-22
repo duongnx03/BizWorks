@@ -5,6 +5,7 @@ import Select from "react-select";
 import DailyReportTable from "./DailyReportTable";
 import { FaTimes } from "react-icons/fa";
 import axios from "axios";
+import ClipLoader from "react-spinners/ClipLoader";
 
 const DailyReports = () => {
   const [focused, setFocused] = useState(false);
@@ -16,11 +17,14 @@ const DailyReports = () => {
   const [selectedDepartment, setSelectedDepartmentState] = useState(null);
   const [selectedPosition, setSelectedPositionState] = useState(null);
   const [noData, setNoData] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 9;
+
+  const [canMarkAbsent, setCanMarkAbsent] = useState(false);
 
   const fetchSummaryData = async () => {
     try {
@@ -167,6 +171,53 @@ const DailyReports = () => {
     }),
   };
 
+  useEffect(() => {
+    const checkIfCanMarkAbsent = () => {
+      const currentTime = new Date();
+      const deadline = new Date();
+      deadline.setHours(17, 0, 0, 0); // 17:00
+
+      setCanMarkAbsent(currentTime >= deadline);
+    };
+
+    checkIfCanMarkAbsent();
+    const intervalId = setInterval(checkIfCanMarkAbsent, 60000); // Kiểm tra mỗi phút
+
+    return () => clearInterval(intervalId); // Dọn dẹp khi component bị gỡ bỏ
+  }, []);
+
+  const handleMarkAbsent = async () => {
+    const currentTime = new Date();
+    const deadline = new Date();
+    deadline.setHours(17, 0, 0, 0); // 5:00 PM
+
+    if (currentTime < deadline) {
+      alert("You can only mark employees absent after 5:00 PM.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/api/attendance/markAbsent",
+        {},
+        { withCredentials: true }
+      );
+
+      if (response.status === 200) {
+        alert("Marked absent employees successfully.");
+        fetchSummaryData();
+        fetchAttendanceByDate();
+      }
+    } catch (error) {
+      console.error("Error marking employees absent: ", error);
+      alert("An error occurred while marking employees absent.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page-wrapper">
       <div className="content container-fluid">
@@ -298,6 +349,37 @@ const DailyReports = () => {
                 <FaTimes />
               </button>
             ) : null}
+          </div>
+        </div>
+
+        {/* Button to mark employees absent */}
+        <div
+          className="row"
+          style={{ marginTop: "20px", marginBottom: "20px" }}
+        >
+          <div
+            className="col-md-12"
+            style={{ display: "flex", justifyContent: "flex-end" }}
+          >
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleMarkAbsent}
+              disabled={!canMarkAbsent || loading}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: !canMarkAbsent || loading ? "#ccc" : "#FF902F",
+                borderColor: !canMarkAbsent || loading ? "#ccc" : "#FF902F",
+              }}
+            >
+              {loading ? (
+                <ClipLoader size={20} color="#fff" />
+              ) : (
+                "Mark Absent Employees"
+              )}
+            </button>
           </div>
         </div>
 

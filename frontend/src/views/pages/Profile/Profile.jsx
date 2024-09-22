@@ -4,55 +4,17 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import axios from "axios";
 import PersonalInformationModelPopup from "../../../components/modelpopup/PersonalInformationModelPopup";
-import ChangePasswordModal from "./ChangePasswordModal";
-import { toast, ToastContainer } from "react-toastify";
 
 const Profile = () => {
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
-
-  const handleShowChangePasswordModal = () => {
-    setShowChangePasswordModal(true);
-  };
-
-  // Hàm đóng modal
-  const handleCloseChangePasswordModal = () => {
-    setShowChangePasswordModal(false);
-  };
-
-  const handleChangePasswordSubmit = async (passwordData) => {
-    setLoading(true); // Bắt đầu hiển thị loading spinner
-    try {
-      await axios.post(
-        "http://localhost:8080/api/auth/change-password",
-        passwordData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
-      toast.success("Password changed successfully!"); 
-      handleCloseChangePasswordModal(); 
-    } catch (error) {
-      toast.error(error.response.data.message);
-    } finally {
-      setLoading(false); // Ẩn loading spinner
-    }
-  };
-
   const fetchEmployee = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:8080/api/employee/getEmployee",
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axios.get("http://localhost:8080/api/employee/getEmployee", {
+        withCredentials: true,
+      });
       setEmployee(response.data.data);
     } catch (error) {
       setError(error.message);
@@ -115,26 +77,36 @@ const Profile = () => {
                             <li>
                               <div className="title">Phone:</div>
                               <div className="text">
-                                <Link to="#">{employee.phone}</Link>
+                                <Link to="#">
+                                  {employee.phone}
+                                </Link>
                               </div>
                             </li>
                             <li>
                               <div className="title">Email:</div>
                               <div className="text">
-                                <Link to="#">{employee.email}</Link>
+                                <Link to="#">
+                                  {employee.email}
+                                </Link>
                               </div>
                             </li>
                             <li>
                               <div className="title">Birthday:</div>
-                              <div className="text">{employee.dob}</div>
+                              <div className="text">
+                                {employee.dob}
+                              </div>
                             </li>
                             <li>
                               <div className="title">Address:</div>
-                              <div className="text">{employee.address}</div>
+                              <div className="text">
+                                {employee.address}
+                              </div>
                             </li>
                             <li>
                               <div className="title">Gender:</div>
-                              <div className="text">{employee.gender}</div>
+                              <div className="text">
+                                {employee.gender}
+                              </div>
                             </li>
                           </ul>
                         </div>
@@ -150,37 +122,14 @@ const Profile = () => {
                         <i className="fa-solid fa-pencil"></i>
                       </Link>
                     </div>
-                    <button
-                      className="btn btn-primary"
-                      onClick={handleShowChangePasswordModal}
-                    >
-                      Change Password
-                    </button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
           <PersonalInformationModelPopup onSave={handleSave} />
-          <ChangePasswordModal
-            showChangePasswordModal={showChangePasswordModal}
-            handleCloseChangePasswordModal={handleCloseChangePasswordModal}
-            handleChangePasswordSubmit={handleChangePasswordSubmit}
-            loading={loading}
-          />
         </div>
       </div>
-      <ToastContainer
-        position="top-center"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
     </>
   );
 };

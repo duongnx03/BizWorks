@@ -112,11 +112,13 @@ public class SalaryService {
 
             Salary saved = salaryRepository.save(salary);
             createdSalaries.add(convertToDTO(saved));
-            sendSalaryEmail(saved, "created");
         }
+
         ApiResponse<List<SalaryDTO>> successResponse = ApiResponse.success(createdSalaries, "Salaries created successfully");
         return new ResponseEntity<>(successResponse, HttpStatus.OK);
     }
+
+
 
     public ResponseEntity<ApiResponse<SalaryDTO>> updateSalary(Long id, SalaryDTO dto) {
         Optional<Salary> optional = salaryRepository.findById(id);
@@ -163,6 +165,8 @@ public class SalaryService {
         ApiResponse<SalaryDTO> notFoundResponse = ApiResponse.notfound(null, "Salary not found");
         return new ResponseEntity<>(notFoundResponse, HttpStatus.NOT_FOUND);
     }
+
+
 
     public ResponseEntity<ApiResponse<Void>> deleteSalary(Long id) {
         try {
@@ -294,7 +298,6 @@ public class SalaryService {
         double basicSalary = salary.getBasicSalary();
         double netSalary = salary.getTotalSalary();
         double percentage = (netSalary / basicSalary) * 100;
-
         // Determine the color based on the comparison
         if (netSalary > basicSalary) {
             netSalaryColor = "#800080"; // Purple
@@ -305,22 +308,17 @@ public class SalaryService {
         } else if (percentage < 80.0) {
             netSalaryColor = "#FF0000"; // Red
         } else {
-            netSalaryColor = "#000000"; // Default to black
+            netSalaryColor = "#000000"; // Default to black if none of the conditions match
         }
 
         // Calculate total deductions
-        double totalDeductions = salary.getDeductions() + salary.getAdvanceSalary();
+        double totalDeductions = salary.getDeductions() + salary.getAdvanceSalary(); // Add other deductions if needed
 
         String to = salary.getEmployee().getEmail();
         String subject = "Salary " + action;
-
-        String content = "<div style=\"max-width: 600px; margin: auto; font-family: Arial, sans-serif; color: #333;\">"
-                + "<div style=\"background-color: #f79e45; padding: 20px; text-align: center; color: white;\">"
-                + "<h1>Bizworks Notification</h1>"
-                + "<p style=\"font-size: 18px;\">Your salary has been <strong>" + action + "</strong>.</p>"
-                + "</div>"
-                + "<div style=\"padding: 20px;\">"
-                + "<h2 style=\"color: #f79e45;\">Dear " + salary.getEmployee().getFullname() + ",</h2>"
+        String content = "<div style=\"font-family: Arial, sans-serif; color: #333; line-height: 1.6;\">"
+                + "<h2 style=\"color: #4CAF50;\">Dear " + salary.getEmployee().getFullname() + ",</h2>"
+                + "<p>Your salary has been <strong>" + action + "</strong>.</p>"
                 + "<h3 style=\"color: #2196F3;\">Salary Details:</h3>"
 
                 // Earnings Table
@@ -328,15 +326,15 @@ public class SalaryService {
                 + "<h3 style=\"color: #4CAF50;\">Earnings</h3>"
                 + "<table style=\"width: 100%; border-collapse: collapse;\">"
                 + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Basic Salary:</strong></td>"
-                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getBasicSalary() + "$</td></tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getBasicSalary()+"$" + "</td></tr>"
                 + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Bonus:</strong></td>"
-                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getBonusSalary() + "$</td></tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getBonusSalary()+"$" + "</td></tr>"
                 + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Overtime:</strong></td>"
-                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getOvertimeSalary() + "$</td></tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getOvertimeSalary()+"$" + "</td></tr>"
                 + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Allowances:</strong></td>"
-                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getAllowances() + "$</td></tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getAllowances()+"$" + "</td></tr>"
                 + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Total Earnings:</strong></td>"
-                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + totalEarnings + "$</td></tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + totalEarnings+"$" + "</td></tr>"
                 + "</table></div>"
 
                 // Deductions Table
@@ -344,32 +342,30 @@ public class SalaryService {
                 + "<h3 style=\"color: #F44336;\">Deductions</h3>"
                 + "<table style=\"width: 100%; border-collapse: collapse;\">"
                 + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Tax Deducted at Source (T.D.S.):</strong></td>"
-                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getDeductions() + "$</td></tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getDeductions()+"$" + "</td></tr>"
                 + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Violations:</strong></td>"
-                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getDeductions() + "$</td></tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getDeductions()+"$" + "</td></tr>"
                 + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Advance Salary:</strong></td>"
-                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getAdvanceSalary() + "$</td></tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + salary.getAdvanceSalary()+"$" + "</td></tr>"
                 + "<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Total Deductions:</strong></td>"
-                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + totalDeductions + "$</td></tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + totalDeductions+"$" + "</td></tr>"
                 + "</table></div>"
 
                 // Net Salary
                 + "<div style=\"clear: both; margin-top: 20px;\">"
-                + "<h3 style=\"color: " + netSalaryColor + ";\">Net Salary: " + salary.getTotalSalary() + "$</h3>"
+                + "<h3 style=\"color: " + netSalaryColor + ";\">Net Salary: " + salary.getTotalSalary()+"$" + "</h3>"
                 + "</div>"
 
-                + "<p style=\"margin-top: 20px;\">If you have any questions, please contact the HR department.</p>"
+                + "<p style=\"margin-top: 20px;\">Please contact the HR department for any questions.</p>"
                 + "<p>Best regards,</p>"
                 + "<h3 style=\"color: #999;\">Bizworks Team</h3>"
-                + "</div>"
                 + "</div>";
 
         try {
             mailService.sendEmail(to, subject, content);
         } catch (MessagingException e) {
-            e.printStackTrace(); // Handle email sending error
+            e.printStackTrace(); // You can handle the email sending error differently if needed
         }
     }
-
 
 }

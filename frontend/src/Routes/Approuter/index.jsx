@@ -73,7 +73,7 @@ const AppRouter = () => {
     <div>
       <AuthProvider>
         <Provider store={store}>
-          <BrowserRouter basename="/bizworks">
+          <BrowserRouter basename="/react/template">
             <ScrollToTop />
             <Routes>
               <Route path="/" element={<Login />} />

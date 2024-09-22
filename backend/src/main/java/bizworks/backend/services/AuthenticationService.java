@@ -33,7 +33,11 @@ public class AuthenticationService {
     private final String urlImage = rootUrl + uploadFolder + File.separator + subFolder;
     private static final String DIGITS = "0123456789";
     private static final int CODE_LENGTH = 8;
-    private static final String ALL_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=<>?";
+    private static final String LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
+    private static final String UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final String SPECIAL_CHARACTERS = "!@#$%^&*()-_+=<>?";
+
+    private static final String ALL_CHARACTERS = LOWERCASE + UPPERCASE + DIGITS + SPECIAL_CHARACTERS;
     private static final SecureRandom random = new SecureRandom();
 
     private final UserRepository userRepository;
@@ -318,27 +322,6 @@ public class AuthenticationService {
         userRepository.save(userExisted);
     }
 
-    public void changePassword(ChangePasswordDTO changePasswordDTO) {
-        String email = getCurrentUserEmail();
-        User userExisted = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Mã hóa mật khẩu mới
-        String oldPassword = changePasswordDTO.getOldPassword();
-        String newPassword = changePasswordDTO.getNewPassword();
-
-        // So sánh mật khẩu mới với mật khẩu hiện tại đã mã hóa
-        if (passwordEncoder.matches(oldPassword, userExisted.getPassword())) {
-            if (passwordEncoder.matches(newPassword, userExisted.getPassword())) {
-                throw new RuntimeException("New password cannot be the same as the old password");
-            }else{
-                userExisted.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
-                userRepository.save(userExisted);
-            }
-        } else {
-            throw new RuntimeException("Old password is incorrect, please try again!");
-        }
-    }
-
     private void sendVerificationForgotPassword(String email, String verificationCode) {
         String subject = "Forgot Password";
         String content = "<html>"
@@ -456,12 +439,8 @@ public class AuthenticationService {
         int length = 10;
         StringBuilder password = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
-            char nextChar;
-            do {
-                int index = random.nextInt(ALL_CHARACTERS.length());
-                nextChar = ALL_CHARACTERS.charAt(index);
-            } while (Character.isWhitespace(nextChar));
-            password.append(nextChar);
+            int index = random.nextInt(ALL_CHARACTERS.length());
+            password.append(ALL_CHARACTERS.charAt(index));
         }
         return password.toString();
     }

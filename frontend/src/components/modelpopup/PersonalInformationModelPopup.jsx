@@ -7,9 +7,12 @@ const PersonalInformationModelPopup = ({ onSave }) => {
     address: "",
     gender: "",
     phone: "",
+    avatar: "",
+    fileImage: null,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
   const [validationErrors, setValidationErrors] = useState({
     dob: "",
@@ -20,12 +23,9 @@ const PersonalInformationModelPopup = ({ onSave }) => {
 
   const fetchEmployee = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:8080/api/employee/getEmployee",
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axios.get("http://localhost:8080/api/employee/getEmployee", {
+        withCredentials: true,
+      });
       setEmployee(response.data.data);
     } catch (error) {
       setError(error.message);
@@ -42,17 +42,14 @@ const PersonalInformationModelPopup = ({ onSave }) => {
     const errors = { ...validationErrors };
 
     switch (name) {
-      case "dob":
+      case 'dob':
         const today = new Date();
         const dob = new Date(value);
         let age = today.getFullYear() - dob.getFullYear();
         const monthDifference = today.getMonth() - dob.getMonth();
         const dayDifference = today.getDate() - dob.getDate();
 
-        if (
-          monthDifference < 0 ||
-          (monthDifference === 0 && dayDifference < 0)
-        ) {
+        if (monthDifference < 0 || (monthDifference === 0 && dayDifference < 0)) {
           age--;
         }
 
@@ -63,7 +60,7 @@ const PersonalInformationModelPopup = ({ onSave }) => {
         }
         break;
 
-      case "gender":
+      case 'gender':
         if (!value) {
           errors.gender = "Gender is required.";
         } else {
@@ -71,7 +68,7 @@ const PersonalInformationModelPopup = ({ onSave }) => {
         }
         break;
 
-      case "phone":
+      case 'phone':
         const phoneRegex = /^\d{10}$/;
         if (!value || !phoneRegex.test(value)) {
           errors.phone = "Phone number must be exactly 10 digits.";
@@ -80,7 +77,7 @@ const PersonalInformationModelPopup = ({ onSave }) => {
         }
         break;
 
-      case "address":
+      case 'address':
         const addressRegex = /^[\w\s/-]+$/;
         if (!value || !addressRegex.test(value)) {
           errors.address = "Address contains invalid characters.";
@@ -102,43 +99,55 @@ const PersonalInformationModelPopup = ({ onSave }) => {
     validateField(name, value); // Validate field on change
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setEmployee({ ...employee, fileImage: file });
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
   const handleGenderChange = (e) => {
     const selectedGender = e.target.value;
     setEmployee((prevEmployee) => ({
       ...prevEmployee,
       gender: selectedGender || "Male",
     }));
-    validateField("gender", selectedGender); // Validate gender on change
+    validateField('gender', selectedGender); // Validate gender on change
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validate all fields before submission
-    validateField("dob", employee.dob);
-    validateField("gender", employee.gender);
-    validateField("phone", employee.phone);
-    validateField("address", employee.address);
+    validateField('dob', employee.dob);
+    validateField('gender', employee.gender);
+    validateField('phone', employee.phone);
+    validateField('address', employee.address);
 
-    if (Object.values(validationErrors).some((error) => error)) {
+    if (Object.values(validationErrors).some(error => error)) {
       return; // If there are validation errors, prevent submission
     }
 
+    // Đảm bảo rằng nếu người dùng không chọn gender thì giá trị được đặt là "Male"
     const genderToSubmit = employee.gender || "Male";
 
+    const formData = new FormData();
+    formData.append("dob", employee.dob);
+    formData.append("address", employee.address);
+    formData.append("gender", genderToSubmit);
+    formData.append("phone", employee.phone);
+    if (employee.fileImage) {
+      formData.append("fileImage", employee.fileImage);
+    }
+
     try {
-      const response = await axios.put(
-        "http://localhost:8080/api/employee/updateEmployee",
-        {
-          dob: employee.dob,
-          address: employee.address,
-          gender: genderToSubmit,
-          phone: employee.phone,
+      const response = await axios.put("http://localhost:8080/api/employee/updateEmployee", formData, {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "multipart/form-data",
         },
-        {
-          withCredentials: true,
-        }
-      );
+      });
       console.log(response.data);
       onSave();
     } catch (error) {
@@ -159,21 +168,11 @@ const PersonalInformationModelPopup = ({ onSave }) => {
         aria-labelledby="profileInfoLabel"
         aria-hidden="true"
       >
-        <div
-          className="modal-dialog modal-dialog-centered modal-lg"
-          role="document"
-        >
+        <div className="modal-dialog modal-dialog-centered modal-lg" role="document">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title" id="profileInfoLabel">
-                Profile Information
-              </h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
+              <h5 className="modal-title" id="profileInfoLabel">Profile Information</h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">×</span>
               </button>
             </div>
@@ -182,11 +181,16 @@ const PersonalInformationModelPopup = ({ onSave }) => {
                 <div className="row">
                   <div className="col-md-12">
                     <div className="profile-img-wrap edit-img">
-                      <img
-                        className="inline-block"
-                        src={employee.avatar}
-                        alt="User Avatar"
-                      />
+                      <img className="inline-block" src={previewImage || employee.avatar} alt="User Avatar" />
+                      <div className="fileupload btn">
+                        <span className="btn-text">Edit</span>
+                        <input
+                          className="upload"
+                          type="file"
+                          name="fileImage"
+                          onChange={handleFileChange}
+                        />
+                      </div>
                     </div>
                     <div className="row">
                       <div className="col-md-6">
@@ -254,11 +258,7 @@ const PersonalInformationModelPopup = ({ onSave }) => {
                             value={employee.dob}
                             onChange={handleInputChange}
                           />
-                          {validationErrors.dob && (
-                            <div className="text-danger">
-                              {validationErrors.dob}
-                            </div>
-                          )}
+                          {validationErrors.dob && <div className="text-danger">{validationErrors.dob}</div>}
                         </div>
                       </div>
                       <div className="col-md-6">
@@ -274,11 +274,7 @@ const PersonalInformationModelPopup = ({ onSave }) => {
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
                           </select>
-                          {validationErrors.gender && (
-                            <div className="text-danger">
-                              {validationErrors.gender}
-                            </div>
-                          )}
+                          {validationErrors.gender && <div className="text-danger">{validationErrors.gender}</div>}
                         </div>
                       </div>
                       <div className="col-md-6">
@@ -291,11 +287,7 @@ const PersonalInformationModelPopup = ({ onSave }) => {
                             value={employee.phone}
                             onChange={handleInputChange}
                           />
-                          {validationErrors.phone && (
-                            <div className="text-danger">
-                              {validationErrors.phone}
-                            </div>
-                          )}
+                          {validationErrors.phone && <div className="text-danger">{validationErrors.phone}</div>}
                         </div>
                       </div>
                       <div className="col-md-12">
@@ -308,11 +300,7 @@ const PersonalInformationModelPopup = ({ onSave }) => {
                             value={employee.address}
                             onChange={handleInputChange}
                           />
-                          {validationErrors.address && (
-                            <div className="text-danger">
-                              {validationErrors.address}
-                            </div>
-                          )}
+                          {validationErrors.address && <div className="text-danger">{validationErrors.address}</div>}
                         </div>
                       </div>
                     </div>

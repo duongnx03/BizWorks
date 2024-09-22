@@ -52,15 +52,15 @@ const Login = () => {
 
             // Điều hướng đến dashboard tương ứng
             if (userRole === "ADMIN") {
-              navigate("/employees");
+              navigate("/admin-dashboard");
             } else if (userRole === "EMPLOYEE") {
-              navigate("/attendance-employee");
+              navigate("/employee-dashboard");
             }
             else if (userRole === "MANAGE") {
-              navigate("/manage-employees");
+              navigate("/employee-dashboard");
             }
             else if (userRole === "LEADER") {
-              navigate("/leader-employees");
+              navigate("/employee-dashboard");
             }
           }
         } catch (verificationError) {

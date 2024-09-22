@@ -74,7 +74,6 @@ const MissedCheckOutCorrection = () => {
           withCredentials: true,
         }
       );
-      fetchEmployees();
       toast.success("Checkout time updated successfully");
     } catch (error) {
       toast.error("Error updating checkout time");

@@ -15,10 +15,7 @@ import bizworks.backend.services.AuthenticationService;
 import bizworks.backend.services.MailService;
 import jakarta.mail.MessagingException;
 import org.springframework.data.domain.Sort;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -55,6 +52,7 @@ public class ViolationService {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("LEADER", "MANAGE", "ADMIN"));
 
+        // Lấy thông tin employee
         Violation violation = new Violation();
         Employee employee = employeeRepository.findById(dto.getEmployee().getId()).orElse(null);
         if (employee == null) {
@@ -74,10 +72,10 @@ public class ViolationService {
             if (!"EMPLOYEE".equals(employeeRole) && !"LEADER".equals(employeeRole)) {
                 throw new AccessDeniedException("Manage can only create violations for EMPLOYEE or LEADER.");
             }
-            violation.setStatus("Pending");
+            violation.setStatus("Approved");
         } else if ("ADMIN".equals(currentUser.getRole())) {
             // ADMIN có quyền tạo cho tất cả các role
-            violation.setStatus("Pending");
+            violation.setStatus("Approved");
         }
 
         // Tiếp tục gán các thông tin còn lại cho violation
@@ -85,42 +83,28 @@ public class ViolationService {
         violation.setViolationType(violationTypeRepository.findById(dto.getViolationType().getId()).orElse(null));
         violation.setViolationDate(dto.getViolationDate());
         violation.setDescription(dto.getDescription());
-        violation.setCreatedAt(LocalDateTime.now());
+        violation.setCreatedDate(LocalDateTime.now());
         violation.setUpdatedAt(LocalDateTime.now());
 
         // Lưu vi phạm
         Violation saved = violationRepository.save(violation);
-        sendViolationEmail(saved, "created");
 
-//        if ("LEADER".equals(currentUser.getRole()) ||"MANAGE".equals(currentUser.getRole()) || "ADMIN".equals(currentUser.getRole())) {
-//            sendViolationEmail(saved, "created");
-//        }
+        // Gửi email nếu là MANAGE hoặc ADMIN
+        if ("LEADER".equals(currentUser.getRole()) ||"MANAGE".equals(currentUser.getRole()) || "ADMIN".equals(currentUser.getRole())) {
+            sendViolationEmail(saved, "created");
+        }
+
+        // Cập nhật lương cho employee
         updateSalaryForEmployee(saved.getEmployee().getId());
 
         return convertToViolationDTO(saved);
     }
 
-    @Scheduled(fixedRate = 3600000) // 1 giờ (3600000 ms)
-    public void autoApprovePendingViolations() {
-        List<Violation> pendingViolations = violationRepository.findByStatus("Pending");
-
-        for (Violation violation : pendingViolations) {
-            // Kiểm tra nếu vi phạm đã được tạo quá 24 giờ
-            if (violation.getCreatedAt().isBefore(LocalDateTime.now().minusHours(24))) {
-                // Cập nhật trạng thái thành "Approved"
-                violation.setStatus("Approved");
-                violation.setUpdatedAt(LocalDateTime.now());
-                violationRepository.save(violation);
-
-                // Cập nhật lương và gửi email thông báo nếu cần
-                updateSalaryForEmployee(violation.getEmployee().getId());
-                sendViolationEmail(violation, "auto-approved");
-            }
-        }
-    }
-
     public ViolationDTO updateViolation(Long id, ViolationDTO dto) {
+        // Lấy thông tin người dùng hiện tại
         User currentUser = authenticationService.getCurrentUser();
+
+        // Kiểm tra quyền hạn của người dùng
         checkRole(currentUser, Arrays.asList("LEADER", "MANAGE", "ADMIN"));
 
         return violationRepository.findById(id)
@@ -192,19 +176,7 @@ public class ViolationService {
                 .orElse(null);
     }
 
-    public List<ViolationDTO> getAllViolationsByUser() {
-        // Lấy thông tin user đang đăng nhập
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // Tìm employee dựa trên email (username)
-        Employee employee = employeeRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        // Trả về các violation của employee
-        return violationRepository.findByEmployeeId(employee.getId()).stream()
-                .map(this::convertToViolationDTO)
-                .collect(Collectors.toList());
-    }
 
     private void checkRole(User user, List<String> allowedRoles) {
         if (user == null) {
@@ -336,55 +308,32 @@ public class ViolationService {
 
     private void sendViolationEmail(Violation violation, String action) {
         String to = violation.getEmployee().getEmail();
-        String subject = "Your Violation has been " + action;
-
-        // Chọn màu sắc dựa trên trạng thái
-        String statusColor;
-        switch (violation.getStatus()) {
-            case "Pending":
-                statusColor = "#f9c74f"; // Màu vàng
-                break;
-            case "Approved":
-                statusColor = "#f94144"; // Màu đỏ
-                break;
-            case "Rejected":
-                statusColor = "#43aa8b"; // Màu xanh lá
-                break;
-            default:
-                statusColor = "#4CAF50"; // Mặc định là màu xanh
-        }
-
-        String content = "<div style=\"max-width: 600px; margin: auto; font-family: Arial, sans-serif; color: #333;\">"
-                + "<div style=\"background-color: #f79e45; padding: 20px; text-align: center; color: white;\">"
-                + "<h1>Bizworks Notification</h1>"
-                + "<p style=\"font-size: 18px;\">A violation has been <strong>" + action + "</strong>.</p>"
-                + "</div>"
-                + "<div style=\"padding: 20px;\">"
-                + "<h2 style=\"color: #f79e45;\">Dear " + violation.getEmployee().getFullname() + ",</h2>"
-                + "<p>We would like to inform you that a violation has been <strong>" + action + "</strong>.</p>"
+        String subject = "Violation " + action;
+        String content = "<div style=\"font-family: Arial, sans-serif; color: #333; line-height: 1.6;\">"
+                + "<h2 style=\"color: #ed0c2a;\">Dear " + violation.getEmployee().getFullname() + ",</h2>"
+                + "<p>A violation has been <strong>" + action + "</strong>.</p>"
                 + "<h3 style=\"color: #2196F3;\">Violation Details:</h3>"
-                + "<table style=\"width: 100%; border-collapse: collapse; margin-top: 10px;\">"
-                + "<tr style=\"background-color: #f2f2f2;\">"
-                + "<td style=\"padding: 10px; border: 1px solid #ddd;\"><strong>Violation Type:</strong></td>"
-                + "<td style=\"padding: 10px; border: 1px solid #ddd;\">" + violation.getViolationType().getType() + "</td>"
+                + "<table style=\"width: 100%; border-collapse: collapse;\">"
+                + "<tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Violation Type:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + violation.getViolationType().getType() + "</td>"
                 + "</tr>"
                 + "<tr>"
-                + "<td style=\"padding: 10px; border: 1px solid #ddd;\"><strong>Violation Money:</strong></td>"
-                + "<td style=\"padding: 10px; border: 1px solid #ddd;\">" + violation.getViolationType().getViolationMoney() + "$" + "</td>"
-                + "</tr>"
-                + "<tr style=\"background-color: #f2f2f2;\">"
-                + "<td style=\"padding: 10px; border: 1px solid #ddd;\"><strong>Description:</strong></td>"
-                + "<td style=\"padding: 10px; border: 1px solid #ddd;\">" + violation.getDescription() + "</td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Violation Money:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + violation.getViolationType().getViolationMoney() +"$"+ "</td>"
                 + "</tr>"
                 + "<tr>"
-                + "<td style=\"padding: 10px; border: 1px solid #ddd;\"><strong>Status:</strong></td>"
-                + "<td style=\"padding: 10px; border: 1px solid #ddd; color: " + statusColor + ";\"><strong>" + violation.getStatus() + "</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\">" + violation.getDescription() + "</td>"
+                + "</tr>"
+                + "<tr>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Status:</strong></td>"
+                + "<td style=\"padding: 8px; border: 1px solid #ddd;color: #4CAF50;\">" + violation.getStatus() + "</td>"
                 + "</tr>"
                 + "</table>"
-                + "<p style=\"margin-top: 20px;\">If you have any questions, please do not hesitate to contact us.</p>"
+                + "<p style=\"margin-top: 20px;\">Please contact the administrator for more information.</p>"
                 + "<p>Best regards,</p>"
                 + "<p style=\"color: #999;\">Bizworks Team</p>"
-                + "</div>"
                 + "</div>";
 
         try {
@@ -393,8 +342,6 @@ public class ViolationService {
             e.printStackTrace(); // Handle email sending error
         }
     }
-
-
 
     private ViolationDTO convertToViolationDTO(Violation violation) {
         return new ViolationDTO(
@@ -418,7 +365,7 @@ public class ViolationService {
                 violation.getViolationDate(),
                 violation.getDescription(),
                 violation.getStatus(),
-                violation.getCreatedAt(),
+                violation.getCreatedDate(),
                 violation.getUpdatedAt()
         );
     }

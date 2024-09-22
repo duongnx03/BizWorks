@@ -28,6 +28,6 @@ public class Violation {
     private LocalDate violationDate;
     private String description;
     private String status;
-    private LocalDateTime createdAt;
+    private LocalDateTime createdDate;
     private LocalDateTime updatedAt;
 }
