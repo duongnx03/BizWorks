@@ -2,13 +2,11 @@
 
         import bizworks.backend.dtos.hrdepartment.InterviewScheduleDTO;
         import bizworks.backend.dtos.hrdepartment.JobApplicationDTO;
-        import bizworks.backend.models.Employee;
         import bizworks.backend.models.hrdepartment.InterviewSchedule;
         import bizworks.backend.models.hrdepartment.JobApplication;
         import bizworks.backend.models.hrdepartment.JobPosting;
         import bizworks.backend.models.hrdepartment.StatusChangeRequest;
         import bizworks.backend.repositories.hrdepartment.*;
-        import bizworks.backend.services.DepartmentService;
         import bizworks.backend.services.EmailService;
         import lombok.RequiredArgsConstructor;
         import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +44,7 @@
                 InterviewSchedule interviewSchedule = new InterviewSchedule();
                 interviewSchedule.setJobApplication(jobApplication);
                 interviewSchedule.setInterviewDate(interviewScheduleDTO.getInterviewDate());
-                interviewSchedule.setInterviewers(interviewScheduleDTO.getInterviewers()); // Đây sẽ là List<Long>
+                interviewSchedule.setInterviewers(interviewScheduleDTO.getInterviewers());
                 interviewSchedule.setLocation(interviewScheduleDTO.getLocation());
 
                 interviewSchedule = interviewScheduleRepository.save(interviewSchedule);
@@ -57,7 +55,7 @@
                 String body = "Dear " + jobApplication.getApplicantName() + ",\n\n"
                         + "Your interview has been scheduled.\n"
                         + "Date: " + interviewSchedule.getInterviewDate() + "\n"
-                        + "Interviewers: " + interviewSchedule.getInterviewers() + "\n" // Cần chuyển danh sách sang chuỗi nếu cần
+                        + "Interviewers: " + interviewSchedule.getInterviewers() + "\n"
                         + "Location: " + interviewSchedule.getLocation() + "\n\n"
                         + "Thank you for your interest in this position. We look forward to meeting you.";
 

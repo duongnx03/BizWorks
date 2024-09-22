@@ -1,10 +1,10 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Table, Button, message, Modal, Form, DatePicker, Input, Select } from "antd";
+import { Table, Button, message, Modal, Form, DatePicker, Input } from "antd";
 import axios from "axios";
 import { base_url } from "../../../../base_urls";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../../../Routes/AuthContext";
-import moment from "moment";
+import moment from "moment"; // Để xử lý thời gian
 
 const JobApplicationApproved = () => {
   const { isLoggedIn, userRole } = useContext(AuthContext);
@@ -13,85 +13,70 @@ const JobApplicationApproved = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [form] = Form.useForm();
-  const [employees, setEmployees] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoggedIn || userRole !== "ADMIN") {
-      navigate("/login");
+    if (!isLoggedIn || userRole !== 'ADMIN') {
+      navigate('/login');
       return;
     }
     fetchApprovedRequests();
-    fetchEmployees();
   }, [isLoggedIn, userRole, navigate]);
 
   const fetchApprovedRequests = async () => {
     try {
       const response = await axios.get(`${base_url}/api/job-applications/accepted`, { withCredentials: true });
-      setApprovedRequests(response.data?.data || []);
+      if (response.data?.data) {
+        setApprovedRequests(response.data.data);
+      } else {
+        setApprovedRequests([]);
+      }
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching approved requests:", error);
-      message.error("Failed to fetch approved requests. Please try again.");
-    } finally {
+      message.error("Failed to fetch approved requests");
+      setApprovedRequests([]);
       setLoading(false);
-    }
-  };
-
-  const fetchEmployees = async () => {
-    try {
-      const response = await axios.get(`${base_url}/api/employee/human-resources`, { withCredentials: true });
-      const employeesWithFullName = response.data.map(employee => ({
-        id: employee.id,
-        name: employee.fullname || `${employee.firstName} ${employee.lastName}`,
-      }));
-      setEmployees(employeesWithFullName);
-    } catch (error) {
-      console.error("Error fetching employees:", error);
-      message.error("Failed to fetch employees. Please try again.");
     }
   };
 
   const columns = [
     {
-      title: "Applicant Name",
-      dataIndex: "applicantName",
-      width: "25%",
+      title: "ID",
+      dataIndex: "id",
+      width: "10%",
     },
     {
-      title: "Email",
+      title: "Applicant Name",
+      dataIndex: "applicantName",
+      width: "20%",
+    },
+    {
+      title: "Applicant Email",
       dataIndex: "applicantEmail",
       width: "25%",
     },
     {
-      title: "Phone",
+      title: "Applicant Phone",
       dataIndex: "applicantPhone",
       width: "20%",
-    },
-    {
-      title: "Application Date",
-      dataIndex: "applicationDate",
-      render: (date) => (date ? moment(date).format("YYYY-MM-DD") : "N/A"),
-      width: "15%",
     },
     {
       title: "Resume",
       render: (_, record) => {
         const resumeUrl = record.resumeUrl;
         return (
-          <Button
-            onClick={() => {
-              if (resumeUrl) {
-                window.open(`${base_url}/api/files/view/${resumeUrl}`, "_blank");
-              } else {
-                message.error("No resume available");
-              }
-            }}
-          >
+          <Button onClick={() => {
+            if (resumeUrl) {
+              window.open(`${base_url}/api/files/view/${resumeUrl}`, '_blank');
+            } else {
+              message.error("No resume available");
+            }
+          }}>
             View Resume
           </Button>
         );
       },
-      width: "15%",
     },
     {
       title: "Action",
@@ -104,7 +89,7 @@ const JobApplicationApproved = () => {
   const openModal = (application) => {
     setSelectedApplication(application);
     setIsModalVisible(true);
-    form.resetFields();
+    form.resetFields(); // Reset các trường trong form
   };
 
   const handleOk = async () => {
@@ -120,10 +105,10 @@ const JobApplicationApproved = () => {
       await axios.post(`${base_url}/api/interview-schedules`, interviewData, { withCredentials: true });
       message.success("Interview scheduled successfully");
       setIsModalVisible(false);
-      fetchApprovedRequests();
+      fetchApprovedRequests(); // Cập nhật danh sách sau khi tạo lịch phỏng vấn
     } catch (error) {
       console.error("Error scheduling interview:", error);
-      message.error("Failed to schedule interview. Please check the information and try again.");
+      message.error("Failed to schedule interview");
     }
   };
 
@@ -144,7 +129,6 @@ const JobApplicationApproved = () => {
           </div>
         </div>
       </div>
-
       <Modal
         title="Schedule Interview"
         visible={isModalVisible}
@@ -155,27 +139,21 @@ const JobApplicationApproved = () => {
           <Form.Item
             label="Interview Date"
             name="interviewDate"
-            rules={[{ required: true, message: "Please select interview date!" }]}
+            rules={[{ required: true, message: 'Please select interview date!' }]}
           >
             <DatePicker showTime />
           </Form.Item>
           <Form.Item
             label="Interviewers"
             name="interviewers"
-            rules={[{ required: true, message: "Please select interviewers!" }]}
+            rules={[{ required: true, message: 'Please input interviewers!' }]}
           >
-            <Select mode="multiple" placeholder="Select interviewers">
-              {employees.map(employee => (
-                <Select.Option key={employee.id} value={employee.id}>
-                  {employee.name}
-                </Select.Option>
-              ))}
-            </Select>
+            <Input />
           </Form.Item>
           <Form.Item
             label="Location"
             name="location"
-            rules={[{ required: true, message: "Please input location!" }]}
+            rules={[{ required: true, message: 'Please input location!' }]}
           >
             <Input />
           </Form.Item>

@@ -1,21 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { List, Typography, Card, Spin, message, Button, Select, Input } from 'antd';
+import { List, Typography, Card, Spin, message, Button } from 'antd';
 import axios from 'axios';
-import { base_url } from '../../../base_urls';
+import { base_url } from '../../../base_urls'; // Đảm bảo bạn đã cấu hình base_url đúng
 
 const { Title } = Typography;
-const { Option } = Select;
 
 const JobBoard = () => {
   const [jobPostings, setJobPostings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [location, setLocation] = useState('');
-  const [employmentType, setEmploymentType] = useState('');
-  const [departmentId, setDepartmentId] = useState('');
-  const [positionId, setPositionId] = useState('');
-  const [departments, setDepartments] = useState([]);
-  const [positions, setPositions] = useState([]);
 
   useEffect(() => {
     const fetchJobPostings = async () => {
@@ -23,14 +16,10 @@ const JobBoard = () => {
         const response = await axios.get(`${base_url}/api/job-postings/list`, { withCredentials: true });
         const currentDate = new Date();
 
+        // Lọc các tin tuyển dụng dựa trên ngày đăng
         const filteredJobPostings = response.data.data.filter(posting => {
           const postedDate = new Date(posting.postedDate);
-          const matchesLocation = posting.location.toLowerCase().includes(location.toLowerCase());
-          const matchesEmploymentType = employmentType ? posting.employmentType === employmentType : true;
-          const matchesDepartment = departmentId ? posting.departmentId === departmentId : true;
-          const matchesPosition = positionId ? posting.positionId === positionId : true;
-
-          return postedDate <= currentDate && matchesLocation && matchesEmploymentType && matchesDepartment && matchesPosition;
+          return postedDate <= currentDate;
         });
 
         setJobPostings(filteredJobPostings);
@@ -43,165 +32,30 @@ const JobBoard = () => {
     };
 
     fetchJobPostings();
-  }, [location, employmentType, departmentId, positionId]);
-
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        const response = await axios.get(`${base_url}/api/departments`, { withCredentials: true });
-        setDepartments(response.data);
-      } catch (error) {
-        console.error('Lỗi khi lấy danh sách phòng ban:', error);
-        message.error('Không thể lấy danh sách phòng ban');
-      }
-    };
-
-    fetchDepartments();
   }, []);
 
-  useEffect(() => {
-    const fetchPositions = async () => {
-      if (departmentId) {
-        try {
-          const response = await axios.get(`${base_url}/api/positions/by-department`, {
-            params: { departmentId },
-            withCredentials: true,
-          });
-          setPositions(response.data);
-        } catch (error) {
-          console.error('Lỗi khi lấy danh sách vị trí:', error);
-          message.error('Không thể lấy danh sách vị trí');
-        }
-      } else {
-        setPositions([]);
-      }
-    };
-
-    fetchPositions();
-  }, [departmentId]);
-
-  const getDepartmentName = (departmentId) => {
-    const department = departments.find(dept => dept.id === departmentId);
-    return department ? department.name : 'N/A';
-  };
-
-  const handleSaveFavorite = async (jobPostingId) => {
-    try {
-      const userId = 1; // Thay bằng ID người dùng thực tế
-      await axios.post(`${base_url}/api/favorites`, { userId, jobPostingId }, { withCredentials: true });
-      message.success('Đã lưu tin tuyển dụng yêu thích!');
-    } catch (error) {
-      console.error('Lỗi khi lưu tin tuyển dụng yêu thích:', error);
-      message.error('Không thể lưu tin tuyển dụng yêu thích');
-    }
-  };
-
   return (
-    <div className="job-postings-list" style={{ padding: '40px', backgroundColor: '#f9fafb' }}>
-      <Title level={2} style={{ textAlign: 'center', marginBottom: '40px', color: '#1e90ff' }}>
-        Danh Sách Tin Tuyển Dụng
-      </Title>
-
-      <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-        <Input 
-          placeholder="Tìm theo địa điểm" 
-          value={location} 
-          onChange={e => setLocation(e.target.value)} 
-          style={{ width: '200px', marginRight: '10px' }} 
-        />
-        <Select 
-          placeholder="Chọn loại công việc" 
-          value={employmentType} 
-          onChange={value => setEmploymentType(value)} 
-          style={{ width: '200px', marginRight: '10px' }}
-        >
-          <Option value="">Tất cả</Option>
-          <Option value="full-time">Toàn thời gian</Option>
-          <Option value="part-time">Bán thời gian</Option>
-        </Select>
-        <Select 
-          placeholder="Chọn phòng ban" 
-          value={departmentId} 
-          onChange={value => setDepartmentId(value)} 
-          style={{ width: '200px', marginRight: '10px' }}
-        >
-          <Option value="">Tất cả</Option>
-          {departments.map(department => (
-            <Option key={department.id} value={department.id}>
-              {department.name}
-            </Option>
-          ))}
-        </Select>
-        <Select 
-          placeholder="Chọn vị trí" 
-          value={positionId} 
-          onChange={value => setPositionId(value)} 
-          style={{ width: '200px' }}
-          disabled={!departmentId}
-        >
-          <Option value="">Tất cả</Option>
-          {positions.map(position => (
-            <Option key={position.id} value={position.id}>
-              {position.positionName}
-            </Option>
-          ))}
-        </Select>
-      </div>
-
+    <div className="job-postings-list" style={{ padding: '20px', backgroundColor: '#f9f9f9' }}>
+      <Title level={2} style={{ textAlign: 'center', marginBottom: '20px' }}>Danh Sách Tin Tuyển Dụng</Title>
       {loading ? (
         <div style={{ textAlign: 'center' }}>
           <Spin size="large" />
         </div>
       ) : (
         <List
-          grid={{ gutter: 16, column: 2 }}  
+          grid={{ gutter: 16, column: 1 }}
           dataSource={jobPostings}
           renderItem={posting => (
             <List.Item>
               <Card
-                title={<span style={{ fontWeight: 'bold', fontSize: '20px', color: '#333' }}>{posting.title}</span>}
-                extra={
-                  <div>
-                    <Link to={`/job-postings/${posting.id}`}>
-                      <Button
-                        type="primary"
-                        style={{
-                          backgroundColor: '#1e90ff',
-                          borderColor: '#1e90ff',
-                          borderRadius: '5px',
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        Xem Thêm
-                      </Button>
-                    </Link>
-                    <Button
-                      type="default"
-                      onClick={() => handleSaveFavorite(posting.id)}
-                      style={{
-                        marginLeft: '10px',
-                        borderRadius: '5px',
-                      }}
-                    >
-                      Lưu
-                    </Button>
-                  </div>
-                }
-                style={{
-                  borderRadius: '10px',
-                  boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
-                  backgroundColor: '#fff',
-                  padding: '20px',
-                  transition: 'transform 0.3s, box-shadow 0.3s',
-                }}
-                hoverable
+                title={<span style={{ fontWeight: 'bold' }}>{posting.title}</span>}
+                extra={<Link to={`/job-postings/${posting.id}`}><Button type="primary">Xem Thêm</Button></Link>}
+                style={{ borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff' }}
               >
-                <p style={{ fontSize: '16px', marginBottom: '12px', color: '#555' }}>{posting.description}</p>
+                <p>{posting.description}</p>
                 <p><strong>Địa điểm:</strong> {posting.location}</p>
                 <p><strong>Hạn chót:</strong> {new Date(posting.deadline).toLocaleDateString()}</p>
-                <p><strong>Vị trí:</strong> {posting.positionName || 'N/A'}</p>
-                <p><strong>Loại hình công việc:</strong> {posting.employmentType || 'N/A'}</p>
-                <p><strong>Phòng ban:</strong> {getDepartmentName(posting.departmentId)}</p>
+                <p><strong>Vị trí:</strong> {posting.positionName || 'N/A'}</p> {/* Hiển thị tên của Position */}
               </Card>
             </List.Item>
           )}

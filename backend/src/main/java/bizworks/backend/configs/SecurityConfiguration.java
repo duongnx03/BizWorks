@@ -54,7 +54,6 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/files/upload/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER" , "MANAGE")
                         .requestMatchers("/api/training-programs/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER" , "MANAGE")
                         .requestMatchers("/api/interview-schedules/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER" , "MANAGE")
-                        .requestMatchers("/api/favorites/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER" , "MANAGE")
 
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

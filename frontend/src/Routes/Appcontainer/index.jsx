@@ -231,7 +231,6 @@ import JobApplicationManage from "../../views/pages/Employees/JobApplication/Job
 import ApprovedRequestsPage from "../../views/pages/Employees/JobApplication/ApprovedRequestsPage.jsx";
 import JobApplicationApproved from "../../views/pages/Employees/JobApplication/JobApplicationApproved.jsx";
 import InterviewScheduleList from "../../views/pages/Employees/JobApplication/InterviewScheduleList.jsx";
-import FavoriteJobPostings from "../../views/pages/Employees/FavoriteJobPostings.jsx";
 const AppContainer = () => {
   useEffect(() => {
     localStorage.setItem("colorschema", "orange");
@@ -1139,11 +1138,6 @@ const AppContainer = () => {
       id: 156,
       path: "interview-schedule-list",      
       element: <InterviewScheduleList   />
-    },
-    {
-      id: 157,
-      path: "favorites",      
-      element: <FavoriteJobPostings   />
     },
   ];
 

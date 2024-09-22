@@ -1,8 +1,9 @@
+// src/pages/ApprovedRequestsPage.js
+
 import React, { useEffect, useState } from 'react';
 import { Table, message } from 'antd';
 import axios from 'axios';
 import { base_url } from '../../../../base_urls';
-import moment from 'moment';
 
 const ApprovedRequestsPage = () => {
   const [approvedRequests, setApprovedRequests] = useState([]);
@@ -37,23 +38,22 @@ const ApprovedRequestsPage = () => {
     },
     {
       title: 'Applicant Name',
-      dataIndex: ['jobApplication', 'applicantName'], // Sửa lại dataIndex
+      dataIndex: 'jobApplication.applicantName',
       width: '20%',
     },
     {
       title: 'Email',
-      dataIndex: ['jobApplication', 'applicantEmail'], // Sửa lại dataIndex
+      dataIndex: 'jobApplication.applicantEmail',
       width: '25%',
     },
     {
       title: 'Phone',
-      dataIndex: ['jobApplication', 'applicantPhone'], // Sửa lại dataIndex
+      dataIndex: 'jobApplication.applicantPhone',
       width: '15%',
     },
     {
       title: 'Application Date',
-      dataIndex: ['jobApplication', 'applicationDate'], // Sửa lại dataIndex
-      render: (date) => (date ? moment(date).format("YYYY-MM-DD") : "N/A"),
+      dataIndex: 'jobApplication.applicationDate',
       width: '15%',
     },
     {
@@ -64,7 +64,6 @@ const ApprovedRequestsPage = () => {
     {
       title: 'Approval Date',
       dataIndex: 'approvalDate',
-      render: (date) => (date ? moment(date).format("YYYY-MM-DD") : "N/A"),
       width: '15%',
     },
   ];

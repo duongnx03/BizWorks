@@ -14,7 +14,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,9 +23,6 @@ public class EmployeeService {
 
     public boolean existsByEmail(String email){
         return employeeRepository.existsByEmail(email);
-    }
-    public List<Employee> getEmployeesByDepartment(String departmentName) {
-        return employeeRepository.findByDepartmentName(departmentName);
     }
 
     public List<Employee> findAll() {

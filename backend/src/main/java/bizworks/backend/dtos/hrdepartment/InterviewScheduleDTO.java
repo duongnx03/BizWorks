@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -14,6 +13,6 @@ public class InterviewScheduleDTO {
     private Long id;
     private Long jobApplicationId;
     private LocalDateTime interviewDate;
-    private List<Long> interviewers; // Sử dụng List<Long> thay vì String
+    private String interviewers;
     private String location;
 }
