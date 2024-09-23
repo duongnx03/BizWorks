@@ -592,7 +592,7 @@ const AppContainer = () => {
       id: 53,
       path: "profile",
       element: (
-        <PrivateRoute element={Profile} allowedRoles={["EMPLOYEE", "LEADER"]} />
+        <PrivateRoute element={Profile} allowedRoles={["EMPLOYEE", "LEADER", "MANAGE"]} />
       ),
     },
     {
