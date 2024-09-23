@@ -2,11 +2,10 @@ package bizworks.backend.services;
 
 import bizworks.backend.configs.Util.GeoToolsDistanceCalculator;
 import bizworks.backend.dtos.*;
-import bizworks.backend.models.Attendance;
-import bizworks.backend.models.Employee;
-import bizworks.backend.models.Overtime;
-import bizworks.backend.models.User;
+import bizworks.backend.models.*;
 import bizworks.backend.repositories.AttendanceRepository;
+import bizworks.backend.services.humanresources.ViolationService;
+import bizworks.backend.services.humanresources.ViolationTypeService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -35,6 +34,8 @@ public class AttendanceService {
     private final MailService mailService;
     private final FaceRecognitionService faceRecognitionService;
     private final MissedCheckOutHandlingService missedCheckOutHandlingService;
+    private final ViolationTypeService violationTypeService;
+    private final ViolationService violationService;
 
     // Địa điểm yêu cầu chấm công
     private static final double REQUIRED_LATITUDE = 11.879387995504702; // Vĩ độ
@@ -151,6 +152,7 @@ public class AttendanceService {
         LocalDateTime currentDateTime = LocalDateTime.now();
         LocalDateTime startCheckInTime = currentDateTime.with(LocalTime.of(7, 55));
         LocalDateTime endCheckInTime = currentDateTime.with(LocalTime.of(8, 5));
+
         if (currentDateTime.isBefore(startCheckInTime)) {
             throw new RuntimeException("You cannot check in at this time. Allowed time is between 7:55 and 8:05.");
         } else {
@@ -162,14 +164,28 @@ public class AttendanceService {
                     throw new RuntimeException("You have already checked in today");
                 } else {
                     LocalDateTime checkInTime;
+                    Employee employee = employeeService.findByEmail(email);
+
                     if (currentDateTime.isAfter(endCheckInTime)) {
-                        //xử lý đi trễ
+                        // Handle late arrival
                         checkInTime = currentDateTime;
+
+                        // Create violation
+                        ViolationDTO violationDTO = new ViolationDTO();
+                        violationDTO.setEmployee(new EmployeeDTO(employee.getId()));
+                        ViolationType violationType = violationTypeService.findById(1L);
+                        violationDTO.setViolationType(ViolationTypeDTO.from(violationType));
+                        violationDTO.setViolationDate(LocalDate.now());
+                        violationDTO.setDescription("You were late today and checkIn in late at: " + checkInTime.toLocalTime());
+                        violationDTO.setStatus("Pending");
+
+                        violationService.createViolation(violationDTO);
                     } else {
                         checkInTime = currentDateTime.with(LocalTime.of(8, 0));
                     }
+
+                    // Create attendance record
                     Attendance attendance = new Attendance();
-                    Employee employee = employeeService.findByEmail(email);
                     attendance.setCheckInTime(checkInTime);
                     attendance.setAttendanceDate(today);
                     attendance.setStatus("In Progress");

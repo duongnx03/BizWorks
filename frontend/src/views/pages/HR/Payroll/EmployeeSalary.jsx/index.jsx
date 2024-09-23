@@ -93,10 +93,9 @@ const EmployeeSalary = () => {
         withCredentials: true,
       });
       const data = Array.isArray(response.data.data) ? response.data.data : [];
-      // Convert month to numeric value if needed
       const formattedData = data.map((item) => ({
         ...item,
-        month: parseInt(item.month, 10), // Convert month to number
+        month: parseInt(item.month, 10),
       }));
       setSalaryData(formattedData);
     } catch (error) {
@@ -167,7 +166,7 @@ const EmployeeSalary = () => {
   const handleEditClick = async (id) => {
     setEditSalaryId(id);
     // Open modal programmatically
-    document.getElementById('edit_salary').classList.add('show');
+    document.getElementById("edit_salary").classList.add("show");
   };
 
   const columns = [
@@ -177,10 +176,10 @@ const EmployeeSalary = () => {
       render: (employees) =>
         employees.length > 0 ? (
           <div className="table-avatar">
-            <Link to="/profile" className="avatar">
+            <Link to={`/client-profile/${employees[0].id}`} className="avatar">
               <img alt="" src={employees[0].avatar} />
             </Link>
-            <Link to="/profile">
+            <Link to={`/client-profile/${employees[0].id}`}>
               {employees[0].fullname} - {employees[0].empCode}
             </Link>
           </div>
@@ -285,14 +284,6 @@ const EmployeeSalary = () => {
             >
               <i className="fa fa-pencil m-r-5" /> Edit
             </Link>
-            <Link
-              className="dropdown-item"
-              to="#"
-              data-bs-toggle="modal"
-              data-bs-target="#delete"
-            >
-              <i className="fa fa-trash m-r-5" /> Delete
-            </Link>
           </div>
         </div>
       ),
@@ -320,7 +311,7 @@ const EmployeeSalary = () => {
             modal="#add_salary"
             name="Add Salary"
           />
-  
+
           <div className="row filter-row">
             {/* Các trường tìm kiếm */}
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
@@ -345,7 +336,6 @@ const EmployeeSalary = () => {
                 </label>
               </div>
             </div>
-            {/* Các trường tìm kiếm khác */}
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
               <div
                 className={`input-block form-focus ${
@@ -415,7 +405,7 @@ const EmployeeSalary = () => {
               </Link>
             </div>
           </div>
-  
+
           <div className="row">
             <div className="col-md-12">
               <div className="table-responsive">
@@ -461,7 +451,7 @@ const EmployeeSalary = () => {
                     </div>
                   )}
                 </div>
-  
+
                 <Table
                   className="table-striped"
                   style={{ overflowX: "auto" }}
@@ -483,14 +473,13 @@ const EmployeeSalary = () => {
           </div>
         </div>
       </div>
-  
+
       <AddSalaryModal onAddSuccess={fetchSalaries} />
       <EditSalaryModal
         salaryId={editSalaryId}
-        onEditSuccess={fetchSalaries}
-        onClose={() => setEditSalaryId(null)} // Ensure the modal closes
+        onUpdateSuccess={fetchSalaries}
+        onClose={() => setEditSalaryId(null)}
       />
-      <DeleteModal Name="Delete Salary" />
     </>
   );
 };

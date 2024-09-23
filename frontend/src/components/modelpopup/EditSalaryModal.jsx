@@ -1,20 +1,76 @@
 import React, { useState, useEffect, useRef } from "react";
 import Select from "react-select";
 import axios from "axios";
+import { Spin, notification } from "antd";
+import { CloseCircleOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { base_url } from "../../base_urls";
+
+const openNotificationWithError = (message) => {
+  notification.error({
+    message: "Error",
+    description: <span style={{ color: "#ed2d33" }}>{message}</span>,
+    placement: "topRight",
+  });
+};
+
+const openNotificationWithSuccess = (message) => {
+  notification.success({
+    message: "Success",
+    description: (
+      <div>
+        <span style={{ color: "#09b347" }}>{message}</span>
+        <button
+          onClick={() => notification.destroy()}
+          style={{
+            border: "none",
+            background: "transparent",
+            float: "right",
+            cursor: "pointer",
+          }}
+        >
+          <CloseCircleOutlined style={{ color: "#09b347" }} />
+        </button>
+      </div>
+    ),
+    placement: "topRight",
+    icon: <CheckCircleOutlined style={{ color: "#52c41a" }} />,
+  });
+};
 
 const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose, userRole }) => {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [basic, setBasic] = useState("");
-  const [bonus, setBonus] = useState("");
-  const [allowance, setAllowance] = useState("");
-  const [advanceSalary, setAdvanceSalary] = useState("");
-  const [deductions, setDeductions] = useState("");
+  const [salaryCode, setSalaryCode] = useState("");
+  const [month, setMonth] = useState("");
+  const [basic, setBasic] = useState("0");
+  const [bonus, setBonus] = useState("0");
+  const [allowance, setAllowance] = useState("0");
+  const [overtime, setOvertime] = useState("0");
+  const [advanceSalary, setAdvanceSalary] = useState("0");
+  const [deductions, setDeductions] = useState("0");
+  const [status, setStatus] = useState("");
+  const [notes, setNotes] = useState("");
+  const [updatedBy, setUpdatedBy] = useState("");
   const [departments, setDepartments] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
-  const closeButtonRef = useRef(null); // Ref to access the close button
+  const [errors, setErrors] = useState({});
+  const closeButtonRef = useRef(null);
+
+  const monthOptions = [
+    { value: "1", label: "January" },
+    { value: "2", label: "February" },
+    { value: "3", label: "March" },
+    { value: "4", label: "April" },
+    { value: "5", label: "May" },
+    { value: "6", label: "June" },
+    { value: "7", label: "July" },
+    { value: "8", label: "August" },
+    { value: "9", label: "September" },
+    { value: "10", label: "October" },
+    { value: "11", label: "November" },
+    { value: "12", label: "December" },
+  ];
 
   useEffect(() => {
     fetchDepartments();
@@ -45,13 +101,17 @@ const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose, userRole }) => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, {
-        withCredentials: true,
-      });
+      const response = await axios.get(
+        `${base_url}/api/employee/getAllEmployees`,
+        {
+          withCredentials: true,
+        }
+      );
       setEmployees(
         response.data.data.map((employee) => ({
           value: employee.id,
-          label: employee.fullname,
+          label: `${employee.fullname} - ${employee.empCode}`,
+          department: employee.department,
         }))
       );
     } catch (error) {
@@ -62,28 +122,34 @@ const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose, userRole }) => {
   const fetchSalaryData = async (id) => {
     setLoading(true);
     try {
-      if (departments.length === 0 || employees.length === 0) {
-        // If data is not loaded yet, wait or handle the error
-        console.warn('Departments or employees data not loaded yet.');
-        return;
-      }
-
       const response = await axios.get(`${base_url}/api/salaries/${id}`, {
         withCredentials: true,
       });
       const data = response.data.data;
-      console.log('Fetched Salary Data:', data);
-      setSelectedDepartment(
-        departments.find(dep => dep.value === data.departmentId) || null
+      const employee = data.employees[0];
+
+      setSelectedDepartment({
+        value: employee.departmentId,
+        label: employee.departmentName,
+      });
+      setSelectedEmployee({
+        value: employee.id,
+        label: `${employee.fullname} (${employee.empCode})`,
+      });
+      setSalaryCode(data.salaryCode || "");
+      const selectedMonth = monthOptions.find(
+        (option) => option.value === data.month.toString() // Convert to string
       );
-      setSelectedEmployee(
-        employees.find(emp => emp.value === data.employeeId) || null
-      );
-      setBasic(data.basic || "");
-      setBonus(data.bonus || "");
-      setAllowance(data.allowance || "");
-      setAdvanceSalary(data.advanceSalary || "");
-      setDeductions(data.violations || "");
+      setMonth(selectedMonth ? selectedMonth.value : "");
+      setBasic(data.basicSalary || "0");
+      setBonus(data.bonusSalary || "0");
+      setAllowance(data.allowances || "0");
+      setOvertime(data.overtime || "0");
+      setAdvanceSalary(data.advanceSalary || "0");
+      setDeductions(data.deductions || "0");
+      setStatus(data.status || "");
+      setUpdatedBy(data.updatedBy || "");
+      setNotes(data.notes || "");
     } catch (error) {
       console.error("Error fetching salary data:", error);
     } finally {
@@ -102,39 +168,71 @@ const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose, userRole }) => {
     }),
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const updatedSalary = {
-      departmentId: selectedDepartment ? selectedDepartment.value : null,
-      employeeId: selectedEmployee ? selectedEmployee.value : null,
+  const validateInputs = () => {
+    const newErrors = {};
+    const fields = {
       basic,
       bonus,
       allowance,
+      overtime,
       advanceSalary,
       deductions,
     };
+
+    Object.keys(fields).forEach((key) => {
+      const value = parseFloat(fields[key]) || 0;
+      if (value < 0) {
+        newErrors[key] = "Value cannot be negative.";
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Return true if no errors
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    if (!validateInputs()) {
+      setLoading(false);
+      return;
+    }
+
+    const updatedSalary = {
+      salaryCode,
+      month,
+      basicSalary: basic || "0",
+      bonusSalary: bonus || "0",
+      allowances: allowance || "0",
+      overtime: overtime || "0",
+      advanceSalary: advanceSalary || "0",
+      deductions: deductions || "0",
+      updatedBy: updatedBy || "Human Resources",
+      notes: notes || "",
+    };
+
     try {
       await axios.put(`${base_url}/api/salaries/${salaryId}`, updatedSalary, {
         withCredentials: true,
       });
-      if (onUpdateSuccess) onUpdateSuccess();
-      // Close the modal
-      if (closeButtonRef.current) {
-        closeButtonRef.current.click(); // Simulate a click on the close button to close the modal
-      }
-    } catch (error) {
-      console.error("Error updating salary:", error);
-    }
-  };
 
-  useEffect(() => {
-    if (!salaryId) {
-      // Manually trigger closing if salaryId is not provided
+      openNotificationWithSuccess("Salary updated successfully!");
+
+      if (onUpdateSuccess) onUpdateSuccess();
+
       if (closeButtonRef.current) {
         closeButtonRef.current.click();
       }
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "Failed to update salary. Please try again.";
+      openNotificationWithError(errorMessage);
+    } finally {
+      setLoading(false);
     }
-  }, [salaryId]);
+  };
 
   return (
     <div
@@ -145,7 +243,10 @@ const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose, userRole }) => {
       aria-labelledby="editSalaryModalLabel"
       aria-hidden={!salaryId}
     >
-      <div className="modal-dialog modal-dialog-centered modal-lg" role="document">
+      <div
+        className="modal-dialog modal-dialog-centered modal-lg"
+        role="document"
+      >
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">Edit Staff Salary</h5>
@@ -154,7 +255,7 @@ const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose, userRole }) => {
               className="btn-close"
               data-bs-dismiss="modal"
               aria-label="Close"
-              ref={closeButtonRef} // Ref for the close button
+              ref={closeButtonRef}
             >
               <span aria-hidden="true">×</span>
             </button>
@@ -164,84 +265,154 @@ const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose, userRole }) => {
               <div className="row">
                 <div className="col-sm-6">
                   <div className="input-block mb-3">
-                    <label className="col-form-label">Select Department</label>
+                    <label className="col-form-label">Department</label>
                     <Select
                       placeholder="Select"
                       options={departments}
                       value={selectedDepartment}
                       onChange={setSelectedDepartment}
                       className="select"
-                      styles={customStyles}
+                      isDisabled
                     />
                   </div>
                 </div>
                 <div className="col-sm-6">
                   <div className="input-block mb-3">
-                    <label className="col-form-label">Select Staff</label>
+                    <label className="col-form-label">Staff</label>
                     <Select
                       placeholder="Select"
                       options={employees}
                       value={selectedEmployee}
                       onChange={setSelectedEmployee}
                       className="select"
+                      isDisabled
+                    />
+                  </div>
+                </div>
+                <div className="col-sm-6">
+                  <div className="input-block mb-3">
+                    <label className="col-form-label">Salary Code</label>
+                    <input
+                      className="form-control"
+                      type="text"
+                      value={salaryCode}
+                      onChange={(e) => setSalaryCode(e.target.value)}
+                      readOnly
+                    />
+                  </div>
+                </div>
+
+                <div className="col-sm-6">
+                  <div className="input-block mb-3">
+                    <label className="col-form-label">Month</label>
+                    <Select
+                      placeholder="Select Month"
+                      options={monthOptions}
+                      value={monthOptions.find(
+                        (option) => option.value === month
+                      )}
+                      onChange={(selectedOption) =>
+                        setMonth(selectedOption.value)
+                      }
+                      className="select"
                       styles={customStyles}
+                      isDisabled
                     />
                   </div>
                 </div>
               </div>
               <div className="row">
                 <div className="col-sm-6">
-                  <h4 className="text-primary">Earnings</h4>
+                  <h4 className="text-success">Earnings</h4>
+                  {["basic", "bonus", "allowance", "overtime"].map((field) => (
+                    <div className="input-block mb-3" key={field}>
+                      <label className="col-form-label">
+                        {field.charAt(0).toUpperCase() + field.slice(1)}
+                      </label>
+                      <div className="input-group">
+                        <span className="input-group-text">$</span>
+                        <input
+                          className="form-control"
+                          type="text"
+                          value={eval(field)} // Access state using eval for brevity
+                          onChange={(e) =>
+                            eval(
+                              `set${
+                                field.charAt(0).toUpperCase() + field.slice(1)
+                              }(e.target.value)`
+                            )
+                          }
+                        />
+                      </div>
+                      {errors[field] && (
+                        <div style={{ color: "red" }}>{errors[field]}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="col-sm-6">
+                  <h4 className="text-danger">Deductions</h4>
+                  {["advanceSalary", "deductions"].map((field) => (
+                    <div className="input-block mb-3" key={field}>
+                      <label className="col-form-label">
+                        {field.charAt(0).toUpperCase() + field.slice(1)}
+                      </label>
+                      <div className="input-group">
+                        <span className="input-group-text">$</span>
+                        <input
+                          className="form-control"
+                          type="text"
+                          value={eval(field)}
+                          onChange={(e) =>
+                            eval(
+                              `set${
+                                field.charAt(0).toUpperCase() + field.slice(1)
+                              }(e.target.value)`
+                            )
+                          }
+                        />
+                      </div>
+                      {errors[field] && (
+                        <div style={{ color: "red" }}>{errors[field]}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-sm-6">
                   <div className="input-block mb-3">
-                    <label className="col-form-label">Basic</label>
+                    <label className="col-form-label">Status</label>
                     <input
                       className="form-control"
                       type="text"
-                      value={basic}
-                      onChange={(e) => setBasic(e.target.value)}
-                    />
-                  </div>
-                  <div className="input-block mb-3">
-                    <label className="col-form-label">Bonus</label>
-                    <input
-                      className="form-control"
-                      type="text"
-                      value={bonus}
-                      onChange={(e) => setBonus(e.target.value)}
-                    />
-                  </div>
-                  <div className="input-block mb-3">
-                    <label className="col-form-label">Allowance</label>
-                    <input
-                      className="form-control"
-                      type="text"
-                      value={allowance}
-                      onChange={(e) => setAllowance(e.target.value)}
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      readOnly
                     />
                   </div>
                 </div>
                 <div className="col-sm-6">
-                  <h4 className="text-primary">Deductions</h4>
                   <div className="input-block mb-3">
-                    <label className="col-form-label">Advance Salary</label>
+                    <label className="col-form-label">Updater Name</label>
                     <input
                       className="form-control"
                       type="text"
-                      value={advanceSalary}
-                      onChange={(e) => setAdvanceSalary(e.target.value)}
-                    />
-                  </div>
-                  <div className="input-block mb-3">
-                    <label className="col-form-label">Violations</label>
-                    <input
-                      className="form-control"
-                      type="text"
-                      value={deductions}
-                      onChange={(e) => setDeductions(e.target.value)}
-                      disabled={userRole === "LEADER"} // Disable the input for LEADER role
+                      value={updatedBy}
+                      onChange={(e) => setUpdatedBy(e.target.value)}
+                      placeholder="Enter updater's name"
                     />
                   </div>
                 </div>
+                <div className="input-block mb-3">
+                    <label className="col-form-label">Notes</label>
+                    <input
+                      className="form-control"
+                      type="text"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                    />
+                  </div>
               </div>
               <div className="submit-section">
                 <button
@@ -249,7 +420,7 @@ const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose, userRole }) => {
                   type="submit"
                   disabled={loading}
                 >
-                  {loading ? "Updating..." : "Submit"}
+                  {loading ? <Spin size="small" /> : "Submit"}
                 </button>
               </div>
             </form>

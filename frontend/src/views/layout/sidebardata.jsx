@@ -77,15 +77,7 @@ export const SidebarData = [
           {
             menuValue: "Departments",
             route: "/departments",
-          },
-          {
-            menuValue: "ViolationType",
-            route: "/violation-types",
-          },
-          {
-            menuValue: "List Violation",
-            route: "/violations",
-          },
+          }, 
           {
             menuValue: 'Training Programs',
             route: "/training-programs",
@@ -161,18 +153,6 @@ export const SidebarData = [
             route: "/departments",
           },
           {
-            menuValue: "ViolationType",
-            route: "/violation-types",
-          },
-          {
-            menuValue: "List Violation",
-            route: "/violations",
-          },
-          {
-            menuValue: "All Violation Complaints",
-            route: "/violation_complaints",
-          },
-          {
             menuValue: 'Training Programs',
             route: "/training-programs",
           },
@@ -242,18 +222,6 @@ export const SidebarData = [
             route: "/departments",
           },
           {
-            menuValue: "ViolationType",
-            route: "/violation-types",
-          },
-          {
-            menuValue: "List Violation",
-            route: "/violations",
-          },
-          {
-            menuValue: "All Violation Complaints",
-            route: "/violation_complaints",
-          },
-          {
             menuValue: 'Training Programs',
             route: "/training-programs",
           },
@@ -264,6 +232,10 @@ export const SidebarData = [
           {
             menuValue: 'Job Application',
             route: "/job-application-list",
+          },
+          {
+            menuValue: "Violation",
+            route: "/violations",
           },
           {
             menuValue: "Profile",
@@ -410,6 +382,14 @@ export const SidebarData = [
             menuValue: "Taxes",
             route: "/taxes",
           },
+          {
+            menuValue: "ViolationType",
+            route: "/violation-types",
+          },
+          {
+            menuValue: "Violation",
+            route: "/violations",
+          },
         ],
       },
       {
@@ -418,14 +398,14 @@ export const SidebarData = [
         showSubRoute: false,
         icon: "la la-files-o",
         subMenus: [
-          {
-            menuValue: "Estimates",
-            route: "/estimates",
-          },
-          {
-            menuValue: "Invoices",
-            route: "/invoices",
-          },
+          // {
+          //   menuValue: "Estimates",
+          //   route: "/estimates",
+          // },
+          // {
+          //   menuValue: "Invoices",
+          //   route: "/invoices",
+          // },
           {
             menuValue: "Payments",
             route: "/payments",
@@ -434,10 +414,10 @@ export const SidebarData = [
             menuValue: "Expenses",
             route: "/expenses",
           },
-          {
-            menuValue: "Provident Fund",
-            route: "/provident-fund",
-          },
+          // {
+          //   menuValue: "Provident Fund",
+          //   route: "/provident-fund",
+          // },
         ],
       },
       {
@@ -481,6 +461,10 @@ export const SidebarData = [
           {
             menuValue: "Daily Report",
             route: "/daily-reports",
+          },
+          {
+            menuValue: "Violation Report",
+            route: "/violation_complaints",
           },
           // {
           //   menuValue: "User Report",

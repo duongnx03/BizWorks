@@ -1,45 +1,48 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Table, notification } from "antd";
-import { CloseCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { CloseCircleOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import axios from "axios";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import AddViolation from "../../../components/modelpopup/AddViolation";
 import EditViolation from "../../../components/modelpopup/EditViolation";
 import { base_url } from "../../../base_urls";
 import { Avatar_02 } from "../../../Routes/ImagePath";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import moment from "moment";
+
 const openNotificationWithError = (message) => {
   notification.error({
-    message: 'Error',
-    description: <span style={{ color: '#ed2d33' }}>{message}</span>,
-    placement: 'topRight',
+    message: "Error",
+    description: <span style={{ color: "#ed2d33" }}>{message}</span>,
+    placement: "topRight",
   });
 };
 
 const openNotificationWithSuccess = (message) => {
   notification.success({
-    message: 'Success',
+    message: "Success",
     description: (
       <div>
-        <span style={{ color: '#09b347' }}>{message}</span>
+        <span style={{ color: "#09b347" }}>{message}</span>
         <button
           onClick={() => notification.destroy()}
           style={{
-            border: 'none',
-            background: 'transparent',
-            float: 'right',
-            cursor: 'pointer',
+            border: "none",
+            background: "transparent",
+            float: "right",
+            cursor: "pointer",
           }}
         >
-          <CloseCircleOutlined style={{ color: '#09b347' }} />
+          <CloseCircleOutlined style={{ color: "#09b347" }} />
         </button>
       </div>
     ),
-    placement: 'topRight',
-    icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
+    placement: "topRight",
+    icon: <CheckCircleOutlined style={{ color: "#52c41a" }} />,
   });
 };
-
 
 const Violation = () => {
   const [violations, setViolations] = useState([]);
@@ -53,6 +56,10 @@ const Violation = () => {
     sessionStorage.getItem("userRole")
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fullnameOrCodeFilter, setFullnameOrCodeFilter] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState(null); // Using Date type for better comparison
+  const [statusFilter, setStatusFilter] = useState("");
 
   const fetchViolations = async () => {
     setLoading(true);
@@ -60,16 +67,20 @@ const Violation = () => {
       const response = await axios.get(`${base_url}/api/violations`, {
         withCredentials: true,
       });
-      const sortedViolations = response.data.data.sort((a, b) => new Date(b.violationDate) - new Date(a.violationDate));
+      const sortedViolations = response.data.data.sort(
+        (a, b) => new Date(b.violationDate) - new Date(a.violationDate)
+      );
       setViolations(sortedViolations);
       await updateStats(sortedViolations);
     } catch (error) {
-      openNotificationWithError(`Error fetching violations: ${error.response?.data || error.message}`);
+      openNotificationWithError(
+        `Error fetching violations: ${error.response?.data || error.message}`
+      );
     } finally {
       setLoading(false);
     }
   };
-  
+
   const fetchEmployees = async () => {
     try {
       const response = await axios.get(
@@ -89,7 +100,8 @@ const Violation = () => {
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth(); // Tháng hiện tại (0-11)
       const currentYear = currentDate.getFullYear(); // Năm hiện tại
-      const violationsThisMonth = violationsData.filter((v) => { //filter violation this month
+      const violationsThisMonth = violationsData.filter((v) => {
+        //filter violation this month
         const violationDate = new Date(v.violationDate); // Chuyển đổi chuỗi ngày thành đối tượng Date
         return (
           violationDate.getMonth() === currentMonth &&
@@ -97,7 +109,9 @@ const Violation = () => {
         );
       });
       const employeeIdsWithViolations = new Set(
-        violationsThisMonth.map((v) => v.employee?.id).filter((id) => id != null)
+        violationsThisMonth
+          .map((v) => v.employee?.id)
+          .filter((id) => id != null)
       );
       const totalEmployeesWithViolations = employeeIdsWithViolations.size;
       const totalViolations = violationsThisMonth.length;
@@ -107,26 +121,26 @@ const Violation = () => {
       const rejectedViolations = violationsThisMonth.filter(
         (v) => v.status === "Rejected"
       ).length;
-  
+
       setStatsData([
         {
           title: "Violation Staff",
-          value: totalEmployeesWithViolations, // Nhân viên có vi phạm trong tháng hiện tại
+          value: totalEmployeesWithViolations,
           month: "this month",
         },
         {
           title: "Total Violation",
-          value: totalViolations, // Tổng số vi phạm trong tháng hiện tại
+          value: totalViolations,
           month: "this month",
         },
         {
           title: "Pending Request",
-          value: pendingViolations, // Vi phạm đang chờ xử lý trong tháng hiện tại
+          value: pendingViolations,
           month: "this month",
         },
         {
           title: "Rejected",
-          value: rejectedViolations, // Vi phạm bị từ chối trong tháng hiện tại
+          value: rejectedViolations,
           month: "this month",
         },
       ]);
@@ -134,31 +148,32 @@ const Violation = () => {
       openNotificationWithError(`Error updating stats: ${error}`);
     }
   };
-  
+
   useEffect(() => {
     fetchViolations();
   }, []);
 
   const handleAdd = async (data) => {
-    if (isSubmitting) return false; 
-  
+    if (isSubmitting) return false;
+
     setIsSubmitting(true);
-  
+
     try {
       await axios.post(`${base_url}/api/violations`, data, {
         withCredentials: true,
       });
-      await fetchViolations(); 
-      openNotificationWithSuccess('Violation added successfully.');
-      return true; 
+      await fetchViolations();
+      openNotificationWithSuccess("Violation added successfully.");
+      return true;
     } catch (error) {
-      openNotificationWithError(`Error adding violation: ${error.response?.data || error.message}`);
+      openNotificationWithError(
+        `Error adding violation: ${error.response?.data || error.message}`
+      );
       return false;
     } finally {
       setIsSubmitting(false);
     }
   };
-  
 
   const handleEdit = async (id) => {
     try {
@@ -166,35 +181,44 @@ const Violation = () => {
       const response = await axios.get(`${base_url}/api/violations/${id}`, {
         withCredentials: true,
       });
-  
+
       if (response.data.status === "SUCCESS" && response.data.data) {
         setEditViolationData(response.data); // Đảm bảo rằng dữ liệu đúng
         setShowEditModal(true);
       } else {
-        openNotificationWithError(`Invalid violation data: ${response.data.data}`);
+        openNotificationWithError(
+          `Invalid violation data: ${response.data.data}`
+        );
       }
     } catch (error) {
       openNotificationWithError(`Error fetching violation data: ${error}`);
     }
   };
-  
 
   const handleSaveEdit = async (data) => {
     if (!data.id) {
       openNotificationWithError("Violation ID is missing");
       return;
     }
-  
+
     try {
-      const response = await axios.put(`${base_url}/api/violations/${data.id}`, data, {
-        withCredentials: true,
-      });
+      const response = await axios.put(
+        `${base_url}/api/violations/${data.id}`,
+        data,
+        {
+          withCredentials: true,
+        }
+      );
       if (response.data.status === "SUCCESS") {
         fetchViolations();
-        openNotificationWithSuccess('Violation updated successfully.');
+        openNotificationWithSuccess("Violation updated successfully.");
         setShowEditModal(false);
       } else {
-        openNotificationWithError(`Error updating violation: ${response.data.message || "Unknown error"}`);
+        openNotificationWithError(
+          `Error updating violation: ${
+            response.data.message || "Unknown error"
+          }`
+        );
       }
     } catch (error) {
       openNotificationWithError(`Error updating violation: ${error}`);
@@ -211,7 +235,7 @@ const Violation = () => {
           withCredentials: true,
         }
       );
-      fetchViolations(); 
+      fetchViolations();
     } catch (error) {
       openNotificationWithError(`Error updating status: ${error}`);
     }
@@ -226,7 +250,7 @@ const Violation = () => {
     key: index,
     id: item.id,
     index: index + 1,
-    employeeId: item.id || "Loading...",
+    employeeId: item.employee?.id || "Loading...",
     employee: item.employee?.fullname || "Loading...",
     empcode: item.employee?.empCode || "Loading...",
     department: item.employee?.departmentName || "Loading...",
@@ -240,6 +264,28 @@ const Violation = () => {
     status: item.status || "Loading...",
   }));
 
+  const filteredElements = userElements.filter((item) => {
+    const matchesNameOrCode =
+      item.employee
+        .toLowerCase()
+        .includes(fullnameOrCodeFilter.toLowerCase()) ||
+      item.empcode.toLowerCase().includes(fullnameOrCodeFilter.toLowerCase());
+
+    const matchesDepartment = item.department
+      .toLowerCase()
+      .includes(departmentFilter.toLowerCase());
+
+    const matchesDate = dateFilter
+      ? moment(item.date).isSame(dateFilter, "day")
+      : true;
+
+    const matchesStatus = statusFilter ? item.status === statusFilter : true;
+
+    return (
+      matchesNameOrCode && matchesDepartment && matchesDate && matchesStatus
+    );
+  });
+
   const columns = [
     {
       title: "#",
@@ -252,10 +298,10 @@ const Violation = () => {
       dataIndex: "employee",
       render: (text, record) => (
         <span className="table-avatar">
-          <Link to="/client-profile" className="avatar">
+          <Link to={`/client-profile/${record.employeeId}`} className="avatar">
             <img alt="" src={record.avatar} />
           </Link>
-          <Link to="/client-profile">
+          <Link to={`/client-profile/${record.employeeId}`}>
             {text} - {record.empcode}
           </Link>
         </span>
@@ -364,7 +410,7 @@ const Violation = () => {
               to="#"
               data-bs-toggle="modal"
               data-bs-target="#edit_violation"
-              onClick={() => handleEdit(record.id)} 
+              onClick={() => handleEdit(record.id)}
             >
               <i className="fa fa-pencil m-r-5" /> Edit
             </Link>
@@ -408,13 +454,54 @@ const Violation = () => {
                   </div>
                 ))}
               </div>
+              <div className="row mb-3">
+                <div className="col-md-3">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Enter Name or Code"
+                    value={fullnameOrCodeFilter}
+                    onChange={(e) => setFullnameOrCodeFilter(e.target.value)}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Filter by Department"
+                    value={departmentFilter}
+                    onChange={(e) => setDepartmentFilter(e.target.value)}
+                  />
+                </div>
+                <div className="col-md-3" >
+                <div className="cal-icon">
+                  <DatePicker
+                    selected={dateFilter}
+                    onChange={(date) => setDateFilter(date)}
+                    className="form-control"
+                    placeholderText="Filter by Date"
+                  />
+                  </div>
+                </div>
+                <div className="col-md-3">
+                  <select
+                    className="form-control"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                  </select>
+                </div>
+              </div>
               <div className="row">
                 <div className="col-md-12">
                   <div className="table-responsive">
-                    {/* <SearchBox /> */}
                     <Table
                       columns={columns}
-                      dataSource={userElements}
+                      dataSource={filteredElements} 
                       className="table-striped"
                       pagination={{ pageSize: 10 }}
                     />

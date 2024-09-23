@@ -47,6 +47,10 @@ public class EmployeeDTO {
         this.positionName = positionName;
     }
 
+    public EmployeeDTO(Long id) {
+        this.id = id;
+    }
+
  public EmployeeDTO(Long id, String fullname) {
      this.id = id;
      this.fullname = fullname;

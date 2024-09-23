@@ -53,7 +53,7 @@ public class ViolationService {
     }
     public ViolationDTO createViolation(ViolationDTO dto) {
         User currentUser = authenticationService.getCurrentUser();
-        checkRole(currentUser, Arrays.asList("LEADER", "MANAGE", "ADMIN"));
+        checkRole(currentUser, Arrays.asList("EMPLOYEE","LEADER", "MANAGE", "ADMIN"));
 
         Violation violation = new Violation();
         Employee employee = employeeRepository.findById(dto.getEmployee().getId()).orElse(null);
@@ -67,18 +67,14 @@ public class ViolationService {
             if (!"EMPLOYEE".equals(employee.getUser().getRole())) {
                 throw new AccessDeniedException("Leader can only create violations for employees with role EMPLOYEE.");
             }
-            violation.setStatus("Pending");
         } else if ("MANAGE".equals(currentUser.getRole())) {
             // MANAGE chỉ được tạo vi phạm cho EMPLOYEE và LEADER, không được tạo cho ADMIN
             String employeeRole = employee.getUser().getRole();
             if (!"EMPLOYEE".equals(employeeRole) && !"LEADER".equals(employeeRole)) {
                 throw new AccessDeniedException("Manage can only create violations for EMPLOYEE or LEADER.");
             }
-            violation.setStatus("Pending");
-        } else if ("ADMIN".equals(currentUser.getRole())) {
-            // ADMIN có quyền tạo cho tất cả các role
-            violation.setStatus("Pending");
         }
+        violation.setStatus("Pending");
 
         // Tiếp tục gán các thông tin còn lại cho violation
         violation.setEmployee(employee);

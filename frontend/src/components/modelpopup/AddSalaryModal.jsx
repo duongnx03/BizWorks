@@ -1,16 +1,53 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Select from "react-select";
+import { Spin, notification } from "antd";
+import { CloseCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
+
+const openNotificationWithError = (message) => {
+  notification.error({
+    message: 'Error',
+    description: <span style={{ color: '#ed2d33' }}>{message}</span>,
+    placement: 'topRight',
+  });
+};
+
+const openNotificationWithSuccess = (message) => {
+  notification.success({
+    message: 'Success',
+    description: (
+      <div>
+        <span style={{ color: '#09b347' }}>{message}</span>
+        <button
+          onClick={() => notification.destroy()}
+          style={{
+            border: 'none',
+            background: 'transparent',
+            float: 'right',
+            cursor: 'pointer',
+          }}
+        >
+          <CloseCircleOutlined style={{ color: '#09b347' }} />
+        </button>
+      </div>
+    ),
+    placement: 'topRight',
+    icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
+  });
+};
 
 const AddSalaryModal = ({ onAddSuccess }) => {
   const [employees, setEmployees] = useState([]);
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(null);
+  const [createdBy, setCreatedBy] = useState("");
   const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [error, setError] = useState({});
-  const closeButtonRef = useRef(null); // Ref to access the close button
+  const closeButtonRef = useRef(null); 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   // Month options
   const months = [
@@ -93,6 +130,8 @@ const AddSalaryModal = ({ onAddSuccess }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setIsSubmitting(true); 
+  
     const newErrors = {};
     
     if (selectedEmployees.length === 0) {
@@ -102,41 +141,47 @@ const AddSalaryModal = ({ onAddSuccess }) => {
     if (!selectedMonth) {
       newErrors.month = "Please select a month.";
     }
-
+  
     setError(newErrors);
-
+  
     if (Object.keys(newErrors).length === 0) {
       try {
         const employeeIds = selectedEmployees.map(emp => emp.value);
-
+        const finalCreatedBy = createdBy.trim() === "" ? "Human Resources" : createdBy;
+  
         const response = await axios.post("http://localhost:8080/api/salaries", {
           employees: employeeIds.map(id => ({ id })),
           month: selectedMonth.value,
+          createdBy: finalCreatedBy,
         }, {
           withCredentials: true,
         });
-
+  
         console.log("API Response:", response.data);
-
+  
+        // Show success notification
+        openNotificationWithSuccess("Salary added successfully!");
+  
         if (onAddSuccess) {
           onAddSuccess();
         }
-
-        // Close the modal
+  
         if (closeButtonRef.current) {
-          closeButtonRef.current.click(); // Simulate a click on the close button to close the modal
+          closeButtonRef.current.click(); 
         }
-
+  
       } catch (error) {
-        if (error.response && error.response.data && error.response.data.message) {
-          setError({ submit: error.response.data.message });
-        } else {
-          setError({ submit: "Failed to submit data. Please try again." });
-        }
+        const errorMessage = error.response?.data?.message || "Failed to submit data. Please try again.";
+        setError({ submit: errorMessage });
+        // Show error notification
+        openNotificationWithError(errorMessage);
       }
     }
+  
+    setIsSubmitting(false); 
   };
-
+  
+  
   const handleSelectAll = () => {
     setSelectedEmployees(filteredEmployees);
   };
@@ -204,11 +249,22 @@ const AddSalaryModal = ({ onAddSuccess }) => {
                   />
                   {error.month && <p className="text-danger">{error.month}</p>}
                 </div>
+                <div className="col-sm-12 mb-3">
+                  <label className="col-form-label">Created By</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={createdBy}
+                    onChange={(e) => setCreatedBy(e.target.value)}
+                    placeholder="Enter creator's name"
+                  />
+                  {error.createdBy && <p className="text-danger">{error.createdBy}</p>}
+                </div>
               </div>
               {error.submit && <p className="text-danger">{error.submit}</p>}
               <div className="submit-section">
-                <button className="btn btn-primary submit-btn" type="submit">
-                  Submit
+                <button className="btn btn-primary submit-btn" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? <Spin size="small" /> : "Submit"} 
                 </button>
               </div>
             </form>

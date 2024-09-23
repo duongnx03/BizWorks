@@ -156,7 +156,7 @@ public class SalaryService {
             // Lưu bản ghi lương đã cập nhật
             Salary updated = salaryRepository.save(salary);
             ApiResponse<SalaryDTO> successResponse = ApiResponse.success(convertToDTO(updated), "Salary updated successfully");
-            // sendSalaryEmail(updated, "updated"); // Gửi email nếu cần
+             sendSalaryEmail(updated, "updated"); // Gửi email nếu cần
 
             return new ResponseEntity<>(successResponse, HttpStatus.OK);
         }

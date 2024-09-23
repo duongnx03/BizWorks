@@ -12,7 +12,10 @@ const AddViolation = ({ onAdd }) => {
   const [selectedViolationType, setSelectedViolationType] = useState(null);
   const [description, setDescription] = useState("");
   const [employees, setEmployees] = useState([]);
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [violationTypes, setViolationTypes] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({
     employee: "",
@@ -20,39 +23,74 @@ const AddViolation = ({ onAdd }) => {
     date: "",
     description: "",
   });
-  const closeButtonRef = useRef(null); // Ref to the close button
+  const closeButtonRef = useRef(null);
 
   useEffect(() => {
-    const fetchEmployees = async () => {
+    const fetchDepartmentsAndEmployees = async () => {
       try {
-        const response = await axios.get(`${base_url}/api/employee/getEmployeesByRole`, { withCredentials: true });
-        const data = response.data.data.map(emp => ({
+        const [departmentsResponse, employeesResponse] = await Promise.all([
+          axios.get(`${base_url}/api/departments`, { withCredentials: true }),
+          axios.get(`${base_url}/api/employee/getEmployeesByRole`, {
+            withCredentials: true,
+          }),
+        ]);
+
+        // Process departments
+        const departmentOptions = departmentsResponse.data.map((dept) => ({
+          value: dept.id,
+          label: dept.name,
+        }));
+        setDepartments(departmentOptions);
+
+        // Process employees
+        const employeeOptions = employeesResponse.data.data.map((emp) => ({
           value: emp.id,
           label: `${emp.fullname} - ${emp.empCode}`,
+          department: emp.department, // Add department info for filtering
         }));
-        setEmployees(data);
+        setEmployees(employeeOptions);
+        setFilteredEmployees(employeeOptions); // Initially set all employees
       } catch (error) {
-        console.error("Error fetching employees:", error);
+        console.error("Error fetching data:", error);
       }
     };
 
     const fetchViolationTypes = async () => {
       try {
-        const response = await axios.get(`${base_url}/api/violation-types`, { withCredentials: true });
-        const data = response.data.map(vt => ({ value: vt.id, label: vt.type }));
+        const response = await axios.get(`${base_url}/api/violation-types`, {
+          withCredentials: true,
+        });
+        const data = response.data.map((vt) => ({
+          value: vt.id,
+          label: vt.type,
+        }));
         setViolationTypes(data);
       } catch (error) {
         console.error("Error fetching violation types:", error);
       }
     };
 
-    fetchEmployees();
+    fetchDepartmentsAndEmployees();
     fetchViolationTypes();
   }, []);
 
+  // Filter employees based on selected department
+  useEffect(() => {
+    if (selectedDepartment) {
+      const filtered = employees.filter(
+        (emp) => emp.department === selectedDepartment.label
+      );
+      setFilteredEmployees(filtered);
+    } else {
+      setFilteredEmployees(employees); // If no department selected, show all employees
+    }
+  }, [selectedDepartment, employees]);
+
   const handleDateChange = (date) => {
     setSelectedDate(date);
+    if (errors.date) setErrors((prev) => ({ ...prev, date: "" }));
   };
+  
 
   const validateForm = () => {
     let valid = true;
@@ -74,6 +112,9 @@ const AddViolation = ({ onAdd }) => {
     if (!selectedDate) {
       newErrors.date = "Please select a date.";
       valid = false;
+    } else if (selectedDate > new Date()) {
+      newErrors.date = "The date cannot be in the future.";
+      valid = false;
     }
     if (!description) {
       newErrors.description = "Please enter a description.";
@@ -87,25 +128,25 @@ const AddViolation = ({ onAdd }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
-  
+
     setIsSubmitting(true); // Lock form during submission
-  
+
     if (!validateForm()) {
       setIsSubmitting(false); // Unlock form if validation fails
       return;
     }
-  
+
     const formattedDate = selectedDate
       ? selectedDate.toISOString().split("T")[0]
       : null;
-  
+
     const violation = {
       employee: { id: selectedEmployee?.value },
       violationType: { id: selectedViolationType?.value },
       violationDate: formattedDate,
       description,
     };
-  
+
     try {
       const success = await onAdd(violation); // Gọi hàm onAdd
       if (success) {
@@ -120,18 +161,23 @@ const AddViolation = ({ onAdd }) => {
           date: "",
           description: "",
         });
-  
+
         // Close modal only on success
         if (closeButtonRef.current) {
           closeButtonRef.current.click();
         }
       } else {
-        // Hiển thị lỗi nếu không thành công
-        setErrors(prevErrors => ({ ...prevErrors, form: "Failed to add violation. Please try again later." }));
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          form: "Failed to add violation. Please try again later.",
+        }));
       }
     } catch (error) {
       console.error("Error adding violation:", error);
-      setErrors(prevErrors => ({ ...prevErrors, form: "Error adding violation. Please try again later." }));
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        form: "Error adding violation. Please try again later.",
+      }));
     } finally {
       setIsSubmitting(false); // Unlock form after submission
     }
@@ -159,7 +205,7 @@ const AddViolation = ({ onAdd }) => {
               className="btn-close"
               data-bs-dismiss="modal"
               aria-label="Close"
-              ref={closeButtonRef} // Ref to the close button
+              ref={closeButtonRef}
             >
               <span aria-hidden="true">×</span>
             </button>
@@ -167,17 +213,36 @@ const AddViolation = ({ onAdd }) => {
           <div className="modal-body">
             <form onSubmit={handleSubmit}>
               <div className="input-block mb-3">
+                <label className="col-form-label">Select Department</label>
+                <Select
+                  options={departments}
+                  value={selectedDepartment}
+                  placeholder="Select Department"
+                  styles={customStyles}
+                  onChange={(selected) => {
+                    setSelectedDepartment(selected);
+                    // Clear any related error if needed
+                  }}
+                />
+              </div>
+              <div className="input-block mb-3">
                 <label className="col-form-label">
                   Select Employee <span className="text-danger">*</span>
                 </label>
                 <Select
-                  options={employees}
+                  options={filteredEmployees}
                   value={selectedEmployee}
                   placeholder="Select"
                   styles={customStyles}
-                  onChange={setSelectedEmployee}
+                  onChange={(selected) => {
+                    setSelectedEmployee(selected);
+                    if (errors.employee) setErrors((prev) => ({ ...prev, employee: "" }));
+                  }}
+                  isDisabled={!selectedDepartment}
                 />
-                {errors.employee && <div className="text-danger">{errors.employee}</div>}
+                {errors.employee && (
+                  <div className="text-danger">{errors.employee}</div>
+                )}
               </div>
               <div className="input-block mb-3">
                 <label className="col-form-label">
@@ -188,9 +253,14 @@ const AddViolation = ({ onAdd }) => {
                   value={selectedViolationType}
                   placeholder="Select"
                   styles={customStyles}
-                  onChange={setSelectedViolationType}
+                  onChange={(selected) => {
+                    setSelectedViolationType(selected);
+                    if (errors.violationType) setErrors((prev) => ({ ...prev, violationType: "" }));
+                  }}
                 />
-                {errors.violationType && <div className="text-danger">{errors.violationType}</div>}
+                {errors.violationType && (
+                  <div className="text-danger">{errors.violationType}</div>
+                )}
               </div>
               <div className="input-block mb-3">
                 <label className="col-form-label">
@@ -204,7 +274,9 @@ const AddViolation = ({ onAdd }) => {
                     dateFormat="dd-MM-yyyy"
                   />
                 </div>
-                {errors.date && <div className="text-danger">{errors.date}</div>}
+                {errors.date && (
+                  <div className="text-danger">{errors.date}</div>
+                )}
               </div>
               <div className="input-block mb-3">
                 <label className="col-form-label">
@@ -214,19 +286,26 @@ const AddViolation = ({ onAdd }) => {
                   rows={4}
                   className="form-control"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    if (errors.description) setErrors((prev) => ({ ...prev, description: "" }));
+                  }}
                 />
-                {errors.description && <div className="text-danger">{errors.description}</div>}
+                {errors.description && (
+                  <div className="text-danger">{errors.description}</div>
+                )}
               </div>
               <div className="submit-section">
                 <button
                   className="btn btn-primary submit-btn"
                   type="submit"
-                  disabled={isSubmitting} // Disable button when submitting
+                  disabled={isSubmitting}
                 >
-                  {isSubmitting ? <Spin size="small" /> : "Submit"} {/* Show spinner when submitting */}
+                  {isSubmitting ? <Spin size="small" /> : "Submit"}
                 </button>
-                {errors.form && <div className="text-danger">{errors.form}</div>}
+                {errors.form && (
+                  <div className="text-danger">{errors.form}</div>
+                )}
               </div>
             </form>
           </div>
@@ -234,6 +313,7 @@ const AddViolation = ({ onAdd }) => {
       </div>
     </div>
   );
+  
 };
 
 export default AddViolation;

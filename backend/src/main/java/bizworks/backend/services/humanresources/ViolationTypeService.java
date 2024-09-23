@@ -95,6 +95,11 @@ public void deleteViolationType(Long id) {
     // Nếu không có Violation nào liên quan, tiến hành xóa ViolationType
     violationTypeRepository.deleteById(id);
 }
+    public ViolationType findById(Long id) {
+        return violationTypeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Violation type not found"));
+    }
+
 
 
 }

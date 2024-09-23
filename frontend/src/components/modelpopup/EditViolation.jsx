@@ -90,6 +90,7 @@ const EditViolation = ({ violationData, onSave, onClose, userRole }) => {
 
   const handleDateChange = (date) => {
     setSelectedDate(date);
+    if (errors.date) setErrors((prev) => ({ ...prev, date: "" }));
   };
 
   const validateForm = () => {
@@ -111,7 +112,10 @@ const EditViolation = ({ violationData, onSave, onClose, userRole }) => {
       valid = false;
     }
     if (!selectedDate) {
-      newErrors.date = "Date is required.";
+      newErrors.date = "Please select a date.";
+      valid = false;
+    } else if (selectedDate > new Date()) {
+      newErrors.date = "The date cannot be in the future.";
       valid = false;
     }
     if (!description) {
