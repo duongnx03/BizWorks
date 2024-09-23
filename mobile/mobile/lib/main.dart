@@ -5,6 +5,7 @@ import 'package:mobile/providers/attendance_complaint_provider.dart';
 import 'package:mobile/providers/attendance_provider.dart';
 import 'package:mobile/providers/auth_provider.dart';
 import 'package:mobile/providers/employee_provider.dart';
+import 'package:mobile/providers/job_application_provider.dart';
 import 'package:mobile/providers/job_posting.provider.dart';
 import 'package:mobile/providers/overtime_provider.dart';
 import 'package:mobile/screens/LoginForm.dart';
@@ -42,7 +43,9 @@ void main() {
         ChangeNotifierProvider(
             create: (context) => OvertimeProvider(dioClient: dioClient)),
         ChangeNotifierProvider(
-            create: (context) => JobPostingProvider(
+            create: (context) => JobPostingProvider(dioClient: dioClient)),
+        ChangeNotifierProvider(
+            create: (context) => JobApplicationProvider(
                 dioClient: dioClient)), // Thêm JobPostingProvider
       ],
       child: const MyApp(),

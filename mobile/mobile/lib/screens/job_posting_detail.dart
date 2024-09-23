@@ -25,38 +25,66 @@ class JobPostingDetails extends StatelessWidget {
             children: [
               Text(
                 jobPostingDTO.title,
-                style:
-                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Location: ${jobPostingDTO.location}',
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                  Text(
+                    'Type: ${jobPostingDTO.employmentType}',
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               Text(
-                'Location: ${jobPostingDTO.location}',
-                style: const TextStyle(fontSize: 16),
-              ),
-              Text(
-                'Employment Type: ${jobPostingDTO.employmentType}',
-                style: const TextStyle(fontSize: 16),
+                'Salary: \$${jobPostingDTO.salaryRangeMin} - \$${jobPostingDTO.salaryRangeMax}',
+                style: const TextStyle(fontSize: 16, color: Colors.black54),
               ),
               const SizedBox(height: 16),
-              Text(
-                'Salary Range: \$${jobPostingDTO.salaryRangeMin} - \$${jobPostingDTO.salaryRangeMax}',
-                style: const TextStyle(fontSize: 16),
-              ),
+              const Divider(thickness: 2, color: Colors.grey),
               const SizedBox(height: 16),
               Text(
                 'Description:',
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 8),
-              Text(
-                jobPostingDTO.description,
-                style: const TextStyle(fontSize: 16),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  jobPostingDTO.description,
+                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                ),
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => _showApplicationDialog(context),
-                child: const Text('Apply Now'),
+              const SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () => _showApplicationDialog(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF902F),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16.0, horizontal: 32.0),
+                    textStyle: const TextStyle(fontSize: 18),
+                  ),
+                  child: const Text('Apply Now'),
+                ),
               ),
             ],
           ),
@@ -79,56 +107,61 @@ class JobPostingDetails extends StatelessWidget {
           title: const Text('Submit Job Application'),
           content: Form(
             key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'Name'),
-                  onChanged: (value) => applicantName = value,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your name';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  onChanged: (value) => applicantEmail = value,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'Phone'),
-                  onChanged: (value) => applicantPhone = value,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your phone number';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 16),
-                TextButton(
-                  onPressed: () async {
-                    final result = await FilePicker.platform.pickFiles(
-                      allowMultiple: false,
-                      type: FileType.custom,
-                      allowedExtensions: ['pdf', 'doc', 'docx'],
-                    );
-                    if (result != null) {
-                      resumeFilePath = result.files.single.path;
-                    }
-                  },
-                  child: Text(resumeFilePath == null
-                      ? 'Upload Resume'
-                      : 'Resume Selected: ${resumeFilePath!.split('/').last}'),
-                ),
-              ],
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'Name'),
+                    onChanged: (value) => applicantName = value,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your name';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'Email'),
+                    onChanged: (value) => applicantEmail = value,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'Phone'),
+                    onChanged: (value) => applicantPhone = value,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your phone number';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () async {
+                      final result = await FilePicker.platform.pickFiles(
+                        allowMultiple: false,
+                        type: FileType.custom,
+                        allowedExtensions: ['pdf', 'doc', 'docx'],
+                      );
+                      if (result != null) {
+                        resumeFilePath = result.files.single.path;
+                      }
+                    },
+                    child: Text(
+                      resumeFilePath == null
+                          ? 'Upload Resume'
+                          : 'Resume Selected: ${resumeFilePath!.split('/').last}',
+                      style: TextStyle(color: Theme.of(context).primaryColor),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -139,16 +172,22 @@ class JobPostingDetails extends StatelessWidget {
                   final provider = Provider.of<JobApplicationProvider>(context,
                       listen: false);
                   provider.submitJobApplication(
-                    applicantName: applicantName,
-                    applicantEmail: applicantEmail,
-                    applicantPhone: applicantPhone,
-                    resumeUrl: resumeFilePath!, // Thay đổi thành resumePath
-                    jobPostingId: jobPostingDTO.id,
+                    applicantName,
+                    applicantEmail,
+                    applicantPhone,
+                    resumeFilePath!,
+                    jobPostingDTO.id,
                   );
-                  Navigator.of(context).pop(); // Đóng dialog
+
+                  Navigator.of(context).pop();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Application submitted successfully')),
+                  );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                         content: Text(
                             'Please complete the form and upload your resume.')),
                   );

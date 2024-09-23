@@ -1,19 +1,21 @@
+import 'package:mobile/models/UserDTO.dart';
 import 'package:mobile/models/JobPostingDTO.dart';
 
 class JobApplicationDTO {
   final int id;
-  final JobPostingDTO jobPosting; // Đối tượng JobPosting
+  final JobPostingDTO? jobPosting;
   final String applicantName;
   final String applicantEmail;
   final String applicantPhone;
   final String resumeUrl;
-  final DateTime applicationDate; // Thay LocalDate bằng DateTime
+  final DateTime applicationDate;
   final String status;
-  final String? rejectionReason; // Có thể là null
+  final String? rejectionReason;
+  final UserDTO? user;
 
   JobApplicationDTO({
     required this.id,
-    required this.jobPosting,
+    this.jobPosting,
     required this.applicantName,
     required this.applicantEmail,
     required this.applicantPhone,
@@ -21,36 +23,38 @@ class JobApplicationDTO {
     required this.applicationDate,
     required this.status,
     this.rejectionReason,
+    this.user,
   });
 
   factory JobApplicationDTO.fromJson(Map<String, dynamic> json) {
     return JobApplicationDTO(
       id: json['id'] as int,
-      jobPosting:
-          JobPostingDTO.fromJson(json['jobPosting']), // Chuyển đổi từ JSON
+      jobPosting: json['jobPosting'] != null
+          ? JobPostingDTO.fromJson(json['jobPosting'])
+          : null,
       applicantName: json['applicantName'] as String,
       applicantEmail: json['applicantEmail'] as String,
       applicantPhone: json['applicantPhone'] as String,
       resumeUrl: json['resumeUrl'] as String,
-      applicationDate:
-          DateTime.parse(json['applicationDate']), // Chuyển đổi thành DateTime
+      applicationDate: DateTime.parse(json['applicationDate']),
       status: json['status'] as String,
       rejectionReason: json['rejectionReason'] as String?,
+      user: json['user'] != null ? UserDTO.fromJson(json['user']) : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'jobPosting': jobPosting.toJson(), // Chuyển đổi thành JSON
+      'jobPosting': jobPosting?.toJson(),
       'applicantName': applicantName,
       'applicantEmail': applicantEmail,
       'applicantPhone': applicantPhone,
       'resumeUrl': resumeUrl,
-      'applicationDate':
-          applicationDate.toIso8601String(), // Chuyển đổi thành chuỗi ISO
+      'applicationDate': applicationDate.toIso8601String(),
       'status': status,
       'rejectionReason': rejectionReason,
+      'user': user?.toJson(),
     };
   }
 }
