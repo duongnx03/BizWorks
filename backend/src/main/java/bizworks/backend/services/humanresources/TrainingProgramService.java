@@ -1,6 +1,6 @@
 package bizworks.backend.services.humanresources;
 
-import bizworks.backend.dtos.TrainingProgramDTO;
+import bizworks.backend.dtos.hrdepartment.TrainingProgramDTO;
 import bizworks.backend.models.Employee;
 import bizworks.backend.models.hrdepartment.TrainingProgram;
 import bizworks.backend.repositories.EmployeeRepository;

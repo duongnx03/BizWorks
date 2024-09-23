@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/helpers/Helper.dart';
 import 'package:mobile/providers/employee_provider.dart';
+import 'package:mobile/providers/violation_provider.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -108,6 +109,7 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildFunctionGrid(BuildContext context) {
+    final violationProvider = Provider.of<ViolationProvider>(context);
     return GridView(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -164,10 +166,11 @@ class HomeScreen extends StatelessWidget {
             Navigator.pushNamed(context, "/job-posting");
           },
         ),
-        _buildFunctionCard(
+        _buildFunctionCardWithBadge(
           icon: Icons.warning,
           title: 'Violation',
           color: const Color(0xFFFF902F),
+          badgeCount: violationProvider.violationCount,
           onTap: () {
             Navigator.pushNamed(context, "/violation");
           },
@@ -224,6 +227,76 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFunctionCardWithBadge({
+    required IconData icon,
+    required String title,
+    required Color color,
+    required int badgeCount,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        alignment: Alignment.topRight,
+        children: [
+          Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            color: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: Icon(
+                        icon,
+                        size: 60,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.blueGrey[800],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (badgeCount > 0)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  badgeCount.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -8,9 +8,12 @@ import 'package:mobile/providers/employee_provider.dart';
 import 'package:mobile/providers/job_application_provider.dart';
 import 'package:mobile/providers/job_posting.provider.dart';
 import 'package:mobile/providers/overtime_provider.dart';
+import 'package:mobile/providers/salary_provider.dart';
+import 'package:mobile/providers/violation_complaint_provider.dart';
+import 'package:mobile/providers/violation_provider.dart';
 import 'package:mobile/screens/LoginForm.dart';
 import 'package:mobile/screens/job_posting_detail.dart';
-import 'package:mobile/screens/job_posting_screen.dart'; // Import JobPostingScreen
+import 'package:mobile/screens/job_posting_screen.dart';
 import 'package:mobile/screens/attendance_complaint_detail_screen.dart';
 import 'package:mobile/screens/attendance_complaint_screen.dart';
 import 'package:mobile/screens/attendance_screen.dart';
@@ -22,6 +25,8 @@ import 'package:mobile/screens/overtime_details_screen.dart';
 import 'package:mobile/screens/overtime_list_screen.dart';
 import 'package:mobile/screens/overtime_screen.dart';
 import 'package:mobile/screens/profile_screen.dart';
+import 'package:mobile/screens/salary_screen.dart';
+import 'package:mobile/screens/violation_screen.dart';
 import 'package:mobile/services/dio_client.dart';
 import 'package:provider/provider.dart';
 
@@ -47,6 +52,13 @@ void main() {
         ChangeNotifierProvider(
             create: (context) => JobApplicationProvider(
                 dioClient: dioClient)), // Thêm JobPostingProvider
+        ChangeNotifierProvider(
+            create: (context) => ViolationProvider(dioClient: dioClient)),
+        ChangeNotifierProvider(
+            create: (context) =>
+                ViolationComplaintProvider(dioClient: dioClient)),
+        ChangeNotifierProvider(
+            create: (context) => SalaryProvider(dioClient: dioClient)),
       ],
       child: const MyApp(),
     ),
@@ -117,6 +129,13 @@ class MyApp extends StatelessWidget {
               builder: (context) =>
                   JobPostingDetails(jobPostingDTO: jobPosting),
             );
+          case '/violation': // Thêm route cho ViolationScreen
+            return MaterialPageRoute(
+                builder: (context) => const ViolationScreen());
+          case '/salary': // Thêm route cho ViolationScreen
+            return MaterialPageRoute(
+                builder: (context) => const SalaryScreen());
+
           default:
             return MaterialPageRoute(builder: (context) => const LoginForm());
         }
