@@ -168,6 +168,14 @@ export const SidebarData = [
             menuValue: "Profile",
             route: "/profile"
           },
+          {
+            menuValue: "My Violation",
+            route: "/violations_user",
+          },
+          {
+            menuValue: "My Salary",
+            route: "/salaries_user",
+          },
         ],
       },
     ],
@@ -241,6 +249,14 @@ export const SidebarData = [
             menuValue: "Profile",
             route: "/profile"
           },
+          {
+            menuValue: "My Violation",
+            route: "/violations_user",
+          },
+          {
+            menuValue: "My Salary",
+            route: "/salaries_user",
+          },
         ],
       },
     ],
@@ -277,6 +293,10 @@ export const SidebarData = [
           {
             menuValue: "My Violation",
             route: "/violations_user",
+          },
+          {
+            menuValue: "My Salary",
+            route: "/salaries_user",
           },
           // {
           //   menuValue: 'Holidays',

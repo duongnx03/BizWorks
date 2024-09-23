@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import Breadcrumbs from "../../../components/Breadcrumbs";
 import {
   Table,
   notification,
@@ -225,6 +226,8 @@ const ViolationUser = () => {
 
       <div className="page-wrapper">
         <div className="content container-fluid">
+        <h2>Your Violation Records</h2>
+        <h5>Dashboard / My Violations </h5><br/>
           <div className="search-filters">
             <Input
               placeholder="Search"

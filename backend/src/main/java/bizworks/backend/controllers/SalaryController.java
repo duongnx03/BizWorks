@@ -24,6 +24,11 @@ public class SalaryController {
         return salaryService.createSalary(dto);
     }
 
+    @GetMapping("/user")
+    public ResponseEntity<ApiResponse<List<SalaryDTO>>> getAllSalariesByUser() {
+        return salaryService.getAllSalariesByUser();
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<List<SalaryDTO>>> getAllSalaries() {
         return salaryService.getAllSalaries();

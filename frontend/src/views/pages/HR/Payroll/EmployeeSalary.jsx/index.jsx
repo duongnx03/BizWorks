@@ -355,7 +355,6 @@ const EmployeeSalary = () => {
                 </label>
               </div>
             </div>
-            {/* Các trường tìm kiếm khác */}
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
               <div className="input-block mb-3 form-focus select-focus">
                 <Select
@@ -368,7 +367,6 @@ const EmployeeSalary = () => {
                 <label className="focus-label">Department</label>
               </div>
             </div>
-            {/* Các trường tìm kiếm khác */}
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
               <div className="input-block mb-3 form-focus select-focus">
                 <Select
@@ -381,7 +379,6 @@ const EmployeeSalary = () => {
                 <label className="focus-label">Month</label>
               </div>
             </div>
-            {/* Các trường tìm kiếm khác */}
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
               <div className="input-block mb-3 form-focus select-focus">
                 <Select
@@ -394,7 +391,6 @@ const EmployeeSalary = () => {
                 <label className="focus-label">Year</label>
               </div>
             </div>
-            {/* Các nút khác */}
             <div className="col-sm-6 col-md-3 col-lg-3 col-xl-2 col-12">
               <Link
                 to="#"

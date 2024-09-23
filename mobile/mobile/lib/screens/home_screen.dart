@@ -25,7 +25,10 @@ class HomeScreen extends StatelessWidget {
           children: [
             _buildUserInfo(context),
             const SizedBox(height: 16),
-            _buildFunctionGrid(context),
+            Expanded(
+              // Thêm Expanded để GridView chiếm không gian còn lại
+              child: _buildFunctionGrid(context),
+            ),
           ],
         ),
       ),
@@ -112,7 +115,6 @@ class HomeScreen extends StatelessWidget {
         mainAxisSpacing: 16,
         childAspectRatio: 1.2,
       ),
-      shrinkWrap: true,
       children: [
         _buildFunctionCard(
           icon: Icons.person,
@@ -156,11 +158,26 @@ class HomeScreen extends StatelessWidget {
         ),
         _buildFunctionCard(
           icon: Icons.business,
-          title: 'Job Postings', // Tiêu đề cho Job Posting
+          title: 'Job Postings',
           color: const Color(0xFFFF902F),
           onTap: () {
-            Navigator.pushNamed(
-                context, "/job-posting"); // Điều hướng đến JobPostingScreen
+            Navigator.pushNamed(context, "/job-posting");
+          },
+        ),
+        _buildFunctionCard(
+          icon: Icons.warning,
+          title: 'Violation',
+          color: const Color(0xFFFF902F),
+          onTap: () {
+            Navigator.pushNamed(context, "/violation");
+          },
+        ),
+        _buildFunctionCard(
+          icon: Icons.monetization_on,
+          title: 'Salary',
+          color: const Color(0xFFFF902F),
+          onTap: () {
+            Navigator.pushNamed(context, "/salary");
           },
         ),
       ],
