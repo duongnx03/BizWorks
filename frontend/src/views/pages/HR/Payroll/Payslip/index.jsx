@@ -29,8 +29,7 @@ const PaySlip = () => {
             <div className="card">
               <div className="card-body">
                 <h4 className="payslip-title">
-                  Payslip for the month of {new Date(salary.dateSalary).toLocaleString('default', { month: 'long' })} {new Date(salary.dateSalary).getFullYear()}
-                </h4>
+                Payslip for the month of {new Date(salary.year, salary.month - 1).toLocaleString('default', { month: 'long' })} {salary.year}                </h4>
                 <div className="row">
                   <div className="col-sm-6 m-b-20">
                     <img src={Applogo} className="inv-logo" alt="Logo" />
@@ -46,7 +45,7 @@ const PaySlip = () => {
                       <h3 className="text-uppercase">Payslip #{salary.salaryCode}</h3>
                       <ul className="list-unstyled">
                         <li>
-                          Salary Month: <span>{new Date(salary.dateSalary).toLocaleString('default', { month: 'long' })}, {new Date(salary.dateSalary).getFullYear()}</span>
+                        Salary Month: <span>{new Date(salary.year, salary.month - 1).toLocaleString('default', { month: 'long' })}, {salary.year}</span>
                         </li>
                       </ul>
                     </div>

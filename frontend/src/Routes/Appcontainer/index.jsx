@@ -234,6 +234,7 @@ import InterviewScheduleList from "../../views/pages/Employees/JobApplication/In
 import FavoriteJobPostings from "../../views/pages/Employees/FavoriteJobPostings.jsx";
 import ViolationUser from "../../views/pages/Employees/ViolationUser.jsx";
 import ViolationComplaint from "../../views/pages/Employees/ViolationComplaint.jsx";
+import SalaryUser from "../../views/pages/HR/Payroll/EmployeeSalary.jsx/SalaryUser.jsx";
 const AppContainer = () => {
   useEffect(() => {
     localStorage.setItem("colorschema", "orange");
@@ -1152,6 +1153,12 @@ const AppContainer = () => {
       path: "violation_complaints",      
       element: <ViolationComplaint  />
     },
+    {
+      id: 158,
+      path: "salaries_user",      
+      element: <SalaryUser  />
+    },
+    
   
   ];
 

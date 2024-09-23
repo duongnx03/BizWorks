@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -174,6 +176,26 @@ public class SalaryService {
             return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    public ResponseEntity<ApiResponse<List<SalaryDTO>>> getAllSalariesByUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Employee employee = employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        List<Salary> salaries = salaryRepository.findByEmployeeId(employee.getId());
+
+        if (salaries.isEmpty()) {
+            return new ResponseEntity<>(ApiResponse.notfound(null, "No salaries found for the employee"), HttpStatus.NOT_FOUND);
+        }
+
+        List<SalaryDTO> salaryDTOs = salaries.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+
+        return new ResponseEntity<>(ApiResponse.success(salaryDTOs, "Salaries fetched successfully"), HttpStatus.OK);
+    }
+
 
     public ResponseEntity<ApiResponse<List<SalaryDTO>>> getAllSalaries() {
         List<Salary> salaries = salaryRepository.findAll();
