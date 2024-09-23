@@ -11,8 +11,12 @@ import bizworks.backend.models.Employee;
 import bizworks.backend.models.LeaveRequest;
 import bizworks.backend.services.EmployeeService;
 import bizworks.backend.services.LeaveRequestService;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -56,7 +60,6 @@ public class LeaveRequestController {
         }
     }
 
-
     @PostMapping("/send")
     public ResponseEntity<?> sendLeaveRequest(@RequestBody LeaveRequestDTO leaveRequestDTO) {
         try {
@@ -95,5 +98,25 @@ public class LeaveRequestController {
         List<LeaveRequestDTO> results = leaveRequestService.searchLeaveRequests(searchDto);
         return ResponseEntity.ok(results);
     }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<Map<String, Object>> getLeaveStatistics(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
+            @RequestParam(required = false) String leaveType,
+            @RequestParam(required = false) String employeeName,
+            @RequestParam(required = false) String status) {
+
+        List<LeaveRequestDTO> leaveRequests = leaveRequestService.searchLeaveRequests(new SearchDTO(startDate, endDate, leaveType, employeeName, status));
+        Map<String, Long> leaveDaysPerEmployee = leaveRequestService.calculateTotalLeaveDays(leaveRequests);
+        Map<String, Long> leaveTypeCounts = leaveRequestService.countLeaveRequestsByType(leaveRequests);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("leaveDaysPerEmployee", leaveDaysPerEmployee);
+        response.put("leaveTypeCounts", leaveTypeCounts);
+
+        return ResponseEntity.ok(response);
+    }
+
 
 }

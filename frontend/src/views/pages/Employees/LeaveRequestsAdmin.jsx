@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Modal from 'react-modal';
+import { Pie } from 'react-chartjs-2';
 import Breadcrumbs from "../../../components/Breadcrumbs";
 
 const LeaveRequestsAdmin = () => {
@@ -17,13 +18,16 @@ const LeaveRequestsAdmin = () => {
     employeeName: '',
     status: ''
   });
-  // const [feedbackMessage, setFeedbackMessage] = useState('');
+
+  const [employeeStatistics, setEmployeeStatistics] = useState([]);
+  const [leaveTypeStatistics, setLeaveTypeStatistics] = useState([]);
 
   const leaveTypes = ["SICK", "MATERNITY", "PERSONAL", "BEREAVEMENT", "MARRIAGE", "CIVIC_DUTY", "OTHER"];
   const statuses = ["Pending", "Approved", "Rejected"];
 
   useEffect(() => {
     fetchLeaveRequests();
+    fetchStatistics(searchCriteria);
   }, []);
 
   const fetchLeaveRequests = async () => {
@@ -62,6 +66,8 @@ const LeaveRequestsAdmin = () => {
       const response = await axios.post('http://localhost:8080/api/leave-requests/search', criteria, { withCredentials: true });
       setLeaveRequests(response.data);
       setNoData(response.data.length === 0);
+
+       fetchStatistics(criteria);
     } catch (error) {
       console.error('Error searching leave requests:', error);
     } finally {
@@ -74,10 +80,9 @@ const LeaveRequestsAdmin = () => {
       try {
         await axios.put(`http://localhost:8080/api/leave-requests/approve/${id}`, {}, { withCredentials: true });
         fetchLeaveRequests();
-        // setFeedbackMessage('Leave request approved and email sent.');
+        setModalIsOpen(false);
       } catch (error) {
         console.error('Error approving leave request:', error.message);
-        // setFeedbackMessage('Error approving leave request.');
       }
     }
   };
@@ -87,10 +92,9 @@ const LeaveRequestsAdmin = () => {
       try {
         await axios.put(`http://localhost:8080/api/leave-requests/reject/${id}`, {}, { withCredentials: true });
         fetchLeaveRequests();
-        // setFeedbackMessage('Leave request rejected and email sent.');
+        setModalIsOpen(false); 
       } catch (error) {
         console.error('Error rejecting leave request:', error.message);
-        // setFeedbackMessage('Error rejecting leave request.');
       }
     }
   };
@@ -109,166 +113,191 @@ const LeaveRequestsAdmin = () => {
     }
   };
 
+  
+
+  const fetchStatistics = async (criteria = {}) => {
+    try {
+      const response = await axios.get('http://localhost:8080/api/leave-requests/statistics', {
+        params: criteria,
+        withCredentials: true 
+      });
+      setEmployeeStatistics(response.data.leaveDaysPerEmployee);
+      setLeaveTypeStatistics(response.data.leaveTypeCounts);
+    } catch (error) {
+      console.error('There was an error fetching the statistics!', error);
+    }
+  };
+
+  const leaveDaysData = {
+    labels: Object.keys(employeeStatistics),
+    datasets: [{
+      data: Object.values(employeeStatistics),
+      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#FFCD56']
+    }]
+  };
+
+  const leaveTypeData = {
+    labels: Object.keys(leaveTypeStatistics),
+    datasets: [{
+      data: Object.values(leaveTypeStatistics),
+      backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#FFCD56']
+    }]
+  };
+  const MAX_LEGEND_ITEMS = 10;
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'right',
+        labels: {
+          generateLabels: (chart) => {
+            const originalLabels = chart.data.labels || [];
+            const limitedLabels = originalLabels.slice(0, MAX_LEGEND_ITEMS);
+            if (originalLabels.length > MAX_LEGEND_ITEMS) {
+              limitedLabels.push('...'); 
+            }
+            return limitedLabels.map((label, index) => ({
+              text: label,
+              fillStyle: chart.data.datasets[0].backgroundColor[index],
+            }));
+          },
+          padding: 20,
+          boxWidth: 20,
+        },
+      },
+    },
+    layout: {
+      padding: {
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: 20,
+      },
+    },
+    cutout: '50%',
+  };
+
   return (
     <div>
       <div className="page-wrapper">
         <div className="content container-fluid">
-          <Breadcrumbs maintitle="Leave Requests" title="Dashboard" subtitle="Leave Request" />
-          {/* {feedbackMessage && <div style={{color: 'green'}} >{feedbackMessage}</div>} */}
-          <div className="row">
+          <Breadcrumbs maintitle="Leave Requests" title="Dashboard" subtitle="Leave Request"/>
+          <div className="row" style={{ flexDirection: 'column' }}>
             <div className="col-md-12">
-              <div
-                className="search-form"
-                style={{
-                  display: 'flex',
-                  gap: '10px',
-                  marginBottom: '20px',
-                  padding: '10px',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '5px',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                  // position: 'sticky',
-                  top: '0',
-                  zIndex: '1000'
-                }}
-              >
-                <input type="date" name="startDate" value={searchCriteria.startDate} onChange={handleSearchChange} max={searchCriteria.endDate}
-                  style={{
-                    padding: '10px',
-                    border: '1px solid #ced4da',
-                    borderRadius: '5px'
-                  }}
-                />
-                <input type="date" name="endDate" value={searchCriteria.endDate} onChange={handleSearchChange} min={searchCriteria.startDate}
-                  style={{
-                    padding: '10px',
-                    border: '1px solid #ced4da',
-                    borderRadius: '5px'
-                  }}
-                />
-                <select name="leaveType" value={searchCriteria.leaveType} onChange={handleSearchChange}
-                  style={{
-                    padding: '10px',
-                    border: '1px solid #ced4da',
-                    borderRadius: '5px'
-                  }}
-                >
-                  <option value="">Select Leave Type</option>
-                  {leaveTypes.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-                <input type="text" name="employeeName" placeholder="Employee Name" value={searchCriteria.employeeName} onChange={handleSearchChange}
-                  style={{
-                    padding: '10px',
-                    border: '1px solid #ced4da',
-                    borderRadius: '5px'
-                  }}
-                />
-                <select name="status" value={searchCriteria.status} onChange={handleSearchChange}
-                  style={{
-                    padding: '10px',
-                    border: '1px solid #ced4da',
-                    borderRadius: '5px'
-                  }}
-                >
-                  <option value="">Select Status</option>
-                  {statuses.map(status => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </select>
-                <button onClick={handleSearch} className="btn btn-primary"
-                  style={{
-                    padding: '10px',
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Search
-                </button>
+              {/* Search Form */}
+              <div className="search-form" style={{ padding: '10px', backgroundColor: '#f8f9fa', borderRadius: '5px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  StartDate:<input type="date" name="startDate" value={searchCriteria.startDate} onChange={handleSearchChange} max={searchCriteria.endDate} style={{ padding: '10px', border: '1px solid #ced4da', borderRadius: '5px' }} />
+                  
+                  EndDate:<input type="date" name="endDate" value={searchCriteria.endDate} onChange={handleSearchChange} min={searchCriteria.startDate} style={{ padding: '10px', border: '1px solid #ced4da', borderRadius: '5px' }} />
+                  
+                  <select name="leaveType" value={searchCriteria.leaveType} onChange={handleSearchChange} style={{ padding: '10px', border: '1px solid #ced4da', borderRadius: '5px' }}>
+                    <option value="">Select Leave Type</option>
+                    {leaveTypes.map(type => (<option key={type} value={type}>{type}</option>))}
+                  </select>
+                  
+                  <select name="status" value={searchCriteria.status} onChange={handleSearchChange} style={{ padding: '10px', border: '1px solid #ced4da', borderRadius: '5px' }}>
+                    <option value="">Select Status</option>
+                    {statuses.map(status => (<option key={status} value={status}>{status}</option>))}
+                  </select>
+                  
+                  <input type="text" name="employeeName" placeholder="Employee Name" value={searchCriteria.employeeName} onChange={handleSearchChange} style={{ padding: '10px', border: '1px solid #ced4da', borderRadius: '5px', minWidth: '200px' }} />
+                  
+                  <button onClick={handleSearch} className="btn btn-primary" style={{ padding: '10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+                    Search
+                  </button>
+                </div>
               </div>
-              <div className="results-container" style={{ marginTop: '20px' }}>
-                {loading ? (
-                  <div className="alert alert-info">Loading...</div>
-                ) : noData ? (
-                  <div className="alert alert-warning">No data found</div>
-                ) : (
-                  <table className="table table-striped">
-                    <thead>
-                      <tr>
-                        <th>Employee</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {leaveRequests
-                        .sort((a, b) => {
-                          const statusOrder = { 'Pending': 1, 'Approved': 2, 'Rejected': 3 };
-                          if (statusOrder[a.status] !== statusOrder[b.status]) {
-                            return statusOrder[a.status] - statusOrder[b.status];
-                          }
-                          return new Date(b.startDate) - new Date(a.startDate);
-                        })
-                        .map(request => (
-                          <tr key={request.id}>
-                            <td>{request.employeeName || 'Unknown Employee'}</td>
-                            <td>{new Date(request.startDate).toLocaleDateString()}</td>
-                            <td>{new Date(request.endDate).toLocaleDateString()}</td>
-                            <td>
-                              <span className={`badge ${request.status === 'Approved' ? 'badge-success' : request.status === 'Pending' ? 'badge-warning' : 'badge-danger'}`}>
-                                {request.status}
-                              </span>
-                            </td>
-                            <td>
-                              <button onClick={() => handleViewDetails(request.id, request.employeeId)} className="btn btn-info btn-sm">View Details</button>
-                              {!request.isActionTaken && request.status === 'Pending' && (
-                                <div className="action-buttons">
-                                  <button onClick={() => handleApprove(request.id)} className="btn btn-success btn-sm">Approve</button>
-                                  <button onClick={() => handleReject(request.id)} className="btn btn-danger btn-sm">Reject</button>
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                )}
+            </div>
+
+            <div className="col-md-12">
+              <div>
+                <div style={{ display: 'flex', gap: '20px' }}>
+                  <div style={{ width: '30%', height: 'auto' }}>
+                    <h3>Leave Days Per Employee</h3>
+                    <Pie data={leaveDaysData} options={options}/>
+                  </div>
+                  <div style={{ width: '30%', height: 'auto' }}>
+                    <h3>Leave Type Counts</h3>
+                    <Pie data={leaveTypeData} options={options}/>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      {selectedRequest && (
-        <Modal
-          isOpen={modalIsOpen}
-          onRequestClose={() => setModalIsOpen(false)}
-          contentLabel="Leave Request Details"
-          style={{
-            content: {
-              top: '50%',
-              left: '50%',
-              right: 'auto',
-              bottom: 'auto',
-              marginRight: '-50%',
-              transform: 'translate(-50%, -50%)',
-              width: '50%',
-              maxHeight: '80vh',
-              overflowY: 'auto',
-              borderRadius: '10px',
-              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-              padding: '20px'
-            }
-          }}
-        >
+
+            <div className="results-container" style={{ marginTop: '20px' }}>
+            {loading ? (
+              <div className="alert alert-info">Loading...</div>
+            ) : noData ? (
+              <div className="alert alert-warning">No data found</div>
+            ) : (
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Employee</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leaveRequests
+                    .sort((a, b) => {
+                      const statusOrder = { 'Pending': 1, 'Approved': 2, 'Rejected': 3 };
+                      if (statusOrder[a.status] !== statusOrder[b.status]) {
+                        return statusOrder[a.status] - statusOrder[b.status];
+                      }
+                      return new Date(b.startDate) - new Date(a.startDate);
+                    })
+                    .map(request => (
+                      <tr key={request.id}>
+                        <td>{request.employeeName || 'Unknown Employee'}</td>
+                        <td>{new Date(request.startDate).toLocaleDateString()}</td>
+                        <td>{new Date(request.endDate).toLocaleDateString()}</td>
+                        <td>
+                          <span className={`badge ${request.status === 'Approved' ? 'badge-success' : request.status === 'Pending' ? 'badge-warning' : 'badge-danger'}`}>
+                            {request.status}
+                          </span>
+                        </td>
+                        <td>
+                          <button onClick={() => handleViewDetails(request.id, request.employeeId)} className="btn btn-info btn-sm">View Details</button>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        {selectedRequest && (
+          <Modal
+            isOpen={modalIsOpen}
+            onRequestClose={() => setModalIsOpen(false)}
+            contentLabel="Leave Request Details"
+            style={{
+              content: {
+                top: '50%',
+                left: '50%',
+                right: 'auto',
+                bottom: 'auto',
+                marginRight: '-50%',
+                transform: 'translate(-50%, -50%)',
+                width: '50%',
+                maxHeight: '80vh',
+                overflowY: 'auto',
+                borderRadius: '10px',
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                padding: '20px'
+              }
+            }}
+          >
           <div>
             <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Leave Request Details</h2>
             {selectedRequest ? (
+              <>
               <table className="table table-bordered">
                 <tbody>
                   <tr>
@@ -301,16 +330,33 @@ const LeaveRequestsAdmin = () => {
                   </tr>
                 </tbody>
               </table>
+              {!selectedRequest.isActionTaken && selectedRequest.status === 'Pending' && (
+                <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                  <button  onClick={() => handleApprove(selectedRequest.id)} className="btn btn-success" style={{ marginRight: '10px' }}>
+                    Approve
+                  </button>
+                  <button onClick={() => handleReject(selectedRequest.id)} className="btn btn-danger">
+                    Reject
+                  </button>
+                </div>
+              )}
+              </>
             ) : (
               <p>No details available</p>
             )}
           </div>
         </Modal>
       )}
+      </div>
+
+    </div>
     </div>
   );
   
 };
 
 export default LeaveRequestsAdmin;
+
+
+
 

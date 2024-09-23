@@ -4,16 +4,14 @@
  */
 package bizworks.backend.services;
 
-import bizworks.backend.dtos.LeaveRequestDTO;
-import bizworks.backend.dtos.LeaveType;
-import bizworks.backend.dtos.SearchDTO;
-import bizworks.backend.models.Employee;
-import bizworks.backend.models.LeaveRequest;
-import bizworks.backend.repositories.EmployeeRepository;
-import bizworks.backend.repositories.LeaveRequestRepository;
+import bizworks.backend.dtos.*;
+import bizworks.backend.models.*;
+import bizworks.backend.repositories.*;
 import jakarta.mail.MessagingException;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +31,7 @@ public class LeaveRequestService {
 
     @Autowired
     private EmployeeRepository employeeRepository;
-    
+
     @Autowired
     private MailService mailService;
 
@@ -96,13 +94,18 @@ public class LeaveRequestService {
         try {
             String subject = "Leave Request Approved";
             String content = String.format(
-                "Dear %s,<br><br>"
-                        + "Your leave request from %s to %s has been approved.<br><br>"
-                        + "Best regards,<br>"
-                        + "BizWorks.",
-                leaveRequest.getEmployee().getFullname(),
-                leaveRequest.getStartDate().toString(),
-                leaveRequest.getEndDate().toString()
+                    "Dear %s,<br><br>"
+                    + "<strong>Your leave request has been approved!</strong><br><br>"
+                    + "<strong>Details:</strong><br>"
+                    + "From: <strong>%s</strong><br>"
+                    + "To: <strong>%s</strong><br>"
+                    + "Reason: <strong>%s</strong><br><br>"
+                    + "Best regards,<br>"
+                    + "<em>BizWorks</em>.",
+                    leaveRequest.getEmployee().getFullname(),
+                    leaveRequest.getStartDate().toString(),
+                    leaveRequest.getEndDate().toString(),
+                    leaveRequest.getReason()
             );
             mailService.sendEmail(leaveRequest.getEmployee().getEmail(), subject, content);
         } catch (MessagingException e) {
@@ -122,17 +125,21 @@ public class LeaveRequestService {
         leaveRequest.setStatus("Rejected");
         LeaveRequest savedRequest = leaveRequestRepository.save(leaveRequest);
 
-        // Send rejection email
         try {
             String subject = "Leave Request Rejected";
             String content = String.format(
                 "Dear %s,<br><br>"
-                        + "Your leave request from %s to %s has been rejected.<br><br>"
-                        + "Best regards,<br>"
-                        + "BizWorks.",
+                + "<strong>Your leave request has been rejectd!</strong><br><br>"
+                + "<strong>Details:</strong><br>"
+                + "From: <strong>%s</strong><br>"
+                + "To: <strong>%s</strong><br>"
+                + "Reason: <strong>%s</strong><br><br>"
+                + "Best regards,<br>"
+                + "<em>BizWorks</em>.",
                 leaveRequest.getEmployee().getFullname(),
                 leaveRequest.getStartDate().toString(),
-                leaveRequest.getEndDate().toString()
+                leaveRequest.getEndDate().toString(),
+                leaveRequest.getReason() 
             );
             mailService.sendEmail(leaveRequest.getEmployee().getEmail(), subject, content);
         } catch (MessagingException e) {
@@ -244,7 +251,7 @@ public class LeaveRequestService {
 
     private boolean filterByEmployeeName(LeaveRequest leaveRequest, SearchDTO searchDto) {
         if (searchDto.getEmployeeName() != null && !searchDto.getEmployeeName().isEmpty()) {
-            return leaveRequest.getEmployee().getFullname().equalsIgnoreCase(searchDto.getEmployeeName());
+            return leaveRequest.getEmployee().getFullname().toLowerCase().contains(searchDto.getEmployeeName());
         }
         return true;
     }
@@ -255,4 +262,22 @@ public class LeaveRequestService {
         }
         return true;
     }
+
+    public Map<String, Long> calculateTotalLeaveDays(List<LeaveRequestDTO> leaveRequests) {
+        Map<String, Long> leaveDaysPerEmployee = new HashMap<>();
+        for (LeaveRequestDTO request : leaveRequests) {
+            long days = ChronoUnit.DAYS.between(request.getStartDate().toInstant(), request.getEndDate().toInstant());
+            leaveDaysPerEmployee.merge(request.getEmployeeName(), days, Long::sum);
+        }
+        return leaveDaysPerEmployee;
+    }
+
+    public Map<String, Long> countLeaveRequestsByType(List<LeaveRequestDTO> leaveRequests) {
+        Map<String, Long> leaveTypeCounts = new HashMap<>();
+        for (LeaveRequestDTO request : leaveRequests) {
+            leaveTypeCounts.merge(request.getLeaveType(), 1L, Long::sum);
+        }
+        return leaveTypeCounts;
+    }
+
 }

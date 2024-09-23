@@ -212,6 +212,7 @@ const LeaveRequestsEmployee = () => {
       )
     },
   ];
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <div>
@@ -227,7 +228,6 @@ const LeaveRequestsEmployee = () => {
           <button onClick={() => setModalIsOpen(true)} style={styles.button}>Request Leave</button>
           <Modal isOpen={modalIsOpen} onRequestClose={() => setModalIsOpen(false)} style={{...styles.modal, zIndex: 1001}}>
             <form onSubmit={handleSubmit} style={styles.form}>
-            {/* {errorMessage && <div style={styles.error}>{errorMessage}</div>} */}
               <div style={styles.formGroup}>
                 <label style={styles.label}>Leave Type:</label>
                 <select name="leaveType" value={sendLeaveRequest.leaveType} onChange={handleChange} style={styles.select}>
@@ -243,12 +243,12 @@ const LeaveRequestsEmployee = () => {
               </div>
               <div style={styles.formGroup}>
                 <label style={styles.label}>Start Date:</label>
-                <input type="date" name="startDate" value={sendLeaveRequest.startDate} onChange={handleChange} max={sendLeaveRequest.endDate} required style={styles.input} />
+                <input type="date" name="startDate" value={sendLeaveRequest.startDate} onChange={handleChange} min={today} max={sendLeaveRequest.endDate} required style={styles.input} />
                 {fieldErrors.startDate && <div className={styles.error} style={styles.error}>{fieldErrors.startDate}</div>}
               </div>
               <div style={styles.formGroup}>
                 <label style={styles.label}>End Date:</label>
-                <input type="date" name="endDate" value={sendLeaveRequest.endDate} onChange={handleChange} min={sendLeaveRequest.startDate} required style={styles.input} />
+                <input type="date" name="endDate" value={sendLeaveRequest.endDate} onChange={handleChange} min={sendLeaveRequest.startDate || today} required style={styles.input} />
                 {fieldErrors.endDate && <div className={styles.error} style={styles.error}>{fieldErrors.endDate}</div>}
                 {errorMessage && <div className={styles.error} style={styles.error}>{errorMessage}</div>}
               </div>

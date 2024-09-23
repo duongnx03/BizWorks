@@ -56,6 +56,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/training-programs/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER" , "MANAGE")
                         .requestMatchers("/api/interview-schedules/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER" , "MANAGE")
                         .requestMatchers("/api/favorites/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER" , "MANAGE")
+                        .requestMatchers("/api/leave-requests/**").hasAnyAuthority("ADMIN", "LEADER", "MANAGE", "EMPLOYEE")
 
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
