@@ -63,5 +63,12 @@
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(e.getMessage(), "ERROR_DELETING_JOB_POSTING"));
             }
         }
-
+        @GetMapping("/expired")
+        public ResponseEntity<ApiResponse<?>> getExpiredJobPostings() {
+            try {
+                return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(jobPostingService.getExpiredJobPostings(), "List of expired job postings fetched successfully"));
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(e.getMessage(), "ERROR_FETCHING_EXPIRED_JOB_POSTINGS"));
+            }
+        }
     }

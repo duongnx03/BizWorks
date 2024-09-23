@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/AttendanceDTO.dart';
+import 'package:mobile/models/JobPostingDTO.dart';
 import 'package:mobile/providers/attendance_complaint_provider.dart';
 import 'package:mobile/providers/attendance_provider.dart';
 import 'package:mobile/providers/auth_provider.dart';
 import 'package:mobile/providers/employee_provider.dart';
+import 'package:mobile/providers/job_posting.provider.dart';
 import 'package:mobile/providers/overtime_provider.dart';
 import 'package:mobile/screens/LoginForm.dart';
+import 'package:mobile/screens/job_posting_detail.dart';
+import 'package:mobile/screens/job_posting_screen.dart'; // Import JobPostingScreen
 import 'package:mobile/screens/attendance_complaint_detail_screen.dart';
 import 'package:mobile/screens/attendance_complaint_screen.dart';
 import 'package:mobile/screens/attendance_screen.dart';
@@ -36,8 +40,10 @@ void main() {
             create: (context) =>
                 AttendanceComplaintProvider(dioClient: dioClient)),
         ChangeNotifierProvider(
-            create: (context) =>
-                OvertimeProvider(dioClient: dioClient)),
+            create: (context) => OvertimeProvider(dioClient: dioClient)),
+        ChangeNotifierProvider(
+            create: (context) => JobPostingProvider(
+                dioClient: dioClient)), // Thêm JobPostingProvider
       ],
       child: const MyApp(),
     ),
@@ -81,7 +87,7 @@ class MyApp extends StatelessWidget {
           case '/overtime':
             final data = settings.arguments as AttendanceDTO;
             return MaterialPageRoute(
-                builder: (context) => OvertimeRequestScreen(attendance: data,));
+                builder: (context) => OvertimeRequestScreen(attendance: data));
           case '/attendance-complaint':
             final data = settings.arguments as AttendanceDTO;
             return MaterialPageRoute(
@@ -100,6 +106,14 @@ class MyApp extends StatelessWidget {
           case '/overtime-detail':
             return MaterialPageRoute(
                 builder: (context) => const OvertimeDetailsScreen());
+          case '/job-posting': // Thêm route cho JobPostingScreen
+            return MaterialPageRoute(builder: (context) => JobPostingScreen());
+          case '/job-posting-details':
+            final jobPosting = settings.arguments as JobPostingDTO;
+            return MaterialPageRoute(
+              builder: (context) =>
+                  JobPostingDetails(jobPostingDTO: jobPosting),
+            );
           default:
             return MaterialPageRoute(builder: (context) => const LoginForm());
         }

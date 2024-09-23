@@ -9,9 +9,11 @@ import bizworks.backend.repositories.PositionRepository;
 import bizworks.backend.repositories.hrdepartment.JobPostingRepository;
 import bizworks.backend.services.EmployeeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -22,6 +24,7 @@ public class JobPostingService {
     private final JobPostingRepository jobPostingRepository;
     private final DepartmentRepository departmentRepository;
     private final PositionRepository positionRepository;
+    private List<JobPostingDTO> expiredJobPostings = new ArrayList<>();
 
     public JobPostingDTO createJobPosting(JobPostingDTO jobPostingDTO) {
         validateJobPostingDTO(jobPostingDTO); // Validate before saving
@@ -69,9 +72,32 @@ public class JobPostingService {
     public JobPostingDTO getJobPostingById(Long id) {
         JobPosting jobPosting = jobPostingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Job Posting not found"));
+
+        if (jobPosting.getDeadline() != null && jobPosting.getDeadline().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Cannot view job posting, deadline has passed.");
+        }
+
         return convertToDTO(jobPosting);
     }
+    @Scheduled(cron = "0 0 0 * * ?") // Chạy mỗi ngày lúc nửa đêm
+    public void checkAndMoveExpiredPostings() {
+        List<JobPosting> allJobPostings = jobPostingRepository.findAll();
+        LocalDate today = LocalDate.now();
 
+        List<JobPostingDTO> expiredPostings = new ArrayList<>();
+
+        for (JobPosting jobPosting : allJobPostings) {
+            if (jobPosting.getDeadline() != null && jobPosting.getDeadline().isBefore(today)) {
+                expiredPostings.add(convertToDTO(jobPosting));
+                jobPostingRepository.delete(jobPosting); // Xóa hoặc đánh dấu là hết hạn
+            }
+        }
+        expiredJobPostings = expiredPostings; // Cập nhật danh sách tin hết hạn
+    }
+
+    public List<JobPostingDTO> getExpiredJobPostings() {
+        return expiredJobPostings;
+    }
     public JobPostingDTO updateJobPosting(Long id, JobPostingDTO jobPostingDTO) {
         JobPosting jobPosting = jobPostingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Job Posting not found"));

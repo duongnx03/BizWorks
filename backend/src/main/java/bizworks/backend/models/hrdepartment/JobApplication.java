@@ -34,6 +34,6 @@ public class JobApplication {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user; // Add this line to your JobApplication model
+    private User user;
 
 }

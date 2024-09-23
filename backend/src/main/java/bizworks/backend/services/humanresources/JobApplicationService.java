@@ -130,10 +130,12 @@
                 return jobApplicationRepository.findAll()
                         .stream().map(this::convertToDTO).collect(Collectors.toList());
             }
+            public long countApplicationsByJobPostingId(Long jobPostingId) {
+                return jobApplicationRepository.countByJobPostingId(jobPostingId);
+            }
             public JobApplicationDTO submitApplication(JobApplicationDTO jobApplicationDTO) {
                 JobPosting jobPosting = jobPostingRepository.findById(jobApplicationDTO.getJobPostingId())
                         .orElseThrow(() -> new RuntimeException("Job posting not found"));
-
                 if (LocalDate.now().isAfter(jobPosting.getDeadline())) {
                     throw new RuntimeException("Cannot submit application. The job posting has expired.");
                 }
