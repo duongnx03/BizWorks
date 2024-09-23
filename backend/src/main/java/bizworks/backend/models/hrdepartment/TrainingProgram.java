@@ -1,56 +1,39 @@
-    package bizworks.backend.models.hrdepartment;
+package bizworks.backend.models.hrdepartment;
 
-    import bizworks.backend.models.Employee;
-    import jakarta.persistence.*;
-    import lombok.AllArgsConstructor;
-    import lombok.Data;
-    import lombok.NoArgsConstructor;
+import bizworks.backend.models.Employee;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-    import java.time.LocalDate;
-    import java.util.HashSet;
-    import java.util.Objects;
-    import java.util.Set;
+import java.time.LocalDate;
+import java.util.List;
 
-    @Entity
-    @Table(name = "training_programs")
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public class TrainingProgram {
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private Long id;
+@Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class TrainingProgram {
 
-        private String title;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-        private String description;
+    private String title;
 
-        @Enumerated(EnumType.STRING)
-        private TrainingType type;
+    private String description;
 
-        private LocalDate startDate;
+    private LocalDate startDate;
 
-        private LocalDate endDate;
+    private LocalDate endDate;
 
-        @OneToMany(mappedBy = "trainingProgram", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-        private Set<Exam> exams = new HashSet<>();
-        @ManyToMany(fetch = FetchType.LAZY)
-        @JoinTable(
-                name = "training_program_employee",
-                joinColumns = @JoinColumn(name = "training_program_id"),
-                inverseJoinColumns = @JoinColumn(name = "employee_id")
-        )
-        private Set<Employee> employees;
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            TrainingProgram that = (TrainingProgram) o;
-            return Objects.equals(id, that.id);
-        }
+    @ManyToMany
+    @JoinTable(
+            name = "training_program_participants",
+            joinColumns = @JoinColumn(name = "training_program_id"),
+            inverseJoinColumns = @JoinColumn(name = "employee_id")
+    )
+    private List<Employee> participants;
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(id);
-        }
-    }
+    // Getters and setters
+}
