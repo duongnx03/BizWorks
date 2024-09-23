@@ -46,7 +46,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/emp-queue/**").hasAnyAuthority("ADMIN", "LEADER", "MANAGE")
                         .requestMatchers("/api/missedCheckOut/**").hasAnyAuthority("ADMIN", "LEADER", "MANAGE", "EMPLOYEE")
                         .requestMatchers("/api/review/**").hasAnyAuthority("ADMIN", "LEADER", "MANAGE", "EMPLOYEE")
-                        .requestMatchers("/api/job-postings/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER")
+                        .requestMatchers("/api/job-postings/**").permitAll()
                         .requestMatchers("/api/job-applications/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER" , "MANAGE")
                         .requestMatchers("/api/exams/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER" , "MANAGE")
                         .requestMatchers("/api/questions/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER" , "MANAGE")

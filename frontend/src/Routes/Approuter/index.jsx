@@ -53,6 +53,9 @@ import UnderManitenance from "../../views/pages/Pages/UnderManitenance";
 import { AuthProvider } from "../AuthContext";
 import VerificationPage from "../../views/pages/Authentication/VerificationPage";
 import ResetPassword from "../../views/pages/Authentication/ResetPassword";
+import Home from "../../views/pages/home/HomePage";
+import JobBoard from "../../views/pages/Employees/JobBoard";
+import JobBoardDetail from "../../views/pages/Employees/JobBoardDetails";
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -73,10 +76,12 @@ const AppRouter = () => {
     <div>
       <AuthProvider>
         <Provider store={store}>
-          <BrowserRouter basename="/bizworks">
+          <BrowserRouter>
             <ScrollToTop />
             <Routes>
-              <Route path="/" element={<Login />} />
+              <Route path="/" element={<Home/>}/>
+              <Route path="/job-board" element={<JobBoard/>}/>
+              <Route path="/login" element={<Login />} />
               <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/verification" element={<VerificationPage />} />
               <Route path="/reset-password" element={<ResetPassword />} />

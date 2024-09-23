@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { List, Typography, Card, Spin, message, Button, Select, Input } from 'antd';
 import axios from 'axios';
 import { base_url } from '../../../base_urls';
+import { Container, Nav, Navbar } from 'react-bootstrap';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -93,7 +94,24 @@ const JobBoard = () => {
   };
 
   return (
-    <div className="job-postings-list" style={{ padding: '40px', backgroundColor: '#f0f2f5' }}>
+    <>
+    <Navbar bg="dark" variant="dark" expand="lg">
+        <Container>
+          <Navbar.Brand href="/">Bizworks</Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="me-auto">
+              <Nav.Link href="/job-board">Job Board</Nav.Link>
+            </Nav>
+            <Nav className="ms-auto">
+              <Button href="/login" variant="outline-light">
+                Login
+              </Button>
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
+      <div className="job-postings-list" style={{ padding: '40px', backgroundColor: '#f0f2f5' }}>
       <Title level={2} style={{ textAlign: 'center', marginBottom: '40px', color: '#1890ff' }}>
         Danh Sách Tin Tuyển Dụng
       </Title>
@@ -245,6 +263,7 @@ const JobBoard = () => {
         />
       )}
     </div>
+    </>
   );
 };
 
