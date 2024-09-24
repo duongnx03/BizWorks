@@ -14,33 +14,29 @@ const TrainingProgram = () => {
   const [trainingProgramToDelete, setTrainingProgramToDelete] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const navigate = useNavigate();  // Add this line
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchTrainingPrograms();
   }, []);
-
   const fetchTrainingPrograms = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get(`${base_url}/api/training-programs`);
-      console.log("API response:", response.data); // Log response data
-      if (Array.isArray(response.data)) {
-        setTrainingPrograms(response.data); // Adjusted for array response
-      } else {
-        setTrainingPrograms([]);
-      }
-      setLoading(false);
+        const response = await axios.get(`${base_url}/api/training-programs`, { withCredentials: true });
+        console.log("Fetched training programs:", response.data); // In ra dữ liệu nhận được
+        setTrainingPrograms(response.data || []);
     } catch (error) {
-      console.error("Error fetching training programs:", error); // Log error
-      message.error("Failed to fetch training programs");
-      setTrainingPrograms([]);
-      setLoading(false);
+        console.error("Error fetching training programs:", error);
+        message.error("Failed to fetch training programs");
+        setTrainingPrograms([]);
+    } finally {
+        setLoading(false);
     }
-  };
+};
 
   const handleTrainingProgramCreated = () => {
-    fetchTrainingPrograms(); // Refresh training program list after creation
-    setModalVisible(false); // Close the modal after creation
+    fetchTrainingPrograms();
+    setModalVisible(false);
   };
 
   const openDeleteModal = (id) => {
@@ -56,13 +52,13 @@ const TrainingProgram = () => {
   const handleDelete = async () => {
     try {
       if (trainingProgramToDelete) {
-        await axios.delete(`${base_url}/api/training-programs/${trainingProgramToDelete}`);
-        fetchTrainingPrograms(); // Refresh training program list after deletion
-        handleDeleteModalClose(); // Close modal
+        await axios.delete(`${base_url}/api/training-programs/${trainingProgramToDelete}`, { withCredentials: true });
+        fetchTrainingPrograms();
+        handleDeleteModalClose();
         message.success("Training program deleted successfully");
       }
     } catch (error) {
-      console.error("Error deleting training program:", error); // Log error
+      console.error("Error deleting training program:", error);
       message.error("Failed to delete training program");
     }
   };
@@ -74,9 +70,8 @@ const TrainingProgram = () => {
   const trainingProgramElements = trainingPrograms.map((program) => ({
     key: program.id,
     id: program.id,
-    programName: program.programName,
-    departmentName: program.departmentName,
-    trainerName: program.trainerName,
+    title: program.title,
+    description: program.description,
     startDate: new Date(program.startDate).toLocaleDateString(),
     endDate: new Date(program.endDate).toLocaleDateString(),
   }));
@@ -89,34 +84,28 @@ const TrainingProgram = () => {
       width: "10%",
     },
     {
-      title: "Program Name",
-      dataIndex: "programName",
-      sorter: (a, b) => a.programName.localeCompare(b.programName),
-      width: "25%",
+      title: "Title",
+      dataIndex: "title",
+      sorter: (a, b) => a.title.localeCompare(b.title),
+      width: "30%",
     },
     {
-      title: "Department Name",
-      dataIndex: "departmentName",
-      sorter: (a, b) => a.departmentName.localeCompare(b.departmentName),
-      width: "25%",
-    },
-    {
-      title: "Trainer Name",
-      dataIndex: "trainerName",
-      sorter: (a, b) => a.trainerName.localeCompare(b.trainerName),
-      width: "20%",
+      title: "Description",
+      dataIndex: "description",
+      sorter: (a, b) => a.description.localeCompare(b.description),
+      width: "30%",
     },
     {
       title: "Start Date",
       dataIndex: "startDate",
       sorter: (a, b) => new Date(a.startDate) - new Date(b.startDate),
-      width: "10%",
+      width: "15%",
     },
     {
       title: "End Date",
       dataIndex: "endDate",
       sorter: (a, b) => new Date(a.endDate) - new Date(b.endDate),
-      width: "10%",
+      width: "15%",
     },
     {
       title: "Actions",
@@ -141,15 +130,9 @@ const TrainingProgram = () => {
             </Link>
             <Link
               className="dropdown-item"
-              to={`/training-programs/${record.id}`}
+              to={`/training-programs/${record.id}`} // Link to View Details
             >
               <i className="fa fa-eye m-r-5" /> View Details
-            </Link>
-            <Link
-              className="dropdown-item"
-              to={`/attendance/${record.id}`} // Updated path
-            >
-              <i className="fa fa-calendar-check m-r-5" /> Attendance
             </Link>
           </div>
         </div>
@@ -167,10 +150,7 @@ const TrainingProgram = () => {
               <div className="table-responsive">
                 <SearchBox />
                 <div className="d-flex justify-content-end mb-3">
-                  <Button
-                    onClick={openTrainingProgramModal}
-                    type="primary"
-                  >
+                  <Button onClick={openTrainingProgramModal} type="primary">
                     Add Training Program
                   </Button>
                 </div>
@@ -179,7 +159,7 @@ const TrainingProgram = () => {
                   dataSource={trainingProgramElements}
                   loading={loading}
                   className="table-striped"
-                  rowKey="id" // Adjusted to rowKey as string
+                  rowKey="id"
                 />
               </div>
             </div>

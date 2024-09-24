@@ -5,6 +5,7 @@ import bizworks.backend.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,4 +26,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     List<Employee> findByUser_Role(String role);
 
     List<Employee> findByPositionId(Long positionId);
+    List<Employee> findAllByUserIdIn(List<Long> userIds); // Adjust the parameter type if needed
+    List<Employee> findByStartDateAfter(LocalDate date); // Define the method
+
 }

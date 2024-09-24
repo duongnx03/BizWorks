@@ -1,54 +1,77 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Form, Input, Button, Select, DatePicker, message } from "antd";
+import { Modal, Form, Input, Button, DatePicker, Select, message, Divider } from "antd";
 import axios from "axios";
 import { base_url } from "../../base_urls";
-
-const { Option } = Select;
+import moment from "moment"; // Thêm dòng import này
 
 const TrainingProgramModal = ({ isVisible, onCancel, onTrainingProgramCreated }) => {
   const [form] = Form.useForm();
-  const [employees, setEmployees] = useState([]);
-  const [loadingEmployees, setLoadingEmployees] = useState(true);
-
+  const [newEmployees, setNewEmployees] = useState([]);
+  const [leaders, setLeaders] = useState([]);
+  const [managers, setManagers] = useState([]);
+  const [selectedOption, setSelectedOption] = useState('');
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState([]);
+  const fetchData = async () => {
+    try {
+      const [newEmployeesResponse, leadersResponse, managersResponse] = await Promise.all([
+        axios.get(`${base_url}/api/training-programs/new-employees`, { withCredentials: true }),
+        axios.get(`${base_url}/api/training-programs/leaders`, { withCredentials: true }),
+        axios.get(`${base_url}/api/training-programs/managers`, { withCredentials: true })
+      ]);
+  
+      // Kiểm tra dữ liệu trả về
+      console.log("New Employees:", newEmployeesResponse.data);
+      console.log("Leaders:", leadersResponse.data);
+      console.log("Managers:", managersResponse.data);
+  
+      // Thiết lập danh sách nhân viên mới, lãnh đạo, quản lý
+      setNewEmployees(Array.isArray(newEmployeesResponse.data) ? newEmployeesResponse.data : []);
+      setLeaders(Array.isArray(leadersResponse.data) ? leadersResponse.data : []);
+      setManagers(Array.isArray(managersResponse.data) ? managersResponse.data : []);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      message.error("Failed to load data");
+    }
+  };
   useEffect(() => {
     if (isVisible) {
-      fetchEmployees();
+      fetchData();
+      setSelectedOption('');
+      setSelectedEmployeeIds([]);
+      form.setFieldsValue({ startDate: moment() }); // Đặt ngày bắt đầu là ngày hôm nay
     }
   }, [isVisible]);
 
-  const fetchEmployees = async () => {
-    try {
-      const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, { withCredentials: true });
-      if (response.data.status === "SUCCESS" && Array.isArray(response.data.data)) {
-        setEmployees(response.data.data);
-      } else {
-        console.error("Unexpected response format:", response.data);
-        message.error("Unexpected response format");
-      }
-    } catch (error) {
-      console.error("Error fetching employees:", error);
-      message.error("Failed to fetch employees");
-    } finally {
-      setLoadingEmployees(false);
-    }
+  const handleOptionChange = (value) => {
+    setSelectedOption(value);
+    setSelectedEmployeeIds([]);
   };
 
+  const handleEmployeeSelectChange = (selectedIds) => {
+    setSelectedEmployeeIds(selectedIds);
+  };
   const handleSubmit = async (values) => {
-    try {
-      const { title, description, type, startDate, endDate, employeeIds } = values;
-      const response = await axios.post(`${base_url}/api/training-programs`, { title, description, type, startDate, endDate }, { withCredentials: true });
-      const trainingProgramId = response.data.id;
+    const { title, description, startDate, endDate } = values;
 
-      if (employeeIds && employeeIds.length > 0) {
-        await axios.put(`${base_url}/api/training-programs/${trainingProgramId}/employees`, employeeIds, { withCredentials: true });
-      }
-      
-      message.success("Training program created successfully");
-      onTrainingProgramCreated();
+    try {
+        const response = await axios.post(`${base_url}/api/training-programs`, { 
+            title, 
+            description, 
+            startDate, 
+            endDate,
+            participantIds: selectedEmployeeIds 
+        }, { withCredentials: true });
+
+        message.success("Training program created successfully");
+        onTrainingProgramCreated();
+        form.resetFields();
     } catch (error) {
-      console.error("Error creating training program:", error);
-      message.error("Failed to create training program");
+        console.error("Error creating training program:", error);
+        message.error("Failed to create training program");
     }
+};
+  const disabledDate = (current) => {
+    return current && current < moment().startOf('day'); // Không cho phép chọn ngày trước ngày hôm nay
   };
 
   return (
@@ -59,63 +82,91 @@ const TrainingProgramModal = ({ isVisible, onCancel, onTrainingProgramCreated })
       cancelText="Cancel"
       onCancel={onCancel}
       onOk={() => form.submit()}
+      width={800}
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-      >
-        <Form.Item
-          name="title"
-          label="Title"
-          rules={[{ required: true, message: 'Please input the title!' }]}
-        >
-          <Input />
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
+        <Form.Item name="title" label="Title" rules={[{ required: true, message: 'Please input the title!' }]}>
+          <Input placeholder="Enter training program title" />
         </Form.Item>
-        <Form.Item
-          name="description"
-          label="Description"
-          rules={[{ required: true, message: 'Please input the description!' }]}
-        >
-          <Input.TextArea rows={4} />
+        
+        <Form.Item name="description" label="Description" rules={[{ required: true, message: 'Please input the description!' }]}>
+          <Input.TextArea rows={4} placeholder="Enter training program description" />
         </Form.Item>
-        <Form.Item
-          name="type"
-          label="Type"
-          rules={[{ required: true, message: 'Please select the type!' }]}
-        >
-          <Select>
-            <Option value="ONLINE">Online</Option>
-            <Option value="OFFLINE">Offline</Option>
-          </Select>
-        </Form.Item>
-        <Form.Item
-          name="startDate"
-          label="Start Date"
-          rules={[{ required: true, message: 'Please select the start date!' }]}
-        >
-          <DatePicker format="YYYY-MM-DD" />
-        </Form.Item>
-        <Form.Item
-          name="endDate"
-          label="End Date"
-          rules={[{ required: true, message: 'Please select the end date!' }]}
-        >
-          <DatePicker format="YYYY-MM-DD" />
-        </Form.Item>
-        <Form.Item
-          name="employeeIds"
-          label="Assign Employees"
-          rules={[{ required: false, message: 'Please select employees!' }]}
-        >
-          <Select
-            mode="multiple"
-            allowClear
-            placeholder="Select employees"
-            loading={loadingEmployees}
-            options={employees.map(emp => ({ value: emp.id, label: emp.fullname }))} // Hiển thị fullname
+
+        <Form.Item name="startDate" label="Start Date" rules={[{ required: true, message: 'Please select the start date!' }]}>
+          <DatePicker 
+            format="YYYY-MM-DD" 
+            placeholder="Select start date" 
+            disabledDate={disabledDate} // Thêm hàm disabledDate
           />
         </Form.Item>
+
+        <Form.Item name="endDate" label="End Date" rules={[{ required: true, message: 'Please select the end date!' }]}>
+          <DatePicker 
+            format="YYYY-MM-DD" 
+            placeholder="Select end date" 
+            disabledDate={disabledDate} // Có thể thêm hàm disabledDate nếu cần
+          />
+        </Form.Item>
+
+        <Divider />
+
+        <Form.Item label="Select Employee Type" rules={[{ required: true, message: 'Please select an employee type!' }]}>
+          <Select
+            placeholder="Select Employee Type"
+            onChange={handleOptionChange}
+            value={selectedOption}
+          >
+            <Select.Option value="new_employee">New Employee</Select.Option>
+            <Select.Option value="leader">Leader</Select.Option>
+            <Select.Option value="manager">Manager</Select.Option>
+          </Select>
+        </Form.Item>
+
+        {selectedOption === 'new_employee' && (
+          <Form.Item
+            label="Select New Employees"
+            rules={[{ required: true, message: 'Please select at least one new employee!' }]}
+          >
+            <Select
+              mode="multiple"
+              placeholder="Select New Employees"
+              options={newEmployees.map(employee => ({ value: employee.id, label: employee.fullName }))}
+              onChange={handleEmployeeSelectChange}
+              value={selectedEmployeeIds}
+            />
+          </Form.Item>
+        )}
+
+        {selectedOption === 'leader' && (
+          <Form.Item
+            label="Select Leaders"
+            rules={[{ required: true, message: 'Please select at least one leader!' }]}
+          >
+            <Select
+              mode="multiple"
+              placeholder="Select Leaders"
+              options={leaders.map(leader => ({ value: leader.id, label: leader.fullName }))}
+              onChange={handleEmployeeSelectChange}
+              value={selectedEmployeeIds}
+            />
+          </Form.Item>
+        )}
+
+{selectedOption === 'manager' && (
+  <Form.Item
+    label="Select Managers"
+    rules={[{ required: true, message: 'Please select at least one manager!' }]}
+  >
+    <Select
+      mode="multiple"
+      placeholder="Select Managers"
+      options={managers.map(manager => ({ value: manager.id, label: manager.fullName }))}
+      onChange={handleEmployeeSelectChange}
+      value={selectedEmployeeIds}
+    />
+  </Form.Item>
+)}
       </Form>
     </Modal>
   );

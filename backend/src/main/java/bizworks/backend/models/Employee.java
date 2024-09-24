@@ -1,6 +1,7 @@
 package bizworks.backend.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference; // Thêm chú thích này
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,12 +32,12 @@ public class Employee {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
-    @JsonBackReference
+    @JsonBackReference // Sử dụng @JsonBackReference để tránh vòng lặp
     private Department department;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "position_id")
-    @JsonBackReference
+    @JsonBackReference // Sử dụng @JsonBackReference để tránh vòng lặp
     private Position position;
 
     @OneToMany(mappedBy = "employee", cascade = CascadeType.MERGE)
@@ -50,6 +51,7 @@ public class Employee {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonBackReference // Đánh dấu là bên tham chiếu
     private User user;
 
     @OneToMany(mappedBy = "employee", cascade = CascadeType.MERGE)

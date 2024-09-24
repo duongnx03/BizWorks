@@ -22,6 +22,9 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
 
+    public List<Employee> findAllByIds(List<Long> ids) {
+        return employeeRepository.findAllById(ids);
+    }
     public boolean existsByEmail(String email){
         return employeeRepository.existsByEmail(email);
     }

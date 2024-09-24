@@ -22,7 +22,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EmployeeController {
     private final EmployeeService employeeService;
-
+    @PostMapping("/batch")
+    public ResponseEntity<List<Employee>> getEmployeesByIds(@RequestBody List<Long> ids) {
+        List<Employee> employees = employeeService.findAllByIds(ids);
+        return ResponseEntity.ok(employees);
+    }
     @GetMapping("/human-resources")
     public ResponseEntity<List<EmployeeDTO>> getHumanResourcesEmployees() {
         List<Employee> employees = employeeService.getEmployeesByDepartment("Human Resources");

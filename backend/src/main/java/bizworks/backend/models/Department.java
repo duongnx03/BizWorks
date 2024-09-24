@@ -1,8 +1,6 @@
 package bizworks.backend.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,6 +13,8 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Department {
     @Id
@@ -23,8 +23,8 @@ public class Department {
     private String name;
     private String description;
 
-    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @OneToMany(mappedBy = "department")
+    @JsonManagedReference // Đánh dấu là bên quản lý
     private List<Employee> employees;
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
     @JsonManagedReference
