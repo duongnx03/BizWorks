@@ -123,6 +123,11 @@ const JobPostingList = () => {
       width: "30%",
       sorter: (a, b) => a.description.localeCompare(b.description),
       sortOrder: sortedInfo.columnKey === 'description' && sortedInfo.order,
+      render: (text) => (
+        <div style={{ maxHeight: '50px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>
+          {text}
+        </div>
+      ),
     },
     {
       title: "Posted Date",
