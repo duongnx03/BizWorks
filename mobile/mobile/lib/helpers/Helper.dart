@@ -6,7 +6,7 @@ import 'package:path/path.dart' as path;
 
 class Helper{
   static String replaceLocalhost(String url){
-    return url.replaceFirst("http://localhost", "http://z");
+    return url.replaceFirst("http://localhost", "http://10.0.2.2");
   }
 
   static bool validateImage(XFile image){

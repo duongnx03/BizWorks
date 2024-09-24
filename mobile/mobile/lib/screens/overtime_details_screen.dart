@@ -35,7 +35,7 @@ class OvertimeDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Complaint Details'),
+        title: const Text('Overtime Details'),
         backgroundColor: Colors.orange,
         foregroundColor: Colors.white,
       ),

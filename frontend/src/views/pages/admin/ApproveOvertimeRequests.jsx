@@ -170,9 +170,9 @@ const ApproveOvertimeRequests = () => {
         <div className="page-wrapper">
           <div className="content container-fluid">
             <Breadcrumbs
-              maintitle="Request Create Employee"
+              maintitle="Approve Overtime Request"
               title="Dashboard"
-              subtitle="Request Create Employee"
+              subtitle="Approve Overtime Request"
             />
             <div className="row">
               <div className="col-md-12">
