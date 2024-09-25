@@ -59,6 +59,8 @@ void main() {
                 ViolationComplaintProvider(dioClient: dioClient)),
         ChangeNotifierProvider(
             create: (context) => SalaryProvider(dioClient: dioClient)),
+        ChangeNotifierProvider(
+            create: (context) => LeaveRequestProvider(dioClient: dioClient)),
       ],
       child: const MyApp(),
     ),
@@ -135,6 +137,9 @@ class MyApp extends StatelessWidget {
           case '/salary': // Thêm route cho ViolationScreen
             return MaterialPageRoute(
                 builder: (context) => const SalaryScreen());
+          case '/leave-requests':
+            return MaterialPageRoute(
+                builder: (context) => LeaveRequestScreen());
 
           default:
             return MaterialPageRoute(builder: (context) => const LoginForm());

@@ -151,6 +151,14 @@ class HomeScreen extends StatelessWidget {
           },
         ),
         _buildFunctionCard(
+          icon: Icons.request_page,
+          title: 'Leave Requests',
+          color: const Color(0xFFFF902F),
+          onTap: () {
+            Navigator.pushNamed(context, "/leave-requests");
+          },
+        ),
+        _buildFunctionCard(
           icon: Icons.access_alarm,
           title: 'Overtime',
           color: const Color(0xFFFF902F),
