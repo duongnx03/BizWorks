@@ -28,7 +28,7 @@ const EmployeeListFilter = ({
 
         const departmentOptions = response.data.map((dept) => ({
           value: dept.id,
-          label: dept.name,
+          label: dept.departmentName,
           positions: dept.positions.map((pos) => ({
             value: pos.id,
             label: pos.positionName,

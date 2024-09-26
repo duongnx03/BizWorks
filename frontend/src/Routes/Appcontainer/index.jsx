@@ -775,7 +775,7 @@ const AppContainer = () => {
     {
       id: 88,
       path: "daily-reports",
-      element: <PrivateRoute element={DailyReports} allowedRoles={["ADMIN"]} />,
+      element: <PrivateRoute element={DailyReports} allowedRoles={["ADMIN", "MANAGE"]} />,
     },
     {
       id: 89,

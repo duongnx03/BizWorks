@@ -29,9 +29,6 @@ const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
           { withCredentials: true }
         );
   
-        console.log("API response:", response); // Để kiểm tra cấu trúc của phản hồi
-        console.log(response);
-  
         if (response.data && Array.isArray(response.data)) {
           const departmentOptions = response.data.map((dept) => ({
             value: dept.id,
