@@ -64,12 +64,10 @@ public class PositionService {
     public Position createPosition(PositionDTO positionDTO) {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
-
         Position position = new Position();
         position.setPositionName(positionDTO.getPositionName());
         position.setDescription(positionDTO.getDescription());
         position.setBasicSalary(positionDTO.getBasicSalary());
-
         if (positionDTO.getDepartment() != null && positionDTO.getDepartment().getId() != null) {
             Department department = departmentRepository.findById(positionDTO.getDepartment().getId())
                     .orElseThrow(() -> new RuntimeException("Department not found"));
@@ -82,27 +80,18 @@ public class PositionService {
     public Position updatePosition(Long id, PositionDTO positionDTO) {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
-
-        Position position = findById(id); // Sử dụng phương thức tìm kiếm đã định nghĩa
-
-        // Cập nhật các trường của position
+        Position position = findById(id);
         updatePositionFields(position, positionDTO);
-
-        // Lưu và trả về position đã cập nhật
         return positionRepository.save(position);
     }
 
     private void updatePositionFields(Position position, PositionDTO positionDTO) {
         position.setPositionName(positionDTO.getPositionName());
         position.setDescription(positionDTO.getDescription());
-
-        // Cập nhật basicSalary nếu có thay đổi
         if (positionDTO.getBasicSalary() != null && !positionDTO.getBasicSalary().equals(position.getBasicSalary())) {
             position.setBasicSalary(positionDTO.getBasicSalary());
-            updateSalariesForPosition(position); // Cập nhật lương cho nhân viên
+            updateSalariesForPosition(position);
         }
-
-        // Cập nhật department nếu có thay đổi
         if (positionDTO.getDepartment() != null && positionDTO.getDepartment().getId() != null) {
             Department department = departmentRepository.findById(positionDTO.getDepartment().getId())
                     .orElseThrow(() -> new RuntimeException("Department not found"));
@@ -125,26 +114,19 @@ public class PositionService {
     public void deletePosition(Long id) {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
-
-        Position position = findById(id); // Sử dụng phương thức tìm kiếm đã định nghĩa
-
-        // Xóa vị trí khỏi từng nhân viên
+        Position position = findById(id);
         for (Employee employee : position.getEmployees()) {
             employee.setPosition(null);
-            employeeService.save(employee); // Lưu thay đổi cho từng nhân viên
+            employeeService.save(employee);
         }
-
-        // Cuối cùng, xóa vị trí
         positionRepository.deleteById(id);
     }
 
     public void assignPositionToEmployee(Long positionId, Long employeeId) {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
-
         Position position = findById(positionId);
         Employee employee = employeeService.findById(employeeId);
-
         employee.setPosition(position);
         employeeService.save(employee);
     }

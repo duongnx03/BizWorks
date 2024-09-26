@@ -27,17 +27,17 @@ const TrainingProgram = () => {
   const fetchTrainingPrograms = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${base_url}/api/training-programs`, { withCredentials: true });
-      console.log("Fetched training programs:", response.data);
-      setTrainingPrograms(response.data || []);
+        const response = await axios.get(`${base_url}/api/training-programs/uncompleted`, { withCredentials: true });
+        console.log("Fetched pending training programs:", response.data);
+        setTrainingPrograms(response.data || []);
     } catch (error) {
-      console.error("Error fetching training programs:", error);
-      message.error("Failed to fetch training programs");
-      setTrainingPrograms([]);
+        console.error("Error fetching training programs:", error);
+        message.error("Failed to fetch training programs");
+        setTrainingPrograms([]);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   const handleTrainingProgramCreated = () => {
     fetchTrainingPrograms();
@@ -79,6 +79,7 @@ const TrainingProgram = () => {
     description: program.description,
     startDate: new Date(program.startDate).toLocaleDateString(),
     endDate: new Date(program.endDate).toLocaleDateString(),
+    isCompleted: program.isCompleted // Thêm thuộc tính hoàn thành
   }));
 
   // Hàm để lọc danh sách chương trình đào tạo theo tìm kiếm
@@ -89,7 +90,7 @@ const TrainingProgram = () => {
       ? new Date(program.startDate) >= dateRange[0] && new Date(program.endDate) <= dateRange[1]
       : true;
 
-    return (isTitleMatch || isDescriptionMatch) && isDateInRange;
+    return (isTitleMatch || isDescriptionMatch) && isDateInRange && !program.isCompleted; // Lọc ra chương trình đã hoàn thành
   });
 
   const columns = [

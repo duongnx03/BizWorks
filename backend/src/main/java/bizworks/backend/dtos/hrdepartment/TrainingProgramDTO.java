@@ -16,5 +16,6 @@
         private LocalDate startDate;
         private LocalDate endDate;
         private List<Long> participantIds;
+        private boolean isCompleted; // Thêm thuộc tính này
 
     }

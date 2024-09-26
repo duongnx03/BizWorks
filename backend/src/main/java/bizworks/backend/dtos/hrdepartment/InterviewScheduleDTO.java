@@ -14,6 +14,6 @@ public class InterviewScheduleDTO {
     private Long id;
     private Long jobApplicationId;
     private LocalDateTime interviewDate;
-    private List<Long> interviewers; // Sử dụng List<Long> thay vì String
+    private List<Long> interviewers;
     private String location;
 }

@@ -19,16 +19,22 @@ public class AttendanceTrainingProgram {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "training_program_id", nullable = false)
+    @JoinColumn(name = "training_program_id")
     private TrainingProgram trainingProgram;
 
     @ManyToOne
-    @JoinColumn(name = "employee_id", nullable = false)
+    @JoinColumn(name = "employee_id")
     private Employee employee;
 
     private LocalDateTime attendedAt;
 
     private LocalDate attendanceDate;
-    private boolean absent;
 
+    @Enumerated(EnumType.STRING)
+    private AttendanceStatus status;
+
+    public enum AttendanceStatus {
+        PRESENT,  // Employee attended
+        ABSENT    // Employee did not attend
+    }
 }

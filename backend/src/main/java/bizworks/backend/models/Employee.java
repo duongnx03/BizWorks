@@ -1,6 +1,8 @@
 package bizworks.backend.models;
 
+import bizworks.backend.models.hrdepartment.TrainingProgram;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference; // Thêm chú thích này
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -46,6 +48,9 @@ public class Employee {
     @OneToMany(mappedBy = "employee", cascade = CascadeType.MERGE)
     private List<LeaveRequest> leaveRequests;
 
+    @ManyToMany(mappedBy = "participants")
+    @JsonIgnore
+    private List<TrainingProgram> trainingPrograms;
     @OneToMany(mappedBy = "employee", cascade = CascadeType.MERGE)
     @JsonManagedReference
     private List<Salary> salaries;

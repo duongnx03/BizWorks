@@ -57,7 +57,7 @@ import Home from "../../views/pages/home/HomePage";
 import JobBoard from "../../views/pages/Employees/JobBoard";
 import JobBoardDetail from "../../views/pages/Employees/JobBoardDetails";
 import About from "../../views/pages/home/About";
-
+import Contact from "../../views/pages/home/Contact";
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
@@ -93,6 +93,7 @@ const AppRouter = () => {
               <Route path="/error-500" element={<Error500 />} />
               <Route path="/coming-soon" element={<ComingSoon />} />
               <Route path="/under-maintenance" element={<UnderManitenance />} />
+              <Route path="/contact" element={<Contact />} />
 
               <Route path="/job-list" element={<JobList />} />
               <Route path="/job-view" element={<JobView />} />

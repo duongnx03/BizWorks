@@ -15,6 +15,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+
 public class TrainingProgram {
 
     @Id
@@ -36,11 +37,11 @@ public class TrainingProgram {
             inverseJoinColumns = @JoinColumn(name = "employee_id")
     )
     @JsonManagedReference
-
     private List<Employee> participants;
 
     @OneToMany(mappedBy = "trainingProgram", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AttendanceTrainingProgram> attendanceRecords = new ArrayList<>();
+    private boolean completed; // Trạng thái hoàn thành chương trình
 
 
 }

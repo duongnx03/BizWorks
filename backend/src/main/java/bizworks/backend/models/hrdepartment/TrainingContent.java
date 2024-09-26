@@ -4,31 +4,26 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
-
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class TrainingContent {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private String title; // Title of the training content
-
+    private String title;
     @Lob
-    private String coreKnowledge; // Core knowledge to be taught
-
+    private String coreKnowledge;
+    private String coreKnowledgeStatus;
     @Lob
-    private String softSkills; // Soft skills to be taught
-
+    private String softSkills;
+    private String softSkillsStatus;
     @Lob
-    private String professionalSkills; // Professional skills to be taught
+    private String professionalSkills;
+    private String professionalSkillsStatus;
 
     @ManyToOne
     @JoinColumn(name = "training_program_id")
-    private TrainingProgram trainingProgram; // Link to the training program
+    private TrainingProgram trainingProgram;
 }
