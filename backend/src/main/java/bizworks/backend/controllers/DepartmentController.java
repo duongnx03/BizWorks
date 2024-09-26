@@ -29,13 +29,13 @@ public class DepartmentController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Department> getDepartmentById(@PathVariable Long id) {
-        try {
-            Department department = departmentService.findById(id);
-            return ResponseEntity.ok(department);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // Hoặc xử lý lỗi chi tiết hơn
+            try {
+                Department department = departmentService.findById(id);
+                return ResponseEntity.ok(department);
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
         }
-    }
 
     @GetMapping("/getByName")
     public ResponseEntity<Department> getDepartmentByName() {
@@ -43,7 +43,7 @@ public class DepartmentController {
             Department department = departmentService.findByName();
             return ResponseEntity.ok(department);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // Hoặc xử lý lỗi chi tiết hơn
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 

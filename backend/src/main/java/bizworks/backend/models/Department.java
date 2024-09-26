@@ -24,9 +24,8 @@ public class Department {
     private String description;
 
     @OneToMany(mappedBy = "department")
-    @JsonManagedReference // Đánh dấu là bên quản lý
+    @JsonManagedReference
     private List<Employee> employees;
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
-    @JsonManagedReference
-    private List<Position> positions;
+    private List<Position> positions; // Kiểm tra lại cấu hình này
 }

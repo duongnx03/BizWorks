@@ -1,12 +1,8 @@
 package bizworks.backend.dtos;
 
-import bizworks.backend.models.Employee;
+import bizworks.backend.models.Department; // Nhớ import Department
 import bizworks.backend.models.Position;
 import lombok.Data;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 public class PositionDTO {
@@ -14,8 +10,7 @@ public class PositionDTO {
     private String positionName;
     private String description;
     private Double basicSalary;
-    private List<EmployeeDTO> employees;
-    private DepartmentDTO department; // Chỉnh sửa ở đây
+    private Department department; // Thêm trường department
 
     public static PositionDTO from(Position position) {
         PositionDTO dto = new PositionDTO();
@@ -23,16 +18,7 @@ public class PositionDTO {
         dto.setPositionName(position.getPositionName());
         dto.setDescription(position.getDescription());
         dto.setBasicSalary(position.getBasicSalary());
-        dto.setEmployees(position.getEmployees() != null ?
-                position.getEmployees().stream()
-                        .map(EmployeeDTO::from)
-                        .collect(Collectors.toList()) :
-                Collections.emptyList());
-
-        if (position.getDepartment() != null) {
-            dto.setDepartment(DepartmentDTO.from(position.getDepartment()));
-        }
-
+        dto.setDepartment(position.getDepartment()); // Gán phòng ban nếu cần
         return dto;
     }
 }

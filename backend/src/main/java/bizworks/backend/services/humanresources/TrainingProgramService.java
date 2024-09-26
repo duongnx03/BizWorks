@@ -44,11 +44,11 @@ public class TrainingProgramService {
         return allPrograms.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
-    public TrainingProgram getTrainingProgramById(Long id) {
-        return trainingProgramRepository.findById(id)
+    public TrainingProgramDTO getTrainingProgramById(Long id) {
+        TrainingProgram trainingProgram = trainingProgramRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Training Program not found"));
+        return convertToDTO(trainingProgram);
     }
-
     public void recordAttendance(Long programId, Long employeeId, LocalDate attendanceDate) {
         TrainingProgram trainingProgram = trainingProgramRepository.findById(programId)
                 .orElseThrow(() -> new RuntimeException("Training Program not found"));
@@ -116,35 +116,27 @@ public class TrainingProgramService {
         message.append("[Tên công ty]");
         return message.toString();
     }
+        public TrainingProgram createTrainingProgram(TrainingProgramDTO dto) {
+            TrainingProgram trainingProgram = new TrainingProgram();
+            trainingProgram.setTitle(dto.getTitle());
+            trainingProgram.setDescription(dto.getDescription());
+            trainingProgram.setStartDate(dto.getStartDate());
+            trainingProgram.setEndDate(dto.getEndDate());
 
-    public TrainingProgram createTrainingProgram(TrainingProgramDTO dto) {
-        TrainingProgram trainingProgram = new TrainingProgram();
-        trainingProgram.setTitle(dto.getTitle());
-        trainingProgram.setDescription(dto.getDescription());
-        trainingProgram.setStartDate(dto.getStartDate());
-        trainingProgram.setEndDate(dto.getEndDate());
-        List<Employee> participants = new ArrayList<>();
-        if (dto.getParticipantIds() != null && !dto.getParticipantIds().isEmpty()) {
-            participants.addAll(employeeRepository.findAllById(dto.getParticipantIds()));
+            // Lấy tất cả các Employee theo ID từ danh sách participantIds trong DTO
+            List<Employee> selectedEmployees = employeeRepository.findAllById(dto.getParticipantIds());
+
+            // Gán danh sách participants cho training program
+            trainingProgram.setParticipants(selectedEmployees);
+
+            // Lưu training program
+            TrainingProgram savedProgram = trainingProgramRepository.save(trainingProgram);
+
+            // Gửi email đến các participants
+            sendEmailToParticipants(savedProgram);
+
+            return savedProgram;
         }
-        List<User> leaders = userRepository.findByRole("LEADER");
-        List<User> managers = userRepository.findByRole("MANAGER");
-        List<Employee> leaderParticipants = employeeRepository.findAllByUserIdIn(
-                leaders.stream().map(User::getId).collect(Collectors.toList())
-        );
-        List<Employee> managerParticipants = employeeRepository.findAllByUserIdIn(
-                managers.stream().map(User::getId).collect(Collectors.toList())
-        );
-        participants.addAll(leaderParticipants);
-        participants.addAll(managerParticipants);
-        Set<Employee> uniqueParticipants = new HashSet<>(participants);
-        trainingProgram.setParticipants(new ArrayList<>(uniqueParticipants));
-        TrainingProgram savedProgram = trainingProgramRepository.save(trainingProgram);
-        sendEmailToParticipants(savedProgram);
-
-        return savedProgram;
-    }
-
     public List<AttendanceTrainingProgram> getAttendanceByEmployeeId(Long employeeId) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));

@@ -32,12 +32,12 @@ public class Employee {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
-    @JsonBackReference // Sử dụng @JsonBackReference để tránh vòng lặp
+    @JsonBackReference
     private Department department;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "position_id")
-    @JsonBackReference // Sử dụng @JsonBackReference để tránh vòng lặp
+    @JsonBackReference
     private Position position;
 
     @OneToMany(mappedBy = "employee", cascade = CascadeType.MERGE)
@@ -47,8 +47,8 @@ public class Employee {
     private List<LeaveRequest> leaveRequests;
 
     @OneToMany(mappedBy = "employee", cascade = CascadeType.MERGE)
+    @JsonManagedReference
     private List<Salary> salaries;
-
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     @JsonBackReference // Đánh dấu là bên tham chiếu

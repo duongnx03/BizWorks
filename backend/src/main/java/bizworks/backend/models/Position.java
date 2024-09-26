@@ -29,7 +29,7 @@ public class Position {
     private List<Employee> employees;
 
     @ManyToOne
-    @JoinColumn(name = "department_id")
+    @JoinColumn(name = "department_id", nullable = false)
     @JsonBackReference
     private Department department;
 }

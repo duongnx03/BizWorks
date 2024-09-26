@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,7 +49,9 @@ public class EmployeeService {
         Employee employee = findByEmail(email);
         return convertToDTO(employee);
     }
-
+    public List<Employee> getEmployeesByRole(String role) {
+        return employeeRepository.findByUserRole(role); // Bạn cần viết phương thức này trong repository
+    }
     public EmployeeResponseDTO getEmployeeById(Long id) {
         Employee employee = findById(id);
         return convertToDTO(employee);
@@ -103,6 +106,10 @@ public class EmployeeService {
 
     public Employee findByUser(User user) {
         return employeeRepository.findByUser(user).orElse(null);
+    }
+    public List<Employee> findNewEmployees() {
+        LocalDate fourMonthsAgo = LocalDate.now().minusMonths(4);
+        return employeeRepository.findNewEmployees(fourMonthsAgo);
     }
 }
 

@@ -28,18 +28,16 @@ public class PositionService {
 
     @Autowired
     private EmployeeService employeeService;
+
     @Autowired
     private SalaryRepository salaryRepository;
+
     @Autowired
     private EmployeeRepository employeeRepository;
 
     public Position findById(Long id) {
-        Optional<Position> optionalPosition = positionRepository.findById(id);
-        if (optionalPosition.isPresent()) {
-            return optionalPosition.get();
-        } else {
-            throw new RuntimeException("Position not found with id " + id);
-        }
+        return positionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Position not found with id " + id));
     }
 
     public List<Position> getAllPositions() {
@@ -62,6 +60,7 @@ public class PositionService {
     public PositionDTO convertToDTO(Position position) {
         return PositionDTO.from(position);
     }
+
     public Position createPosition(PositionDTO positionDTO) {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
@@ -84,19 +83,23 @@ public class PositionService {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
 
-        // Tìm position theo id
-        Position position = positionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Position not found"));
+        Position position = findById(id); // Sử dụng phương thức tìm kiếm đã định nghĩa
 
         // Cập nhật các trường của position
+        updatePositionFields(position, positionDTO);
+
+        // Lưu và trả về position đã cập nhật
+        return positionRepository.save(position);
+    }
+
+    private void updatePositionFields(Position position, PositionDTO positionDTO) {
         position.setPositionName(positionDTO.getPositionName());
         position.setDescription(positionDTO.getDescription());
 
-        // Kiểm tra nếu có cập nhật basicSalary
-        boolean isBasicSalaryUpdated = false;
+        // Cập nhật basicSalary nếu có thay đổi
         if (positionDTO.getBasicSalary() != null && !positionDTO.getBasicSalary().equals(position.getBasicSalary())) {
             position.setBasicSalary(positionDTO.getBasicSalary());
-            isBasicSalaryUpdated = true;
+            updateSalariesForPosition(position); // Cập nhật lương cho nhân viên
         }
 
         // Cập nhật department nếu có thay đổi
@@ -105,69 +108,44 @@ public class PositionService {
                     .orElseThrow(() -> new RuntimeException("Department not found"));
             position.setDepartment(department);
         }
-        Position updatedPosition = positionRepository.save(position);
-
-        // Nếu basicSalary thay đổi, cập nhật lương của nhân viên thuộc vị trí này
-        if (isBasicSalaryUpdated) {
-            updateSalariesForPosition(updatedPosition);
-        }
-
-        return updatedPosition;
     }
 
     public void updateSalariesForPosition(Position position) {
-        // Tìm tất cả các nhân viên thuộc vị trí này
         List<Employee> employees = employeeRepository.findByPositionId(position.getId());
-
-        // Tìm tất cả các bảng lương liên quan đến các nhân viên đó
         for (Employee employee : employees) {
             List<Salary> salaries = salaryRepository.findByEmployeeId(employee.getId());
-
             for (Salary salary : salaries) {
-                // Cập nhật basicSalary cho mỗi bảng lương
                 salary.setBasicSalary(position.getBasicSalary());
-
-                // Tính lại tổng lương
-                salary.calculateTotalSalary();
-
-                // Lưu bản ghi bảng lương đã cập nhật
+                salary.calculateTotalSalary(); // Tính lại tổng lương
                 salaryRepository.save(salary);
             }
         }
     }
 
-
     public void deletePosition(Long id) {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
 
-        // Fetch the position to delete
-        Position position = positionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Position not found"));
+        Position position = findById(id); // Sử dụng phương thức tìm kiếm đã định nghĩa
 
-        // Get all employees assigned to this position
-        List<Employee> employees = position.getEmployees();
-
-        // Remove the position from each employee
-        for (Employee employee : employees) {
+        // Xóa vị trí khỏi từng nhân viên
+        for (Employee employee : position.getEmployees()) {
             employee.setPosition(null);
-            employeeService.save(employee); // Save changes to each employee
+            employeeService.save(employee); // Lưu thay đổi cho từng nhân viên
         }
 
-        // Finally, delete the position
+        // Cuối cùng, xóa vị trí
         positionRepository.deleteById(id);
     }
+
     public void assignPositionToEmployee(Long positionId, Long employeeId) {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
 
-        Position position = positionRepository.findById(positionId)
-                .orElseThrow(() -> new RuntimeException("Position not found"));
-
+        Position position = findById(positionId);
         Employee employee = employeeService.findById(employeeId);
 
         employee.setPosition(position);
-
         employeeService.save(employee);
     }
 

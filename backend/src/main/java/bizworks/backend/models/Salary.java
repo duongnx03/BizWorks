@@ -1,5 +1,6 @@
 package bizworks.backend.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -48,8 +49,8 @@ public class Salary {
 
     @ManyToOne
     @JoinColumn(name = "empId", nullable = false)
-    private Employee employee; // Nhân viên có lương này
-
+    @JsonBackReference
+    private Employee employee;
     @OneToOne(mappedBy = "salary", cascade = CascadeType.MERGE)
     private Transaction transaction; // Giao dịch liên quan đến việc trả lương
 

@@ -1,6 +1,7 @@
 package bizworks.backend.services;
 
 import bizworks.backend.dtos.DepartmentDTO;
+import bizworks.backend.dtos.PositionDTO;
 import bizworks.backend.models.Department;
 import bizworks.backend.models.User;
 import bizworks.backend.repositories.DepartmentRepository;
@@ -80,7 +81,11 @@ public class DepartmentService {
         dto.setId(department.getId());
         dto.setDepartmentName(department.getName());
         dto.setDescription(department.getDescription());
-        // Thêm các trường khác nếu cần
+        // Lấy danh sách positions từ department và thêm vào DTO
+        dto.setPositions(department.getPositions().stream()
+                .map(PositionDTO::from)
+                .collect(Collectors.toList()));
+
         return dto;
     }
     private void checkRole(User user, List<String> allowedRoles) {

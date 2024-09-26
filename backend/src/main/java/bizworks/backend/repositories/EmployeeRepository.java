@@ -3,6 +3,8 @@ package bizworks.backend.repositories;
 import bizworks.backend.models.Employee;
 import bizworks.backend.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -28,5 +30,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     List<Employee> findByPositionId(Long positionId);
     List<Employee> findAllByUserIdIn(List<Long> userIds); // Adjust the parameter type if needed
     List<Employee> findByStartDateAfter(LocalDate date); // Define the method
-
+    @Query("SELECT e FROM Employee e JOIN e.user u WHERE u.role = :role")
+    List<Employee> findByUserRole(@Param("role") String role);
+    @Query("SELECT e FROM Employee e WHERE e.user.role = 'EMPLOYEE' AND e.startDate > :thresholdDate")
+    List<Employee> findNewEmployees(@Param("thresholdDate") LocalDate thresholdDate);
 }

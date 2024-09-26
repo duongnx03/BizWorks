@@ -26,29 +26,34 @@ const AllEmployeeAddPopup = ({ refreshEmployeeList }) => {
       try {
         const response = await axios.get(
           "http://localhost:8080/api/departments",
-          {
-            withCredentials: true, // Enable cookies to be sent
-          }
+          { withCredentials: true }
         );
-        console.log(response.data);
-
-        const departmentOptions = response.data.map((dept) => ({
-          value: dept.id,
-          label: dept.name,
-          positions: dept.positions.map((pos) => ({
-            value: pos.id,
-            label: pos.positionName,
-          })),
-        }));
-        setDepartments(departmentOptions);
+  
+        console.log("API response:", response); // Để kiểm tra cấu trúc của phản hồi
+        console.log(response);
+  
+        if (response.data && Array.isArray(response.data)) {
+          const departmentOptions = response.data.map((dept) => ({
+            value: dept.id,
+            label: dept.departmentName,
+            positions: Array.isArray(dept.positions) ? dept.positions.map((pos) => ({
+              value: pos.id,
+              label: pos.positionName,
+            })) : [], 
+          }));
+  
+          setDepartments(departmentOptions);
+        } else {
+          throw new Error("Unexpected response structure");
+        }
       } catch (error) {
         console.error("Error fetching departments:", error);
+        toast.error("Failed to load departments. Please try again.");
       }
     };
-
+  
     fetchDepartments();
   }, []);
-
   useEffect(() => {
     if (selectedDepartment) {
       const department = departments.find(

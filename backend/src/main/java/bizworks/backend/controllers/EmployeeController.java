@@ -14,7 +14,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -50,7 +52,17 @@ public class EmployeeController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
         }
     }
+    @GetMapping("/getLeadersAndManagers")
+    public ResponseEntity<Map<String, List<Employee>>> getLeadersAndManagers() {
+        List<Employee> leaders = employeeService.getEmployeesByRole("LEADER");
+        List<Employee> managers = employeeService.getEmployeesByRole("MANAGE");
 
+        Map<String, List<Employee>> response = new HashMap<>();
+        response.put("leaders", leaders);
+        response.put("managers", managers);
+
+        return ResponseEntity.ok(response);
+    }
     @GetMapping("/getEmployee")
     public ResponseEntity<ApiResponse<?>> getEmployeeByEmail() {
         try {
@@ -62,7 +74,22 @@ public class EmployeeController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
         }
     }
+    @GetMapping("/getNewEmployees")
+    public ResponseEntity<ApiResponse<?>> getNewEmployees() {
+        try {
+            List<Employee> newEmployees = employeeService.findNewEmployees();
+            if (newEmployees.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.notfound(null, "No new employees found"));
+            }
+            List<EmployeeResponseDTO> employeeDTOs = newEmployees.stream()
+                    .map(employeeService::convertToDTO)
+                    .collect(Collectors.toList());
 
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(employeeDTOs, "Get new employees successfully"));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
+        }
+    }
     @GetMapping("/getEmployeeById/{id}")
     public ResponseEntity<ApiResponse<?>> getEmployeeById(@PathVariable Long id) {
         try {

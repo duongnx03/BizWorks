@@ -34,8 +34,7 @@ public class TrainingProgramController {
     }
     @GetMapping("/{id}")
     public ResponseEntity<TrainingProgramDTO> getTrainingProgramById(@PathVariable Long id) {
-        TrainingProgram trainingProgram = trainingProgramService.getTrainingProgramById(id);
-        TrainingProgramDTO dto = trainingProgramService.convertToDTO(trainingProgram);
+        TrainingProgramDTO dto = trainingProgramService.getTrainingProgramById(id);
         return ResponseEntity.ok(dto);
     }
     @GetMapping("/leaders")

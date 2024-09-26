@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import {
   Card,
   Descriptions,
-  List,
   message,
   Spin,
   Avatar,
@@ -34,23 +33,24 @@ const TrainingProgramDetails = () => {
   const [selectedContent, setSelectedContent] = useState(null);
 
   const fetchTrainingProgramDetails = async () => {
+    console.log("Fetching training program details for ID:", id); // Log ID being fetched
     try {
       const response = await axios.get(`${base_url}/api/training-programs/${id}`, { withCredentials: true });
+      console.log("Training Program Response:", response.data); // Log the response data
       setTrainingProgram(response.data);
 
       // Fetch training content
       const trainingContentResponse = await axios.get(`${base_url}/api/training-contents/program/${id}`, { withCredentials: true });
+      console.log("Training Content Response:", trainingContentResponse.data); // Log the training content response
       setTrainingContents(trainingContentResponse.data);
 
-      // Fetch participants if participantIds are available
       if (response.data.participantIds && response.data.participantIds.length > 0) {
         const participantsResponse = await axios.post(`${base_url}/api/employee/batch`, response.data.participantIds, { withCredentials: true });
-        console.log(participantsResponse.data); // Check the data received for participants
-        if (Array.isArray(participantsResponse.data)) {
-          setParticipants(participantsResponse.data);
-        } else {
-          message.error("Dữ liệu tham gia không hợp lệ.");
-        }
+        console.log("Participants Response:", participantsResponse.data); // Log participants response
+        setParticipants(participantsResponse.data);
+        
+        // Hiển thị thông tin nhân viên trong console
+        console.log("Danh sách nhân viên tham gia:", participantsResponse.data);
       }
       setLoading(false);
     } catch (error) {
@@ -62,7 +62,7 @@ const TrainingProgramDetails = () => {
 
   useEffect(() => {
     fetchTrainingProgramDetails();
-  }, [id]);
+  }, [id]); // Chỉ gọi khi `id` thay đổi
 
   const handleCreateContent = async (values) => {
     try {
@@ -104,29 +104,32 @@ const TrainingProgramDetails = () => {
     return <p>Không tìm thấy chương trình đào tạo.</p>;
   }
 
-  // Create data for employee training records
+  // Tạo dữ liệu bảng cho các nhân viên tham gia và nội dung đào tạo của họ
   const employeeTrainingData = Array.isArray(participants) ? participants.map(participant => {
     const trainingRecord = {
       key: participant.id,
       name: participant.fullname || "Tên không xác định",
+      empCode: participant.empCode || "Mã không xác định", // Thêm empCode vào dữ liệu
       coreKnowledge: trainingContents.map(content => content.coreKnowledge).join(", "),
       softSkills: trainingContents.map(content => content.softSkills).join(", "),
       professionalSkills: trainingContents.map(content => content.professionalSkills).join(", "),
     };
 
+    console.log("Training Record:", trainingRecord); // Log training record for each participant
     return trainingRecord;
   }) : [];
 
-  // Define columns for the training content table
+  // Định nghĩa cột cho bảng hiển thị nội dung đào tạo theo từng nhân viên
   const columns = [
     {
       title: 'Tên Nhân Viên',
       dataIndex: 'name',
       key: 'name',
-      render: (text) => (
+      render: (text, record) => (
         <div>
           <Avatar>{text ? text.charAt(0) : '?'}</Avatar>
           <Text strong style={{ marginLeft: '8px' }}>{text || 'Tên không xác định'}</Text>
+          <Text style={{ marginLeft: '8px' }}> - {record.empCode}</Text>
         </div>
       ),
     },
@@ -152,8 +155,8 @@ const TrainingProgramDetails = () => {
       <Descriptions bordered column={1} style={{ marginBottom: "20px" }}>
         <Descriptions.Item label="Tiêu Đề"><Text strong>{trainingProgram.title}</Text></Descriptions.Item>
         <Descriptions.Item label="Mô Tả">{trainingProgram.description}</Descriptions.Item>
-        <Descriptions.Item label="Ngày Bắt Đầu">{moment(trainingProgram.startDate).format("DD/MM/YYYY")}</Descriptions.Item>
-        <Descriptions.Item label="Ngày Kết Thúc">{moment(trainingProgram.endDate).format("DD/MM/YYYY")}</Descriptions.Item>
+        <Descriptions.Item label="Ngày Bắt Đầu">{moment(trainingProgram.startDate).format('DD/MM/YYYY')}</Descriptions.Item>
+        <Descriptions.Item label="Ngày Kết Thúc">{moment(trainingProgram.endDate).format('DD/MM/YYYY')}</Descriptions.Item>
         <Descriptions.Item label="Số Người Tham Gia">{participants.length}</Descriptions.Item>
       </Descriptions>
 
@@ -206,7 +209,7 @@ const TrainingProgramDetails = () => {
             <Title level={5}>{selectedContent.title}</Title>
             <Text strong>Kiến Thức Cơ Bản:</Text> <Text>{selectedContent.coreKnowledge}</Text><br />
             <Text strong>Kỹ Năng Mềm:</Text> <Text>{selectedContent.softSkills}</Text><br />
-            <Text strong>Kỹ Năng Chuyên Môn:</Text> <Text>{selectedContent.professionalSkills}</Text>
+            <Text strong>Kỹ Năng Chuyên Môn:</Text> <Text>{selectedContent.professionalSkills}</Text><br />
           </>
         )}
       </Modal>

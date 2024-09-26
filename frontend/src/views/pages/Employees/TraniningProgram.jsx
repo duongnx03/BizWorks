@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Table, message, Button } from "antd";
+import { Table, message, Button, Input, DatePicker, Form } from "antd";
 import axios from "axios";
 import DeleteModal from "../../../components/modelpopup/DeleteModal";
 import SearchBox from "../../../components/SearchBox";
 import TrainingProgramModal from "../../../components/modelpopup/TrainingProgramModal";
 import { base_url } from "../../../base_urls";
+
+const { RangePicker } = DatePicker;
 
 const TrainingProgram = () => {
   const [trainingPrograms, setTrainingPrograms] = useState([]);
@@ -13,26 +15,29 @@ const TrainingProgram = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [trainingProgramToDelete, setTrainingProgramToDelete] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [dateRange, setDateRange] = useState([]); // Đặt mặc định là mảng rỗng
 
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchTrainingPrograms();
   }, []);
+
   const fetchTrainingPrograms = async () => {
     setLoading(true);
     try {
-        const response = await axios.get(`${base_url}/api/training-programs`, { withCredentials: true });
-        console.log("Fetched training programs:", response.data); // In ra dữ liệu nhận được
-        setTrainingPrograms(response.data || []);
+      const response = await axios.get(`${base_url}/api/training-programs`, { withCredentials: true });
+      console.log("Fetched training programs:", response.data);
+      setTrainingPrograms(response.data || []);
     } catch (error) {
-        console.error("Error fetching training programs:", error);
-        message.error("Failed to fetch training programs");
-        setTrainingPrograms([]);
+      console.error("Error fetching training programs:", error);
+      message.error("Failed to fetch training programs");
+      setTrainingPrograms([]);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
+  };
 
   const handleTrainingProgramCreated = () => {
     fetchTrainingPrograms();
@@ -75,6 +80,17 @@ const TrainingProgram = () => {
     startDate: new Date(program.startDate).toLocaleDateString(),
     endDate: new Date(program.endDate).toLocaleDateString(),
   }));
+
+  // Hàm để lọc danh sách chương trình đào tạo theo tìm kiếm
+  const filteredTrainingPrograms = trainingProgramElements.filter((program) => {
+    const isTitleMatch = program.title.toLowerCase().includes(searchText.toLowerCase());
+    const isDescriptionMatch = program.description.toLowerCase().includes(searchText.toLowerCase());
+    const isDateInRange = dateRange[0] && dateRange[1]
+      ? new Date(program.startDate) >= dateRange[0] && new Date(program.endDate) <= dateRange[1]
+      : true;
+
+    return (isTitleMatch || isDescriptionMatch) && isDateInRange;
+  });
 
   const columns = [
     {
@@ -141,6 +157,11 @@ const TrainingProgram = () => {
     },
   ];
 
+  const resetFilters = () => {
+    setSearchText(""); // Đặt lại nội dung tìm kiếm về rỗng
+    setDateRange([]); // Đặt lại khoảng thời gian về mảng rỗng
+  };
+
   return (
     <>
       <div className="page-wrapper">
@@ -154,9 +175,28 @@ const TrainingProgram = () => {
                     Add Training Program
                   </Button>
                 </div>
+                <Form layout="vertical" style={{ marginBottom: 20 }}>
+                  <Form.Item label="Search by title or description">
+                    <Input
+                      placeholder="Enter title or description"
+                      value={searchText}
+                      onChange={(e) => setSearchText(e.target.value)}
+                    />
+                  </Form.Item>
+                  <Form.Item label="Date Range">
+                    <RangePicker
+                      value={dateRange} // Đảm bảo rằng giá trị được đặt đúng
+                      onChange={(dates) => setDateRange(dates)}
+                      style={{ width: '100%' }}
+                    />
+                  </Form.Item>
+                  <Button type="default" onClick={resetFilters} style={{ marginTop: 10 }}>
+                    Reset
+                  </Button>
+                </Form>
                 <Table
                   columns={columns}
-                  dataSource={trainingProgramElements}
+                  dataSource={filteredTrainingPrograms}
                   loading={loading}
                   className="table-striped"
                   rowKey="id"
