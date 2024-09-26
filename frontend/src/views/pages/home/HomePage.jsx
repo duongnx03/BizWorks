@@ -1,27 +1,12 @@
 import React from "react";
-import { Navbar, Nav, Button, Carousel, Container } from "react-bootstrap";
+import { Button, Carousel, Container } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
+import Header from "./Header";
 
 const Home = () => {
   return (
     <>
-      <Navbar bg="dark" variant="dark" expand="lg">
-        <Container>
-          <Navbar.Brand href="/">Bizworks</Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
-              <Nav.Link href="/job-board">Job Board</Nav.Link>
-            </Nav>
-            <Nav className="ms-auto">
-              <Button href="/login" variant="outline-light">
-                Login
-              </Button>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
-
+      <Header/>
       <Carousel fade={true} interval={3000} controls={true} indicators={true}>
         <Carousel.Item>
           <img

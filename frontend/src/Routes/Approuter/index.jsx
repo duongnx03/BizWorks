@@ -56,6 +56,7 @@ import ResetPassword from "../../views/pages/Authentication/ResetPassword";
 import Home from "../../views/pages/home/HomePage";
 import JobBoard from "../../views/pages/Employees/JobBoard";
 import JobBoardDetail from "../../views/pages/Employees/JobBoardDetails";
+import About from "../../views/pages/home/About";
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -81,6 +82,7 @@ const AppRouter = () => {
             <Routes>
               <Route path="/" element={<Home/>}/>
               <Route path="/job-board" element={<JobBoard/>}/>
+              <Route path="/about" element={<About/>}/>
               <Route path="/login" element={<Login />} />
               <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/verification" element={<VerificationPage />} />
