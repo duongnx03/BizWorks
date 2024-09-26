@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class DepartmentService {
@@ -38,11 +39,10 @@ public class DepartmentService {
                 .orElseThrow(() -> new RuntimeException("Department not found"));
     }
 
-    public List<Department> getAllDepartments() {
+    public List<DepartmentDTO> getAllDepartments() {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "ADMIN"));
-
-        return departmentRepository.findAll();
+        return departmentRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     public Department createDepartment(DepartmentDTO departmentDTO) {
@@ -75,7 +75,14 @@ public class DepartmentService {
 
         departmentRepository.deleteById(id);
     }
-
+    private DepartmentDTO convertToDTO(Department department) {
+        DepartmentDTO dto = new DepartmentDTO();
+        dto.setId(department.getId());
+        dto.setDepartmentName(department.getName());
+        dto.setDescription(department.getDescription());
+        // Thêm các trường khác nếu cần
+        return dto;
+    }
     private void checkRole(User user, List<String> allowedRoles) {
         if (user == null) {
             throw new RuntimeException("User is not authenticated.");

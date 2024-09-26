@@ -18,12 +18,12 @@ public class DepartmentController {
     private DepartmentService departmentService;
 
     @GetMapping
-    public ResponseEntity<List<Department>> getAllDepartments() {
+    public ResponseEntity<List<DepartmentDTO>> getAllDepartments() {
         try {
-            List<Department> departments = departmentService.getAllDepartments();
+            List<DepartmentDTO> departments = departmentService.getAllDepartments();
             return ResponseEntity.ok(departments);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // Hoặc xử lý lỗi chi tiết hơn
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
 

@@ -22,12 +22,19 @@ const JobPostingModal = ({ isVisible, onJobPostingCreated, onCancel }) => {
     const fetchDepartments = async () => {
       try {
         const response = await axios.get(`${base_url}/api/departments`, { withCredentials: true });
-        setDepartments(response.data);
+        if (Array.isArray(response.data)) {
+          console.log("Fetched Departments:", response.data);
+          setDepartments(response.data);
+        } else {
+          console.error("Departments response is not an array:", response.data);
+          message.error('Invalid data format for departments');
+        }
       } catch (error) {
         console.error('Error fetching departments:', error);
         message.error('Failed to fetch departments');
       }
     };
+    
     fetchDepartments();
   }, []);
 
@@ -243,9 +250,9 @@ const JobPostingModal = ({ isVisible, onJobPostingCreated, onCancel }) => {
               setSelectedDepartment(value);
               form.setFieldsValue({ positionId: undefined });
             }}>
-            {departments.map(department => (
+            {Array.isArray(departments) && departments.map(department => (
               <Option key={department.id} value={department.id}>
-                {department.name}
+                {department.departmentName}  {/* Hiển thị tên phòng ban */}
               </Option>
             ))}
           </Select>
@@ -255,7 +262,7 @@ const JobPostingModal = ({ isVisible, onJobPostingCreated, onCancel }) => {
           label="Position"
           rules={[{ required: true, message: 'Please select a position' }]} >
           <Select>
-            {positions.map(position => (
+            {Array.isArray(positions) && positions.map(position => (
               <Option key={position.id} value={position.id}>
                 {position.positionName}
               </Option>

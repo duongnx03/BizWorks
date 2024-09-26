@@ -21,6 +21,7 @@ const JobBoard = () => {
 
   useEffect(() => {
     const fetchJobPostings = async () => {
+      setLoading(true); // Set loading true before fetching
       try {
         const response = await axios.get(`${base_url}/api/job-postings/list`, { withCredentials: true });
         const currentDate = new Date();
@@ -43,8 +44,8 @@ const JobBoard = () => {
         setJobPostings(filteredJobPostings.filter(posting => !currentExpiredJobPostings.includes(posting)));
         setExpiredJobPostings(currentExpiredJobPostings);
       } catch (error) {
-        console.error('Lỗi khi lấy danh sách tin tuyển dụng:', error);
-        message.error('Không thể lấy danh sách tin tuyển dụng');
+        console.error('Error fetching job postings:', error);
+        message.error('Unable to fetch job postings');
       } finally {
         setLoading(false);
       }
@@ -57,10 +58,11 @@ const JobBoard = () => {
     const fetchDepartments = async () => {
       try {
         const response = await axios.get(`${base_url}/api/departments`, { withCredentials: true });
-        setDepartments(response.data);
+        console.log("Departments Response:", response.data); // Log the response
+        setDepartments(response.data); // Ensure this is an array
       } catch (error) {
-        console.error('Lỗi khi lấy danh sách phòng ban:', error);
-        message.error('Không thể lấy danh sách phòng ban');
+        console.error("Error fetching departments:", error);
+        setDepartments([]); // Set to an empty array on error to prevent map error
       }
     };
 
@@ -77,8 +79,8 @@ const JobBoard = () => {
           });
           setPositions(response.data);
         } catch (error) {
-          console.error('Lỗi khi lấy danh sách vị trí:', error);
-          message.error('Không thể lấy danh sách vị trí');
+          console.error('Error fetching positions:', error);
+          message.error('Unable to fetch positions');
         }
       } else {
         setPositions([]);
@@ -90,12 +92,12 @@ const JobBoard = () => {
 
   const getDepartmentName = (departmentId) => {
     const department = departments.find(dept => dept.id === departmentId);
-    return department ? department.name : 'N/A';
+    return department ? department.departmentName  : 'N/A';
   };
 
   return (
     <>
-    <Navbar bg="dark" variant="dark" expand="lg">
+      <Navbar bg="dark" variant="dark" expand="lg">
         <Container>
           <Navbar.Brand href="/">Bizworks</Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -112,121 +114,69 @@ const JobBoard = () => {
         </Container>
       </Navbar>
       <div className="job-postings-list" style={{ padding: '40px', backgroundColor: '#f0f2f5' }}>
-      <Title level={2} style={{ textAlign: 'center', marginBottom: '40px', color: '#1890ff' }}>
-        Danh Sách Tin Tuyển Dụng
-      </Title>
+        <Title level={2} style={{ textAlign: 'center', marginBottom: '40px', color: '#1890ff' }}>
+          Danh Sách Tin Tuyển Dụng
+        </Title>
 
-      <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-        <Input
-          placeholder="Tìm theo địa điểm"
-          value={location}
-          onChange={e => setLocation(e.target.value)}
-          style={{ width: '200px', marginRight: '10px' }}
-        />
-        <Select
-          placeholder="Chọn loại công việc"
-          value={employmentType}
-          onChange={value => setEmploymentType(value)}
-          style={{ width: '200px', marginRight: '10px' }}
-        >
-          <Option value="">Tất cả</Option>
-          <Option value="full-time">Toàn thời gian</Option>
-          <Option value="part-time">Bán thời gian</Option>
-        </Select>
-        <Select
-          placeholder="Chọn phòng ban"
-          value={departmentId}
-          onChange={value => setDepartmentId(value)}
-          style={{ width: '200px', marginRight: '10px' }}
-        >
-          <Option value="">Tất cả</Option>
-          {departments.map(department => (
-            <Option key={department.id} value={department.id}>
-              {department.name}
-            </Option>
-          ))}
-        </Select>
-        <Select
-          placeholder="Chọn vị trí"
-          value={positionId}
-          onChange={value => setPositionId(value)}
-          style={{ width: '200px' }}
-          disabled={!departmentId}
-        >
-          <Option value="">Tất cả</Option>
-          {positions.map(position => (
-            <Option key={position.id} value={position.id}>
-              {position.positionName}
-            </Option>
-          ))}
-        </Select>
-      </div>
-
-      {loading ? (
-        <div style={{ textAlign: 'center' }}>
-          <Spin size="large" />
+        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+          <Input
+            placeholder="Tìm theo địa điểm"
+            value={location}
+            onChange={e => setLocation(e.target.value)}
+            style={{ width: '200px', marginRight: '10px' }}
+          />
+          <Select
+            placeholder="Chọn loại công việc"
+            value={employmentType}
+            onChange={value => setEmploymentType(value)}
+            style={{ width: '200px', marginRight: '10px' }}
+          >
+            <Option value="">Tất cả</Option>
+            <Option value="full-time">Toàn thời gian</Option>
+            <Option value="part-time">Bán thời gian</Option>
+          </Select>
+          <Select
+            placeholder="Chọn phòng ban"
+            value={departmentId}
+            onChange={value => setDepartmentId(value)}
+            style={{ width: '200px', marginRight: '10px' }}
+          >
+            <Option value="">Tất cả</Option>
+            {departments.map(department => (
+              <Option key={department.id} value={department.id}>
+                {department.departmentName }
+              </Option>
+            ))}
+          </Select>
+          <Select
+            placeholder="Chọn vị trí"
+            value={positionId}
+            onChange={value => setPositionId(value)}
+            style={{ width: '200px' }}
+            disabled={!departmentId}
+          >
+            <Option value="">Tất cả</Option>
+            {positions.map(position => (
+              <Option key={position.id} value={position.id}>
+                {position.positionName}
+              </Option>
+            ))}
+          </Select>
         </div>
-      ) : (
-        <List
-          grid={{ gutter: 16, column: 2 }}
-          dataSource={jobPostings}
-          renderItem={posting => (
-            <List.Item>
-              <Card
-                title={<span style={{ fontWeight: 'bold', fontSize: '20px', color: '#333' }}>{posting.title}</span>}
-                extra={
-                  <div>
-                    <Link to={`/job-postings/${posting.id}`}>
-                      <Button
-                        type="primary"
-                        style={{
-                          backgroundColor: '#1890ff',
-                          borderColor: '#1890ff',
-                          borderRadius: '5px',
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        Xem Thêm
-                      </Button>
-                    </Link>
-                  </div>
-                }
-                style={{
-                  borderRadius: '10px',
-                  boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
-                  backgroundColor: '#fff',
-                  padding: '20px',
-                  transition: 'transform 0.3s, box-shadow 0.3s',
-                }}
-                hoverable
-              >
-                <p style={{ fontSize: '16px', marginBottom: '12px', color: '#555' }}>{posting.description}</p>
-                <p><strong>Địa điểm:</strong> {posting.location}</p>
-                <p><strong>Hạn chót:</strong> {new Date(posting.deadline).toLocaleDateString()}</p>
-                <p><strong>Vị trí:</strong> {posting.positionName || 'N/A'}</p>
-                <p><strong>Loại hình công việc:</strong> {posting.employmentType || 'N/A'}</p>
-                <p><strong>Phòng ban:</strong> {getDepartmentName(posting.departmentId)}</p>
-              </Card>
-            </List.Item>
-          )}
-        />
-      )}
 
-      <Title level={3} style={{ marginTop: '40px', color: '#ff6347', textAlign: 'center' }}>
-        Tin Tuyển Dụng Hết Hạn
-      </Title>
-      {expiredJobPostings.length === 0 ? (
-        <p style={{ textAlign: 'center', color: '#888' }}>Không có tin tuyển dụng hết hạn</p>
-      ) : (
-        <List
-          grid={{ gutter: 16, column: 2 }}
-          dataSource={expiredJobPostings}
-          renderItem={posting => (
-            <List.Item>
-              <Card
-                title={<span style={{ fontWeight: 'bold', fontSize: '20px', color: '#333' }}>{posting.title}</span>}
-                extra={
-                  <div>
+        {loading ? (
+          <div style={{ textAlign: 'center' }}>
+            <Spin size="large" />
+          </div>
+        ) : (
+          <List
+            grid={{ gutter: 16, column: 2 }}
+            dataSource={jobPostings}
+            renderItem={posting => (
+              <List.Item>
+                <Card
+                  title={<span style={{ fontWeight: 'bold', fontSize: '20px', color: '#333' }}>{posting.title}</span>}
+                  extra={
                     <Link to={`/job-postings/${posting.id}`}>
                       <Button
                         type="primary"
@@ -240,29 +190,77 @@ const JobBoard = () => {
                         Xem Thêm
                       </Button>
                     </Link>
-                  </div>
-                }
-                style={{
-                  borderRadius: '10px',
-                  boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
-                  backgroundColor: '#fff',
-                  padding: '20px',
-                  transition: 'transform 0.3s, box-shadow 0.3s',
-                }}
-                hoverable
-              >
-                <p style={{ fontSize: '16px', marginBottom: '12px', color: '#555' }}>{posting.description}</p>
-                <p><strong>Địa điểm:</strong> {posting.location}</p>
-                <p><strong>Hạn chót:</strong> {new Date(posting.deadline).toLocaleDateString()}</p>
-                <p><strong>Vị trí:</strong> {posting.positionName || 'N/A'}</p>
-                <p><strong>Loại hình công việc:</strong> {posting.employmentType || 'N/A'}</p>
-                <p><strong>Phòng ban:</strong> {getDepartmentName(posting.departmentId)}</p>
-              </Card>
-            </List.Item>
-          )}
-        />
-      )}
-    </div>
+                  }
+                  style={{
+                    borderRadius: '10px',
+                    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
+                    backgroundColor: '#fff',
+                    padding: '20px',
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                  }}
+                  hoverable
+                >
+                  <p style={{ fontSize: '16px', marginBottom: '12px', color: '#555' }}>{posting.description}</p>
+                  <p><strong>Địa điểm:</strong> {posting.location}</p>
+                  <p><strong>Hạn chót:</strong> {new Date(posting.deadline).toLocaleDateString()}</p>
+                  <p><strong>Vị trí:</strong> {posting.positionName || 'N/A'}</p>
+                  <p><strong>Loại hình công việc:</strong> {posting.employmentType || 'N/A'}</p>
+                  <p><strong>Phòng ban:</strong> {getDepartmentName(posting.departmentId)}</p>
+                </Card>
+              </List.Item>
+            )}
+          />
+        )}
+
+        <Title level={3} style={{ marginTop: '40px', color: '#ff6347', textAlign: 'center' }}>
+          Tin Tuyển Dụng Hết Hạn
+        </Title>
+        {expiredJobPostings.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#888' }}>Không có tin tuyển dụng hết hạn</p>
+        ) : (
+          <List
+            grid={{ gutter: 16, column: 2 }}
+            dataSource={expiredJobPostings}
+            renderItem={posting => (
+              <List.Item>
+                <Card
+                  title={<span style={{ fontWeight: 'bold', fontSize: '20px', color: '#333' }}>{posting.title}</span>}
+                  extra={
+                    <Link to={`/job-postings/${posting.id}`}>
+                      <Button
+                        type="primary"
+                        style={{
+                          backgroundColor: '#1890ff',
+                          borderColor: '#1890ff',
+                          borderRadius: '5px',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        Xem Thêm
+                      </Button>
+                    </Link>
+                  }
+                  style={{
+                    borderRadius: '10px',
+                    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)',
+                    backgroundColor: '#fff',
+                    padding: '20px',
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                  }}
+                  hoverable
+                >
+                  <p style={{ fontSize: '16px', marginBottom: '12px', color: '#555' }}>{posting.description}</p>
+                  <p><strong>Địa điểm:</strong> {posting.location}</p>
+                  <p><strong>Hạn chót:</strong> {new Date(posting.deadline).toLocaleDateString()}</p>
+                  <p><strong>Vị trí:</strong> {posting.positionName || 'N/A'}</p>
+                  <p><strong>Loại hình công việc:</strong> {posting.employmentType || 'N/A'}</p>
+                  <p><strong>Phòng ban:</strong> {getDepartmentName(posting.departmentId)}</p>
+                </Card>
+              </List.Item>
+            )}
+          />
+        )}
+      </div>
     </>
   );
 };

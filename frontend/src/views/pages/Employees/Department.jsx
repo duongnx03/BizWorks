@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Table, message, Button, Input } from "antd"; // Thêm Input vào imports
+import { Table, message, Button, Input } from "antd";
 import axios from "axios";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import DeleteModal from "../../../components/modelpopup/DeleteModal";
@@ -15,7 +15,7 @@ const Department = () => {
   const [departmentToDelete, setDepartmentToDelete] = useState(null);
   const [departmentModalOpen, setDepartmentModalOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [searchTerm, setSearchTerm] = useState(""); // Thêm state cho từ khóa tìm kiếm
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,9 +26,10 @@ const Department = () => {
     setLoading(true);
     try {
       const response = await axios.get(`${base_url}/api/departments`, { withCredentials: true });
+      console.log(response.data);
       if (Array.isArray(response.data)) {
         const filteredDepartments = response.data.filter(department =>
-          department.name.toLowerCase().includes(search.toLowerCase())
+          department.departmentName.toLowerCase().includes(search.toLowerCase()) // Sửa thành departmentName
         );
         setDepartments(filteredDepartments);
       } else {
@@ -36,25 +37,7 @@ const Department = () => {
         setDepartments([]);
       }
     } catch (error) {
-      if (error.response) {
-        const { status, data } = error.response;
-        switch (status) {
-          case 403:
-            message.error(`Access denied. Details: ${data.message}`);
-            break;
-          case 401:
-            message.error("Unauthorized. Please log in.");
-            break;
-          case 404:
-            message.error("Resource not found.");
-            break;
-          default:
-            message.error(`Error: ${data.message || "An error occurred"}`);
-        }
-      } else {
-        message.error("Failed to fetch departments. " + (error.message || "Unknown error"));
-      }
-      setDepartments([]);
+      message.error("Failed to fetch departments"); // Thông báo lỗi
     } finally {
       setLoading(false);
     }
@@ -62,7 +45,7 @@ const Department = () => {
 
   const handleSearch = (value) => {
     setSearchTerm(value);
-    fetchDepartments(value); // Gọi lại fetchDepartments với từ khóa tìm kiếm
+    fetchDepartments(value);
   };
 
   const handleDepartmentCreated = () => {
@@ -84,24 +67,22 @@ const Department = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(`${base_url}/api/departments/${departmentToDelete}`, { withCredentials: true });
-      // Update the department list immediately
       setDepartments(departments.filter(department => department.id !== departmentToDelete));
       handleDeleteModalClose();
+      message.success("Department deleted successfully"); // Thông báo thành công
     } catch (error) {
       if (error.response && error.response.status === 403) {
         message.error("Access denied. Please log in.");
       } else {
         message.error("Failed to delete department");
       }
-    } finally {
-      handleDeleteModalClose();
     }
   };
 
   const departmentElements = Array.isArray(departments) ? departments.map((department) => ({
     key: department.id,
     id: department.id,
-    department: department.name,
+    department: department.departmentName, // Sửa thành departmentName
   })) : [];
 
   const columns = [
@@ -123,7 +104,7 @@ const Department = () => {
       render: (text, record) => (
         <div className="dropdown dropdown-action text-end">
           <Link
-            to="ID"
+            to="#"
             className="action-icon dropdown-toggle"
             data-bs-toggle="dropdown"
             aria-expanded="false"
@@ -133,7 +114,7 @@ const Department = () => {
           <div className="dropdown-menu dropdown-menu-right">
             <Link
               className="dropdown-item"
-              to="ID"
+              to="#"
               onClick={() => {
                 setSelectedDepartment(record);
                 setDepartmentModalOpen(true);
@@ -143,7 +124,7 @@ const Department = () => {
             </Link>
             <Link
               className="dropdown-item"
-              to="ID"
+              to="#"
               onClick={() => openDeleteModal(record.id)}>
               <i className="fa fa-trash m-r-5" /> Delete
             </Link>

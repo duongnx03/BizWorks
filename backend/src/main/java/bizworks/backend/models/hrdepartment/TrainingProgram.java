@@ -28,16 +28,19 @@ public class TrainingProgram {
     private LocalDate startDate;
 
     private LocalDate endDate;
+
     @ManyToMany
     @JoinTable(
             name = "training_program_employees",
             joinColumns = @JoinColumn(name = "training_program_id"),
             inverseJoinColumns = @JoinColumn(name = "employee_id")
     )
-    @JsonManagedReference // Ngăn chặn lặp lại vô hạn
+    @JsonManagedReference
 
     private List<Employee> participants;
 
     @OneToMany(mappedBy = "trainingProgram", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AttendanceTrainingProgram> attendanceRecords = new ArrayList<>();
+
+
 }

@@ -11,5 +11,6 @@ import java.util.List;
 public interface AttendanceTrainingProgramRepository extends JpaRepository<AttendanceTrainingProgram, Long> {
     List<AttendanceTrainingProgram> findByTrainingProgram(TrainingProgram trainingProgram);
     boolean existsByTrainingProgramAndEmployeeAndAttendanceDate(TrainingProgram trainingProgram, Employee employee, LocalDate attendanceDate);
+    List<AttendanceTrainingProgram> findByEmployee(Employee employee);
 
 }

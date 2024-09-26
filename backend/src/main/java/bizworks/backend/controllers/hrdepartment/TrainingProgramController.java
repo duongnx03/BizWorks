@@ -48,6 +48,11 @@ public class TrainingProgramController {
         List<User> managers = userService.findByRole("MANAGE");
         return ResponseEntity.ok(managers);
     }
+    @GetMapping("/attendance/employee/{employeeId}")
+    public ResponseEntity<List<AttendanceTrainingProgram>> getAttendanceByEmployeeId(@PathVariable Long employeeId) {
+        List<AttendanceTrainingProgram> attendanceList = trainingProgramService.getAttendanceByEmployeeId(employeeId);
+        return ResponseEntity.ok(attendanceList);
+    }
     @PutMapping("/{id}")
     public ResponseEntity<TrainingProgram> updateTrainingProgram(@PathVariable Long id, @RequestBody TrainingProgramDTO dto) {
         return ResponseEntity.ok(trainingProgramService.updateTrainingProgram(id, dto));

@@ -68,7 +68,7 @@ public class TrainingProgramService {
         attendance.setTrainingProgram(trainingProgram);
         attendance.setEmployee(employee);
         attendance.setAttendedAt(LocalDateTime.now());
-        attendance.setAttendanceDate(attendanceDate);  // Lưu ngày điểm danh
+        attendance.setAttendanceDate(attendanceDate);
 
         attendanceTrainingProgramRepository.save(attendance);
     }
@@ -78,7 +78,6 @@ public class TrainingProgramService {
 
         return attendanceTrainingProgramRepository.findByTrainingProgram(trainingProgram);
     }
-
     public void notifyParticipants(TrainingProgram trainingProgram) {
         List<Employee> participants = trainingProgram.getParticipants();
 
@@ -87,11 +86,25 @@ public class TrainingProgramService {
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             String message = createNotificationMessage(trainingProgram, user.getRole());
-            notificationService.sendNotification(user.getEmail(), message); // Gửi email hoặc thông báo nội bộ
+            // Gửi email thay vì gọi sendNotification
+            notificationService.sendNotification(user.getEmail(), "Thông báo chương trình đào tạo", message);
         }
     }
 
     private String createNotificationMessage(TrainingProgram trainingProgram, String role) {
+        StringBuilder message = new StringBuilder();
+        message.append("Kính gửi ").append(role).append(",\n\n");
+        message.append("Chúng tôi xin thông báo về chương trình đào tạo: ").append(trainingProgram.getTitle()).append("\n");
+        message.append("Mô tả: ").append(trainingProgram.getDescription()).append("\n");
+        message.append("Thời gian: ").append(trainingProgram.getStartDate()).append(" đến ").append(trainingProgram.getEndDate()).append("\n");
+        message.append("Địa điểm: [Địa điểm cụ thể]\n");
+        message.append("Xin vui lòng tham gia chương trình.\n\n");
+        message.append("Trân trọng,\n");
+        message.append("[Tên công ty]");
+        return message.toString();
+    }
+
+    private String generateNotificationMessage(TrainingProgram trainingProgram, String role) {
         StringBuilder message = new StringBuilder();
         message.append("Kính gửi ").append(role).append(",\n\n");
         message.append("Chúng tôi xin thông báo về chương trình đào tạo: ").append(trainingProgram.getTitle()).append("\n");
@@ -110,44 +123,49 @@ public class TrainingProgramService {
         trainingProgram.setDescription(dto.getDescription());
         trainingProgram.setStartDate(dto.getStartDate());
         trainingProgram.setEndDate(dto.getEndDate());
-
         List<Employee> participants = new ArrayList<>();
-
         if (dto.getParticipantIds() != null && !dto.getParticipantIds().isEmpty()) {
             participants.addAll(employeeRepository.findAllById(dto.getParticipantIds()));
         }
-
-        // Thêm nhân viên lãnh đạo và quản lý vào danh sách tham gia
         List<User> leaders = userRepository.findByRole("LEADER");
-        List<User> managers = userRepository.findByRole("MANAGE");
-
+        List<User> managers = userRepository.findByRole("MANAGER");
         List<Employee> leaderParticipants = employeeRepository.findAllByUserIdIn(
                 leaders.stream().map(User::getId).collect(Collectors.toList())
         );
-
         List<Employee> managerParticipants = employeeRepository.findAllByUserIdIn(
                 managers.stream().map(User::getId).collect(Collectors.toList())
         );
-
         participants.addAll(leaderParticipants);
         participants.addAll(managerParticipants);
-
         Set<Employee> uniqueParticipants = new HashSet<>(participants);
         trainingProgram.setParticipants(new ArrayList<>(uniqueParticipants));
-
         TrainingProgram savedProgram = trainingProgramRepository.save(trainingProgram);
-
-        // Gửi thông báo đến các nhân viên tham gia
-        notifyParticipants(savedProgram);
+        sendEmailToParticipants(savedProgram);
 
         return savedProgram;
     }
 
+    public List<AttendanceTrainingProgram> getAttendanceByEmployeeId(Long employeeId) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        return attendanceTrainingProgramRepository.findByEmployee(employee);
+    }
     public List<Employee> getNewEmployees() {
         LocalDate sixMonthsAgo = LocalDate.now().minusMonths(6);
         return employeeRepository.findByStartDateAfter(sixMonthsAgo);
     }
 
+    private void sendEmailToParticipants(TrainingProgram trainingProgram) {
+        List<Employee> participants = trainingProgram.getParticipants();
+
+        for (Employee participant : participants) {
+            User user = userRepository.findById(participant.getId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            String message = generateNotificationMessage(trainingProgram, user.getRole());
+            notificationService.sendNotification(user.getEmail(), "Thông báo chương trình đào tạo", message);
+        }
+    }
     public List<User> getLeaders() {
         return userRepository.findByRole("LEADER");
     }

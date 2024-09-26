@@ -2,6 +2,7 @@ package bizworks.backend.models.hrdepartment;
 
 import bizworks.backend.models.Department;
 import bizworks.backend.models.Position;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,10 +27,12 @@ public class JobPosting {
 
     @ManyToOne
     @JoinColumn(name = "department_id")
+    @JsonBackReference
     private Department department;
 
     @ManyToOne
     @JoinColumn(name = "position_id")
+    @JsonBackReference
     private Position position;
 
     private String location;

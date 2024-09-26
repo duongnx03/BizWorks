@@ -10,10 +10,17 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class NotificationService {
 
-    public void sendNotification(String recipient, String message) {
-        // Implementation to send the notification
-        System.out.println("Sending notification to: " + recipient);
-        System.out.println("Message: " + message);
-    }
+    @Autowired
+    private JavaMailSender mailSender;
+
+    public void sendNotification(String toEmail, String subject, String body) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject(subject);
+        message.setText(body);
+        message.setFrom("bizworks8386@gmail.com"); // Địa chỉ email của hệ thống
+
+        mailSender.send(message);
 
 }
+    }

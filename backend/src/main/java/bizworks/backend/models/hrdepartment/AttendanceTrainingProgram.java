@@ -28,7 +28,7 @@ public class AttendanceTrainingProgram {
 
     private LocalDateTime attendedAt;
 
-    // Thêm trường này để lưu ngày mà nhân viên điểm danh
     private LocalDate attendanceDate;
+    private boolean absent;
 
 }
