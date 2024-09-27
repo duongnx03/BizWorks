@@ -1,18 +1,15 @@
-import 'package:mobile/models/EmployeeResponseDTO.dart';
-import 'package:mobile/models/TrainingProgramDTO.dart';
-
 class AttendanceTrainingProgramDTO {
   final int id;
-  final TrainingProgramDTO trainingProgram;
-  final EmployeeResponseDTO employee;
+  final int trainingProgramId;
+  final int employeeId;
   final DateTime attendedAt;
   final DateTime attendanceDate;
-  final AttendanceStatus status;
+  final String status; // Use String for status (PRESENT/ABSENT)
 
   AttendanceTrainingProgramDTO({
     required this.id,
-    required this.trainingProgram,
-    required this.employee,
+    required this.trainingProgramId,
+    required this.employeeId,
     required this.attendedAt,
     required this.attendanceDate,
     required this.status,
@@ -21,28 +18,22 @@ class AttendanceTrainingProgramDTO {
   factory AttendanceTrainingProgramDTO.fromJson(Map<String, dynamic> json) {
     return AttendanceTrainingProgramDTO(
       id: json['id'] as int,
-      trainingProgram: TrainingProgramDTO.fromJson(json['trainingProgram']),
-      employee: EmployeeResponseDTO.fromJson(json['employee']),
+      trainingProgramId: json['trainingProgramId'] as int,
+      employeeId: json['employeeId'] as int,
       attendedAt: DateTime.parse(json['attendedAt']),
       attendanceDate: DateTime.parse(json['attendanceDate']),
-      status: AttendanceStatus.values.firstWhere(
-          (e) => e.toString() == 'AttendanceStatus.${json['status']}'),
+      status: json['status'] as String,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'trainingProgram': trainingProgram.toJson(),
-      'employee': employee.toJson(),
+      'trainingProgramId': trainingProgramId,
+      'employeeId': employeeId,
       'attendedAt': attendedAt.toIso8601String(),
       'attendanceDate': attendanceDate.toIso8601String(),
-      'status': status.toString().split('.').last,
+      'status': status,
     };
   }
-}
-
-enum AttendanceStatus {
-  PRESENT,
-  ABSENT,
 }

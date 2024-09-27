@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TrainingEvaluation {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,6 +24,6 @@ public class TrainingEvaluation {
     @JoinColumn(name = "employee_id")
     private Employee employee;
 
-    private int rating;
-    private String feedback;
+    private int rating; // Đánh giá từ 1 đến 5
+    private String feedback; // Nhận xét
 }

@@ -196,7 +196,7 @@ class HomeScreen extends StatelessWidget {
           title: 'Training Program',
           color: const Color(0xFFFF902F),
           onTap: () {
-            Navigator.pushNamed(context, "/training-program");
+            Navigator.pushNamed(context, "/training-programs");
           },
         ),
       ],

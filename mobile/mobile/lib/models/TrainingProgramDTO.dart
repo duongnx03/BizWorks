@@ -1,5 +1,4 @@
 import 'package:mobile/models/EmployeeResponseDTO.dart';
-import 'package:mobile/models/AttendanceTrainingProgramDTO.dart';
 
 class TrainingProgramDTO {
   final int id;
@@ -7,8 +6,7 @@ class TrainingProgramDTO {
   final String description;
   final DateTime startDate;
   final DateTime endDate;
-  final List<EmployeeResponseDTO>? participants;
-  final List<AttendanceTrainingProgramDTO>? attendanceRecords;
+  final List<int> participantIds; // Chỉ cần ánh xạ IDs
   final bool completed;
 
   TrainingProgramDTO({
@@ -17,8 +15,7 @@ class TrainingProgramDTO {
     required this.description,
     required this.startDate,
     required this.endDate,
-    this.participants,
-    this.attendanceRecords,
+    required this.participantIds,
     required this.completed,
   });
 
@@ -29,14 +26,8 @@ class TrainingProgramDTO {
       description: json['description'] as String,
       startDate: DateTime.parse(json['startDate']),
       endDate: DateTime.parse(json['endDate']),
-      participants: json['participants'] != null
-          ? List<EmployeeResponseDTO>.from(
-              json['participants'].map((e) => EmployeeResponseDTO.fromJson(e)))
-          : null,
-      attendanceRecords: json['attendanceRecords'] != null
-          ? List<AttendanceTrainingProgramDTO>.from(json['attendanceRecords']
-              .map((a) => AttendanceTrainingProgramDTO.fromJson(a)))
-          : null,
+      participantIds: List<int>.from(
+          json['participantIds'] as List), // Ánh xạ participantIds
       completed: json['completed'] as bool,
     );
   }
@@ -48,8 +39,7 @@ class TrainingProgramDTO {
       'description': description,
       'startDate': startDate.toIso8601String(),
       'endDate': endDate.toIso8601String(),
-      'participants': participants?.map((e) => e.toJson()).toList(),
-      'attendanceRecords': attendanceRecords?.map((a) => a.toJson()).toList(),
+      'participantIds': participantIds, // Chỉ cần ánh xạ participantIds
       'completed': completed,
     };
   }
