@@ -6,6 +6,7 @@ import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "leave_requests")
@@ -25,7 +26,13 @@ public class LeaveRequest {
   private LeaveType leaveType;
 
   private String reason;
+
+  @Column(name = "created_at", nullable = false, updatable = false)
+  @CreationTimestamp
+  private Date createdAt;
+
   private String status;
+  private String leaderStatus;
 
   @ManyToOne
   @JoinColumn(name = "empId")

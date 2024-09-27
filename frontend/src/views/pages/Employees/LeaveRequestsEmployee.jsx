@@ -18,7 +18,11 @@ const LeaveRequestsEmployee = () => {
     startDate: "",
     endDate: "",
     reason: "",
+    leaderStatus: "Pending",
   });
+  const [updateErrors, setUpdateErrors] = useState({});
+  const [updateModalIsOpen, setUpdateModalIsOpen] = useState(false);
+  const [selectedLeaveRequest, setSelectedLeaveRequest] = useState(null);
   const [searchCriteria, setSearchCriteria] = useState({
     startDate: '',
     endDate: '',
@@ -32,6 +36,11 @@ const LeaveRequestsEmployee = () => {
 
   useEffect(() => {
     fetchLeaveRequests();
+    const interval = setInterval(() => {
+      fetchLeaveRequests();
+    }, 60000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchLeaveRequests = async () => {
@@ -41,7 +50,10 @@ const LeaveRequestsEmployee = () => {
       });
       
       console.log('Leave Requests Data:', response.data);
-      const sortedRequests = sortLeaveRequests(response.data.data);
+      const sortedRequests = sortLeaveRequests(response.data.data.map(request => ({
+        ...request,
+        createdAt: request.createdAt || new Date().toISOString()
+      })));
       setLeaveRequests(sortedRequests);
     } catch (error) {
       console.error('Error fetching leave requests:', error);
@@ -137,12 +149,26 @@ const LeaveRequestsEmployee = () => {
     return true;
   };
 
+  const canUpdateRequest = (request) => {
+    return  request.status === 'Pending' && 
+            request.leaderStatus !== 'Approved' &&
+           (new Date() - new Date(request.createdAt)) / (1000 * 60) <= 60;
+  };
+
+  const handleOpenUpdateModal = (leaveRequest) => {
+    setSelectedLeaveRequest(leaveRequest);
+    setUpdateModalIsOpen(true);
+  };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
+
+    
 
     try {
         const response = await axios.post("http://localhost:8080/api/leave-requests/send", sendLeaveRequest, {
@@ -160,6 +186,108 @@ const LeaveRequestsEmployee = () => {
         } else {
             setError("An error occurred");
         }
+    }
+  };
+
+  const checkDateOverlap = (currentRequestId, newStartDate, newEndDate) => {
+    let invalidStartDate = null; // Khởi tạo biến để lưu ngày không hợp lệ
+    leaveRequests.forEach(request => {
+        const requestStart = new Date(request.startDate);
+        const requestEnd = new Date(request.endDate);
+        // Chỉ kiểm tra yêu cầu khác ngoài yêu cầu hiện tại
+        if (request.id !== currentRequestId && newStartDate <= requestEnd && newEndDate >= requestStart) {
+            // Nếu ngày mới trùng với yêu cầu hiện có
+            if (!invalidStartDate || requestEnd > invalidStartDate) {
+                invalidStartDate = requestEnd; // Cập nhật ngày không hợp lệ
+            }
+        }
+    });
+    
+    return invalidStartDate; 
+  };
+
+  const checkLeaveDaysLimit = (leaveType, startDate, endDate) => {
+    const leaveLimits = {
+        'SICK': 10,
+        'MATERNITY': 90,
+        'PERSONAL': 5,
+        'BEREAVEMENT': 3,
+        'MARRIAGE': 5,
+        'CIVIC_DUTY': 10,
+        'OTHER': Infinity,
+    };
+
+    const totalDays = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24) + 1;
+    return {
+        isValid: totalDays <= leaveLimits[leaveType],
+        maxDays: leaveLimits[leaveType]
+    };
+};
+
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+  
+    if (!canUpdateRequest(selectedLeaveRequest)) {
+      setError("This request can no longer be updated.");
+      return;
+    }
+
+    setUpdateErrors({});
+  
+    const errors = {};
+    if (!selectedLeaveRequest.leaveType) errors.leaveType = "Leave type is required.";
+    if (!selectedLeaveRequest.startDate) errors.startDate = "Start date is required.";
+    if (!selectedLeaveRequest.endDate) errors.endDate = "End date is required.";
+    if (!selectedLeaveRequest.reason) errors.reason = "Reason is required.";
+  
+    const newStartDate = new Date(selectedLeaveRequest.startDate);
+    const newEndDate = new Date(selectedLeaveRequest.endDate);
+    const invalidStartDate = checkDateOverlap(selectedLeaveRequest.id, newStartDate, newEndDate);
+    const { isValid, maxDays } = checkLeaveDaysLimit(selectedLeaveRequest.leaveType, newStartDate, newEndDate);
+
+    if (invalidStartDate) {
+      setUpdateErrors({ date: `You can only request leave after ${invalidStartDate.toISOString().split('T')[0]}.` });
+      return;
+    }
+    
+    if (!isValid) {
+        setUpdateErrors({ leaveLimit: `Cannot request more than ${maxDays} days for '${selectedLeaveRequest.leaveType}'.` });
+        return;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setUpdateErrors(errors);
+      return;
+    }
+  
+    try {
+
+      const formattedStartDate = new Date(selectedLeaveRequest.startDate).toISOString().split('T')[0];
+      const formattedEndDate = new Date(selectedLeaveRequest.endDate).toISOString().split('T')[0];
+
+      const formattedRequest = {
+        ...selectedLeaveRequest,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate
+      };
+
+      console.log('Sending update request with data:', selectedLeaveRequest);
+      const response = await axios.put(
+        `http://localhost:8080/api/leave-requests/update/${selectedLeaveRequest.id}`,
+         formattedRequest,
+        { withCredentials: true }
+      );
+      console.log('Leave request updated:', response.data);
+      setUpdateModalIsOpen(false);
+      fetchLeaveRequests();
+    } catch (error) {
+      console.error('Error updating leave request:', error);
+      if (error.response && error.response.data) {
+        setError(error.response.data);
+      } else {
+        setError("An error occurred while updating");
+      }
     }
   };
 
@@ -197,6 +325,20 @@ const LeaveRequestsEmployee = () => {
       selector: row => row.reason,
       sortable: true
     },
+    // {
+    //   name: 'Leader Status',
+    //   selector: row => row.leaderStatus,
+    //   sortable: true,
+    //   cell: row => (
+    //     <span style={
+    //       row.leaderStatus === 'Pending' ? styles.pending :
+    //       row.leaderStatus === 'Approved' ? styles.approved :
+    //       row.leaderStatus === 'Rejected' ? styles.rejected : {}
+    //     }>
+    //       {row.leaderStatus}
+    //     </span>
+    //   )
+    // },
     {
       name: 'Status',
       selector: row => row.status,
@@ -211,6 +353,16 @@ const LeaveRequestsEmployee = () => {
         </span>
       )
     },
+    {
+      name: 'Active',
+      cell: row => (
+        canUpdateRequest(row) ? (
+          <button onClick={() => handleOpenUpdateModal(row)} style={styles.updateButton}>
+            Update
+          </button>
+        ) : null
+      ),
+    }
   ];
   const today = new Date().toISOString().split('T')[0];
 
@@ -259,6 +411,73 @@ const LeaveRequestsEmployee = () => {
               </div>
               <button type="submit" style={styles.submitButton}>Submit Leave Request</button>
             </form>
+          </Modal>
+          <Modal isOpen={updateModalIsOpen} onRequestClose={() => setUpdateModalIsOpen(false)} style={{...styles.modal, zIndex: 1001}}>
+            {selectedLeaveRequest && (
+              <form onSubmit={handleUpdate} style={styles.form}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Leave Type:</label>
+                  <select 
+                    name="leaveType" 
+                    value={selectedLeaveRequest.leaveType} 
+                    onChange={(e) => setSelectedLeaveRequest({...selectedLeaveRequest, leaveType: e.target.value})}
+                    style={styles.select}
+                  >
+                    {leaveTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                  {updateErrors.leaveType && <div style={styles.error}>{updateErrors.leaveType}</div>}
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Start Date:</label>
+                  <input 
+                    type="date" 
+                    name="startDate" 
+                    value={selectedLeaveRequest.startDate.split('T')[0]} 
+                    onChange={(e) => {
+                      const newStartDate = e.target.value;
+                      setSelectedLeaveRequest({...selectedLeaveRequest, startDate: newStartDate});
+                    }}
+                    // onChange={(e) => setSelectedLeaveRequest({...selectedLeaveRequest, startDate: e.target.value})}
+                    max={selectedLeaveRequest.endDate.split('T')[0]}
+                    style={styles.input} 
+                  />
+                  {updateErrors.startDate && <div style={styles.error}>{updateErrors.startDate}</div>}
+                  {updateErrors.date && <div style={styles.error} className="error">{updateErrors.date}</div>}
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>End Date:</label>
+                  <input 
+                    type="date" 
+                    name="endDate" 
+                    value={selectedLeaveRequest.endDate.split('T')[0]} 
+                    onChange={(e) => {
+                      const newEndDate = e.target.value;
+                      setSelectedLeaveRequest({...selectedLeaveRequest, endDate: newEndDate});
+                    }}
+                    // onChange={(e) => setSelectedLeaveRequest({...selectedLeaveRequest, endDate: e.target.value})}
+                    min={selectedLeaveRequest.startDate.split('T')[0]}
+
+                    style={styles.input} 
+                  />
+                  {updateErrors.endDate && <div style={styles.error}>{updateErrors.endDate}</div>}
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Reason:</label>
+                  <textarea 
+                    name="reason" 
+                    value={selectedLeaveRequest.reason} 
+                    onChange={(e) => setSelectedLeaveRequest({...selectedLeaveRequest, reason: e.target.value})}
+                    style={styles.textarea} 
+                  />
+                  {updateErrors.reason && <div style={styles.error}>{updateErrors.reason}</div>}
+                </div>
+                {updateErrors.leaveLimit && <div style={styles.error}>{updateErrors.leaveLimit}</div>}
+                {error && <div style={styles.error}>{error}</div>}
+                <button type="submit" style={styles.submitButton}>Update Leave Request</button>
+              </form>
+            )}
           </Modal>
           <div>
             <h2>Leave Requests History</h2>
@@ -349,6 +568,14 @@ const LeaveRequestsEmployee = () => {
 };
 
 const styles = {
+  updateButton: {
+    padding: '5px 10px',
+    backgroundColor: '#ffc107',
+    color: '#000',
+    border: 'none',
+    borderRadius: '3px',
+    cursor: 'pointer'
+  },
   button: {
     padding: '10px 20px',
     backgroundColor: '#007bff',

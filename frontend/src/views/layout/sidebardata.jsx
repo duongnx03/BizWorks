@@ -225,8 +225,8 @@ export const SidebarData = [
             route: "/overtime",
           },
           {
-            menuValue: 'All Leave Requests',
-            route: "/leave-requests",
+            menuValue: 'Leave Requests',
+            route: "/leave-requests-leader",
           },
           {
             menuValue: "Departments",

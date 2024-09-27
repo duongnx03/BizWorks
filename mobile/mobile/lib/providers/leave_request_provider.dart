@@ -25,11 +25,36 @@ class LeaveRequestProvider with ChangeNotifier {
     }
   }
 
+  Future<LeaveRequestDTO> updateLeaveRequest(int id, LeaveRequestDTO updatedLeaveRequest) async {
+    try {
+      final response = await _dioClient.dio.put(
+        '/api/leave-requests/update/$id',
+        data: updatedLeaveRequest.toJson(),
+      );
+
+      if (response.statusCode == 200) {
+        final updatedRequest = LeaveRequestDTO.fromJson(response.data);
+
+        final index = _leaveRequests.indexWhere((request) => request.id == id);
+        if (index != -1) {
+          _leaveRequests[index] = updatedRequest;
+          notifyListeners();
+        }
+
+        return updatedRequest;
+      } else {
+        throw Exception('Failed to update leave request');
+      }
+    } catch (e) {
+      print('Error updating leave request: $e');
+      throw UpdateLeaveRequestException('Failed to update leave request: $e');
+    }
+  }
+
   Future<List<LeaveRequestDTO>> searchLeaveRequests(SearchDTO searchDto) async {
     try {
       final response = await _dioClient.dio.post('/api/leave-requests/search', data: searchDto.toJson());
       if (response.statusCode == 200) {
-        // Chuyển đổi dữ liệu trả về thành danh sách LeaveRequestDTO
         List<LeaveRequestDTO> leaveRequests = (response.data as List)
             .map((request) => LeaveRequestDTO.fromJson(request))
             .toList();
@@ -97,6 +122,9 @@ class SendLeaveRequestException implements Exception {
   SendLeaveRequestException(this.message);
 }
 
-
+class UpdateLeaveRequestException implements Exception {
+  final String message;
+  UpdateLeaveRequestException(this.message);
+}
 
 

@@ -36,9 +36,16 @@ public class LeaveRequestController {
     @Autowired
     private EmployeeService employeeService;
 
-    @GetMapping("/all")
-    public List<LeaveRequestDTO> getAllLeaveRequests() {
-        return leaveRequestService.getAllLeaveRequests();
+    @GetMapping("/leader")
+    public ResponseEntity<List<LeaveRequestDTO>> getLeaveRequestsForLeader() {
+        List<LeaveRequestDTO> leaveRequests = leaveRequestService.getLeaveRequestsForLeader();
+        return ResponseEntity.ok(leaveRequests);
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<List<LeaveRequestDTO>> getLeaveRequestsForAdmin() {
+        List<LeaveRequestDTO> leaveRequests = leaveRequestService.getLeaveRequestsForAdmin();
+        return ResponseEntity.ok(leaveRequests);
     }
 
     @GetMapping("/getLeaveRequestById/{id}")
@@ -71,19 +78,27 @@ public class LeaveRequestController {
             return new ResponseEntity<>("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    
+    @PutMapping("/leader/approve/{id}")
+    public ResponseEntity<LeaveRequest> leaderApproveLeaveRequest(@PathVariable Long id) {
+        LeaveRequest leaveRequest = leaveRequestService.leaderApproveLeaveRequest(id);
+        return ResponseEntity.ok(leaveRequest);
+    }
 
-    @PutMapping("/approve/{id}")
-    public ResponseEntity<LeaveRequest> approveLeaveRequest(
-            @PathVariable Long id
-    ) {
+    @PutMapping("/leader/reject/{id}")
+    public ResponseEntity<LeaveRequest> leaderRejectLeaveRequest(@PathVariable Long id) {
+        LeaveRequest leaveRequest = leaveRequestService.leaderRejectLeaveRequest(id);
+        return ResponseEntity.ok(leaveRequest);
+    }
+
+    @PutMapping("/admin/approve/{id}")
+    public ResponseEntity<LeaveRequest> adminApproveLeaveRequest(@PathVariable Long id) {
         LeaveRequest leaveRequest = leaveRequestService.approveLeaveRequest(id);
         return ResponseEntity.ok(leaveRequest);
     }
 
-    @PutMapping("/reject/{id}")
-    public ResponseEntity<LeaveRequest> rejectLeaveRequest(
-            @PathVariable Long id
-    ) {
+    @PutMapping("/admin/reject/{id}")
+    public ResponseEntity<LeaveRequest> adminRejectLeaveRequest(@PathVariable Long id) {
         LeaveRequest leaveRequest = leaveRequestService.rejectLeaveRequest(id);
         return ResponseEntity.ok(leaveRequest);
     }
@@ -92,24 +107,36 @@ public class LeaveRequestController {
     public Integer getRemainingLeaveDays(@PathVariable Long emp_id) {
         return leaveRequestService.calculateRemainingLeaveDays(emp_id).orElse(null);
     }
-
-    @PostMapping("/search")
+    
+        @PostMapping("/search")
     public ResponseEntity<List<LeaveRequestDTO>> searchLeaveRequests(@RequestBody SearchDTO searchDto) {
         List<LeaveRequestDTO> results = leaveRequestService.searchLeaveRequests(searchDto);
         return ResponseEntity.ok(results);
     }
+    
+    @PostMapping("/leader/search")
+    public ResponseEntity<List<LeaveRequestDTO>> searchLeaveRequestsForLeader(@RequestBody SearchDTO searchDto) {
+        List<LeaveRequestDTO> results = leaveRequestService.searchLeaveRequestsForLeader(searchDto);
+        return ResponseEntity.ok(results);
+    }
 
-    @GetMapping("/statistics")
-    public ResponseEntity<Map<String, Object>> getLeaveStatistics(
+    @PostMapping("/admin/search")
+    public ResponseEntity<List<LeaveRequestDTO>> searchLeaveRequestsForAdmin(@RequestBody SearchDTO searchDto) {
+        List<LeaveRequestDTO> results = leaveRequestService.searchLeaveRequestsForAdmin(searchDto);
+        return ResponseEntity.ok(results);
+    }
+    
+    @GetMapping("/statistics/leader")
+    public ResponseEntity<Map<String, Object>> getLeaveStatisticsForLeader(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
             @RequestParam(required = false) String leaveType,
             @RequestParam(required = false) String employeeName,
             @RequestParam(required = false) String status) {
 
-        List<LeaveRequestDTO> leaveRequests = leaveRequestService.searchLeaveRequests(new SearchDTO(startDate, endDate, leaveType, employeeName, status));
-        Map<String, Long> leaveDaysPerEmployee = leaveRequestService.calculateTotalLeaveDays(leaveRequests);
-        Map<String, Long> leaveTypeCounts = leaveRequestService.countLeaveRequestsByType(leaveRequests);
+        List<LeaveRequestDTO> leaveRequests = leaveRequestService.searchLeaveRequestsForLeader(new SearchDTO(startDate, endDate, leaveType, employeeName, status));
+        Map<String, Long> leaveDaysPerEmployee = leaveRequestService.calculateTotalLeaveDaysForLeader(leaveRequests);
+        Map<String, Long> leaveTypeCounts = leaveRequestService.countLeaveRequestsByTypeForLeader(leaveRequests);
 
         Map<String, Object> response = new HashMap<>();
         response.put("leaveDaysPerEmployee", leaveDaysPerEmployee);
@@ -118,5 +145,39 @@ public class LeaveRequestController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/statistics/admin")
+    public ResponseEntity<Map<String, Object>> getLeaveStatisticsForAdmin(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
+            @RequestParam(required = false) String leaveType,
+            @RequestParam(required = false) String employeeName,
+            @RequestParam(required = false) String status) {
+
+        List<LeaveRequestDTO> leaveRequests = leaveRequestService.searchLeaveRequestsForAdmin(new SearchDTO(startDate, endDate, leaveType, employeeName, status));
+        Map<String, Long> leaveDaysPerEmployee = leaveRequestService.calculateTotalLeaveDaysForAdmin(leaveRequests);
+        Map<String, Long> leaveTypeCounts = leaveRequestService.countLeaveRequestsByTypeForAdmin(leaveRequests);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("leaveDaysPerEmployee", leaveDaysPerEmployee);
+        response.put("leaveTypeCounts", leaveTypeCounts);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateLeaveRequest(
+            @PathVariable Long id,
+            @RequestBody LeaveRequestDTO leaveRequestDTO) {
+        try {
+            LeaveRequestDTO updatedLeaveRequest = leaveRequestService.updateLeaveRequest(id, leaveRequestDTO);
+            return ResponseEntity.ok(updatedLeaveRequest);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body("Error status: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Not found: " + e.getMessage());
+        }
+    }
 
 }

@@ -237,6 +237,7 @@ import ViolationComplaint from "../../views/pages/Employees/ViolationComplaint.j
 import SalaryUser from "../../views/pages/HR/Payroll/EmployeeSalary.jsx/SalaryUser.jsx";
 import CompletedTrainingPrograms from "../../views/pages/Employees/CompletedTrainingPrograms.jsx";
 import CompletedProgramDetail from "../../views/pages/Employees/CompletedProgramDetail.jsx";
+import LeaveRequestsLeader from "../../views/pages/Employees/LeaveRequestsLeader";
 const AppContainer = () => {
   useEffect(() => {
     localStorage.setItem("colorschema", "orange");
@@ -1169,6 +1170,11 @@ const AppContainer = () => {
       id: 161,
       path: "completed_training_program/:id",      
       element: <CompletedProgramDetail  />
+    },
+    {
+      id: 162,
+      path: "leave-requests-leader",      
+      element: <LeaveRequestsLeader />,
     },
 
   ];

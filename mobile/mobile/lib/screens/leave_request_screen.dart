@@ -4,6 +4,7 @@ import 'package:mobile/models/LeaveType.dart';
 import 'package:mobile/models/SearchDTO.dart';
 import 'package:mobile/providers/leave_request_provider.dart';
 import 'package:mobile/screens/LeaveRequestForm.dart';
+import 'package:mobile/screens/LeaveRequestUpdateForm.dart';
 import 'package:mobile/services/dio_client.dart';
 
 class LeaveRequestScreen extends StatefulWidget {
@@ -15,7 +16,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   late LeaveRequestProvider leaveRequestService;
   late Future<List<LeaveRequestDTO>> _leaveRequests;
 
-  // Khai báo biến cho tìm kiếm
   DateTime? _startDate;
   DateTime? _endDate;
   String? _selectedLeaveType;
@@ -28,6 +28,23 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     final dioClient = DioClient();
     leaveRequestService = LeaveRequestProvider(dioClient: dioClient);
     _leaveRequests = leaveRequestService.getLeaveRequestsByEmployee();
+  }
+
+  void _openUpdateLeaveRequestForm(LeaveRequestDTO leaveRequest) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: LeaveRequestUpdateForm(leaveRequest: leaveRequest),
+        );
+      },
+    ).then((value) {
+      if (value == true) {
+        setState(() {
+          _leaveRequests = leaveRequestService.getLeaveRequestsByEmployee();
+        });
+      }
+    });
   }
 
   void _openLeaveRequestForm() {
@@ -90,13 +107,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       ),
       body: Column(
         children: [
-          // Padding(
-          //   padding: EdgeInsets.all(16.0),
-          //   child: Text(
-          //     'Search Leave Requests',
-          //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          //   ),
-          // ),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
@@ -134,7 +144,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                         onChanged: (value) {
                           setState(() {
                             _selectedLeaveType = value;
-                            // Nếu chọn lại, đặt lại giá trị thành null
                             if (value == 'All') {
                               _selectedLeaveType = null;
                             }
@@ -156,7 +165,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                         onChanged: (value) {
                           setState(() {
                             _selectedStatus = value;
-                            // Nếu chọn lại, đặt lại giá trị thành null
                             if (value == 'All') {
                               _selectedStatus = null;
                             }
@@ -190,14 +198,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
             ),
           ),
           SizedBox(height: 20),
-          // Tiêu đề phần lịch sử yêu cầu
-          // Padding(
-          //   padding: EdgeInsets.all(16.0),
-          //   child: Text(
-          //     'Leave Requests History',
-          //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          //   ),
-          // ),
           Expanded(
             child: FutureBuilder<List<LeaveRequestDTO>>(
               future: _leaveRequests,
@@ -230,12 +230,22 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                         subtitle: Text(
                           '${leaveRequest.startDate.toLocal().toString().split(' ')[0]} - ${leaveRequest.endDate.toLocal().toString().split(' ')[0]}',
                         ),
-                        trailing: Text(
-                          leaveRequest.status,
-                          style: TextStyle(
-                            color: _getStatusColor(leaveRequest.status),
-                            fontWeight: FontWeight.bold,
-                          ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              leaveRequest.status,
+                              style: TextStyle(
+                                color: _getStatusColor(leaveRequest.status),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (leaveRequest.status == 'Pending')
+                              IconButton(
+                                icon: Icon(Icons.edit),
+                                onPressed: () => _openUpdateLeaveRequestForm(leaveRequest),
+                              ),
+                          ],
                         ),
                       );
                     },
@@ -283,6 +293,3 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     }
   }
 }
-
-
-

@@ -4,45 +4,46 @@ import Modal from 'react-modal';
 import { Pie } from 'react-chartjs-2';
 import Breadcrumbs from "../../../components/Breadcrumbs";
 
-const LeaveRequestsAdmin = () => {
+const LeaveRequestsLeader = () => {
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [noData, setNoData] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [remainingLeaveDays, setRemainingLeaveDays] = useState(0);
+
   const [searchCriteria, setSearchCriteria] = useState({
     startDate: '',
     endDate: '',
     leaveType: '',
     employeeName: '',
-    adminStatus: ''
+    leaderStatus: ''
   });
 
   const [employeeStatistics, setEmployeeStatistics] = useState([]);
   const [leaveTypeStatistics, setLeaveTypeStatistics] = useState([]);
 
   const leaveTypes = ["SICK", "MATERNITY", "PERSONAL", "BEREAVEMENT", "MARRIAGE", "CIVIC_DUTY", "OTHER"];
-  const adminStatuses = ["Pending", "Approved", "Rejected"];
+  const leaderStatuses = ["Pending", "Approved", "Rejected"];
 
   useEffect(() => {
     fetchLeaveRequests();
     fetchStatistics(searchCriteria);
     const interval = setInterval(() => {
-      fetchLeaveRequests();
-    }, 60000); 
-
-    return () => clearInterval(interval);
+        fetchLeaveRequests();
+      }, 60000);
+  
+      return () => clearInterval(interval);
   }, []);
 
   const fetchLeaveRequests = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8080/api/leave-requests/admin', { withCredentials: true });
+      const response = await axios.get('http://localhost:8080/api/leave-requests/leader', { withCredentials: true });
       if (response.data.length === 0) {
         setNoData(true);
       } else {
-        setLeaveRequests(response.data.map(request => ({ ...request, isActionTaken: false })));
+        setLeaveRequests(response.data);
         setNoData(false);
       }
     } catch (error) {
@@ -65,10 +66,10 @@ const LeaveRequestsAdmin = () => {
     if (searchCriteria.endDate) criteria.endDate = searchCriteria.endDate;
     if (searchCriteria.leaveType) criteria.leaveType = searchCriteria.leaveType;
     if (searchCriteria.employeeName) criteria.employeeName = searchCriteria.employeeName;
-    if (searchCriteria.adminStatus) criteria.status = searchCriteria.adminStatus;
+    if (searchCriteria.leaderStatus) criteria.status = searchCriteria.leaderStatus;
   
     try {
-      const response = await axios.post('http://localhost:8080/api/leave-requests/admin/search', criteria, { withCredentials: true });
+      const response = await axios.post('http://localhost:8080/api/leave-requests/leader/search', criteria, { withCredentials: true });
       setLeaveRequests(response.data);
       setNoData(response.data.length === 0);
 
@@ -83,7 +84,7 @@ const LeaveRequestsAdmin = () => {
   const handleApprove = async (id) => {
     if (window.confirm("Are you sure you want to approve this leave request?")) {
       try {
-        await axios.put(`http://localhost:8080/api/leave-requests/admin/approve/${id}`, {}, { withCredentials: true });
+        await axios.put(`http://localhost:8080/api/leave-requests/leader/approve/${id}`, {}, { withCredentials: true });
         fetchLeaveRequests();
         setModalIsOpen(false);
       } catch (error) {
@@ -95,44 +96,54 @@ const LeaveRequestsAdmin = () => {
   const handleReject = async (id) => {
     if (window.confirm("Are you sure you want to reject this leave request?")) {
       try {
-        await axios.put(`http://localhost:8080/api/leave-requests/admin/reject/${id}`, {}, { withCredentials: true });
+        await axios.put(`http://localhost:8080/api/leave-requests/leader/reject/${id}`, {}, { withCredentials: true });
         fetchLeaveRequests();
-        setModalIsOpen(false); 
+        setModalIsOpen(false);
       } catch (error) {
         console.error('Error rejecting leave request:', error.message);
       }
     }
   };
 
-  const handleViewDetails = async (id, emp_id) => {
-    try {
-      const [response, remainingLeaveResponse] = await Promise.all([
-        axios.get(`http://localhost:8080/api/leave-requests/getLeaveRequestById/${id}`, { withCredentials: true }),
-        axios.get(`http://localhost:8080/api/leave-requests/remaining-leave-days/${emp_id}`, { withCredentials: true })
-      ]);
-      setSelectedRequest(response.data);
-      setRemainingLeaveDays(remainingLeaveResponse.data);
-      setModalIsOpen(true);
-    } catch (error) {
-      console.error('Error fetching leave request details:', error.message);
-    }
-  };
 
-  const getStatusDisplay = (request) => {
-    if (request.leaderStatus === 'Approved' && request.status === 'Pending') {
-        return <span style={{ color: 'orange' }}>Pending</span>;
-    } else if (request.leaderStatus === 'Approved' && request.status === 'Approve') {
-        return <span style={{ color: 'green' }}>Approved</span>;
-    } else if (request.leaderStatus === 'Approved' && request.status === 'Rejected') {
-        return <span style={{ color: 'red' }}>Rejected</span>;
-    }
-    return <span>{request.status}</span>;
-};
-  
+    const handleViewDetails = async (id, emp_id) => {
+        try {
+            const [response, remainingLeaveResponse] = await Promise.all([
+                axios.get(`http://localhost:8080/api/leave-requests/getLeaveRequestById/${id}`, { withCredentials: true }),
+                axios.get(`http://localhost:8080/api/leave-requests/remaining-leave-days/${emp_id}`, { withCredentials: true })
+            ]);
+            setSelectedRequest(response.data);
+            setRemainingLeaveDays(remainingLeaveResponse.data);
+            setModalIsOpen(true);
+            } catch (error) {
+            console.error('Error fetching leave request details:', error.message);
+        }
+    };
+
+    const getStatusDisplay = (request) => {
+        if (request.status === 'Pending' && !request.leaderStatus) {
+            return <span style={{ color: 'orange' }}>Pending</span>;
+        } 
+        // else if(request.status === 'Rejected'){
+        //     return <span style={{ color: 'red' }}>Rejected</span>;
+        // } else if(request.status === 'Approved'){
+        //     return <span style={{ color: 'green' }}>Approved</span>;
+        // }
+         else if (request.leaderStatus === 'Rejected') {
+            return <span style={{ color: 'red' }}>Rejected</span>;
+        } else if (request.leaderStatus === 'Approved' && request.status === 'Approved') {
+            return <span style={{ color: 'green' }}>Approved</span>;
+        } else if (request.leaderStatus === 'Approved' && request.status === 'Pending') {
+            return <span style={{ color: 'purple ' }}>Pending A</span>;
+        } else if (request.leaderStatus === 'Approved' && request.status === 'Rejected') {
+            return <span style={{ color: 'red ' }}>Reject A</span>;
+        }
+        return <span>{request.status}</span>;
+    };
 
   const fetchStatistics = async (criteria = {}) => {
     try {
-      const response = await axios.get('http://localhost:8080/api/leave-requests/statistics/admin', {
+      const response = await axios.get('http://localhost:8080/api/leave-requests/statistics/leader', {
         params: criteria,
         withCredentials: true 
       });
@@ -213,9 +224,9 @@ const LeaveRequestsAdmin = () => {
                     {leaveTypes.map(type => (<option key={type} value={type}>{type}</option>))}
                   </select>
                   
-                  <select name="adminStatus" value={searchCriteria.adminStatus} onChange={handleSearchChange} style={{ padding: '10px', border: '1px solid #ced4da', borderRadius: '5px' }}>
+                  <select name="leaderStatus" value={searchCriteria.leaderStatus} onChange={handleSearchChange} style={{ padding: '10px', border: '1px solid #ced4da', borderRadius: '5px' }}>
                     <option value="">Select Status</option>
-                    {adminStatuses.map(status => (<option key={status} value={status}>{status}</option>))}
+                    {leaderStatuses.map(leaderStatus => (<option key={leaderStatus} value={leaderStatus}>{leaderStatus}</option>))}
                   </select>
                   
                   <input type="text" name="employeeName" placeholder="Employee Name" value={searchCriteria.employeeName} onChange={handleSearchChange} style={{ padding: '10px', border: '1px solid #ced4da', borderRadius: '5px', minWidth: '200px' }} />
@@ -249,7 +260,7 @@ const LeaveRequestsAdmin = () => {
             ) : noData ? (
               <div className="alert alert-warning">No data found</div>
             ) : (
-              <table className="table table-striped">
+                <table className="table table-striped">
                 <thead>
                   <tr>
                     <th>Employee</th>
@@ -263,8 +274,8 @@ const LeaveRequestsAdmin = () => {
                   {leaveRequests
                     .sort((a, b) => {
                       const statusOrder = { 'Pending': 1, 'Approved': 2, 'Rejected': 3 };
-                      if (statusOrder[a.status] !== statusOrder[b.status]) {
-                        return statusOrder[a.status] - statusOrder[b.status];
+                      if (statusOrder[a.leaderStatus] !== statusOrder[b.leaderStatus]) {
+                        return statusOrder[a.leaderStatus] - statusOrder[b.leaderStatus];
                       }
                       return new Date(b.startDate) - new Date(a.startDate);
                     })
@@ -276,12 +287,12 @@ const LeaveRequestsAdmin = () => {
                         <td>{getStatusDisplay(request)}</td>
                         <td>
                           <button onClick={() => handleViewDetails(request.id, request.employeeId)} className="btn btn-info btn-sm">View Details</button>
+                          
                         </td>
                       </tr>
                     ))}
                 </tbody>
               </table>
-
             )}
           </div>
         {selectedRequest && (
@@ -364,11 +375,6 @@ const LeaveRequestsAdmin = () => {
     </div>
     </div>
   );
-  
 };
 
-export default LeaveRequestsAdmin;
-
-
-
-
+export default LeaveRequestsLeader;
