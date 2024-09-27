@@ -2,6 +2,8 @@ import React from "react";
 import { Button, Carousel, Container } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Header from "./Header";
+import FeaturedEmployees from "./FeaturedEmployees";
+import CompanyEvents from "./CompanyEvents";
 
 const Home = () => {
   return (
@@ -78,6 +80,9 @@ const Home = () => {
       </Button>
       <div style={{ marginBottom: '40px' }} />
     </Container>
+
+    <FeaturedEmployees />
+    <CompanyEvents/>
     </>
   );
 };

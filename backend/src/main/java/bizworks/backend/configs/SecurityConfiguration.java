@@ -38,6 +38,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/violation-types/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER", "MANAGE")
                         .requestMatchers("/api/violations/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER", "MANAGE")
                         .requestMatchers("/api/violation_complaints/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER", "MANAGE")
+                        .requestMatchers("/api/events/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER", "MANAGE")
                         .requestMatchers("/api/salaries/**").hasAnyAuthority("ADMIN", "EMPLOYEE", "LEADER", "MANAGE")
                         .requestMatchers("/api/departments/**").hasAnyAuthority("ADMIN", "LEADER", "MANAGE")
                         .requestMatchers("/api/positions/**").hasAnyAuthority("ADMIN", "LEADER", "MANAGE")

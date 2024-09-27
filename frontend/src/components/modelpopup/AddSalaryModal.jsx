@@ -42,7 +42,7 @@ const AddSalaryModal = ({ onAddSuccess }) => {
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(null);
-  const [createdBy, setCreatedBy] = useState("");
+  const [createdBy, setCreatedBy] = useState("Duong Manage");
   const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [error, setError] = useState({});
@@ -148,6 +148,14 @@ const AddSalaryModal = ({ onAddSuccess }) => {
 
     if (!selectedMonth) {
       newErrors.month = "Please select a month.";
+    } else {
+      const currentMonth = new Date().getMonth() + 1; // Tháng hiện tại
+      const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1; // Tháng kế tiếp
+  
+      // Kiểm tra xem tháng đã chọn có hợp lệ không
+      if (selectedMonth.value !== currentMonth && selectedMonth.value !== nextMonth) {
+        newErrors.month = "Month must be the current month or the next month.";
+      }
     }
 
     setError(newErrors);
@@ -277,8 +285,7 @@ const AddSalaryModal = ({ onAddSuccess }) => {
                     type="text"
                     className="form-control"
                     value={createdBy}
-                    onChange={(e) => setCreatedBy(e.target.value)}
-                    placeholder="Enter creator's name"
+                    readOnly 
                   />
                   {error.createdBy && (
                     <p className="text-danger">{error.createdBy}</p>
