@@ -10,6 +10,7 @@ import 'package:mobile/providers/job_posting.provider.dart';
 import 'package:mobile/providers/leave_request_provider.dart';
 import 'package:mobile/providers/overtime_provider.dart';
 import 'package:mobile/providers/salary_provider.dart';
+import 'package:mobile/providers/training_program_provider.dart';
 import 'package:mobile/providers/violation_complaint_provider.dart';
 import 'package:mobile/providers/violation_provider.dart';
 import 'package:mobile/screens/LoginForm.dart';
@@ -28,6 +29,7 @@ import 'package:mobile/screens/overtime_list_screen.dart';
 import 'package:mobile/screens/overtime_screen.dart';
 import 'package:mobile/screens/profile_screen.dart';
 import 'package:mobile/screens/salary_screen.dart';
+import 'package:mobile/screens/training_program_screen.dart';
 import 'package:mobile/screens/violation_screen.dart';
 import 'package:mobile/services/dio_client.dart';
 import 'package:provider/provider.dart';
@@ -63,6 +65,8 @@ void main() {
             create: (context) => SalaryProvider(dioClient: dioClient)),
         ChangeNotifierProvider(
             create: (context) => LeaveRequestProvider(dioClient: dioClient)),
+        ChangeNotifierProvider(
+            create: (context) => TrainingProgramProvider(dioClient: dioClient)),
       ],
       child: const MyApp(),
     ),
@@ -142,6 +146,10 @@ class MyApp extends StatelessWidget {
           case '/leave-requests':
             return MaterialPageRoute(
                 builder: (context) => LeaveRequestScreen());
+          case '/training-program': // Thêm route cho TrainingProgramScreen
+            return MaterialPageRoute(
+                builder: (context) =>
+                    TrainingProgramScreen()); // Tạo mới TrainingProgramScreen
 
           default:
             return MaterialPageRoute(builder: (context) => const LoginForm());

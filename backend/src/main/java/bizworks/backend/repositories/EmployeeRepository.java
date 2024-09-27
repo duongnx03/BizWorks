@@ -34,4 +34,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     List<Employee> findByUserRole(@Param("role") String role);
     @Query("SELECT e FROM Employee e WHERE e.user.role = 'EMPLOYEE' AND e.startDate > :thresholdDate")
     List<Employee> findNewEmployees(@Param("thresholdDate") LocalDate thresholdDate);
+    @Query("SELECT e.id FROM Employee e WHERE e.user.id = :userId")
+    Long findEmployeeIdByUserId(@Param("userId") Long userId);
 }

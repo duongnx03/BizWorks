@@ -1,30 +1,23 @@
-import {
-  Spin,
-  Avatar,
-  Button,
-  Popover,
-  Row,
-  Card,
-  List,
-  Descriptions,
-  message,
-} from "antd";
+import React, { useContext, useEffect, useState } from "react";
+import { Spin, Avatar, Button, Popover, Card, List, Descriptions, message } from "antd";
 import axios from "axios";
-import { useParams, useNavigate } from "react-router-dom"; // Thêm useNavigate
-import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { base_url } from "../../../base_urls";
 import moment from "moment";
+import { AuthContext } from "../../../Routes/AuthContext";
+import { Modal } from "antd"; // Nhớ import Modal
 
 const TrainingProgramDetails = () => {
   const { id } = useParams();
-  const navigate = useNavigate(); // Khởi tạo useNavigate
+  const navigate = useNavigate();
   const [trainingProgram, setTrainingProgram] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [attendanceRecords, setAttendanceRecords] = useState({});
   const [trainingDates, setTrainingDates] = useState([]);
-  const [activeAttendance, setActiveAttendance] = useState(null);
-  const [isCompleted, setIsCompleted] = useState(false); // Trạng thái hoàn thành
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  const { userRole, username } = useContext(AuthContext);
 
   const generateTrainingDates = (startDate, endDate) => {
     const dates = [];
@@ -98,16 +91,12 @@ const TrainingProgramDetails = () => {
     }
   };
 
-  const handleAttendanceButtonClick = (participantId) => {
-    setActiveAttendance(activeAttendance === participantId ? null : participantId);
-  };
-
   const renderAttendanceButtons = (participantId) => {
     const today = moment().format("YYYY-MM-DD");
-    
+
     return trainingDates.map((date) => {
       const isToday = moment(date).isSame(today, 'day');
-  
+
       return (
         <Button
           key={date}
@@ -122,20 +111,53 @@ const TrainingProgramDetails = () => {
     });
   };
 
-  const handleCompleteProgram = async () => {
-    try {
-      await axios.put(`${base_url}/api/training-programs/${id}/complete`, {}, { withCredentials: true });
-      setIsCompleted(true);
-      message.success("Chương trình đào tạo đã được đánh dấu hoàn thành.");
-      navigate("/training-programs"); // Chuyển hướng về danh sách chương trình đào tạo
-    } catch (error) {
-      console.error("Error completing training program:", error);
-      message.error("Đánh dấu hoàn thành chương trình đào tạo thất bại.");
+  const handleCompleteProgram = () => {
+    const today = moment().startOf('day'); // Ngày hiện tại
+    const endDate = moment(trainingProgram.endDate).startOf('day'); // Ngày kết thúc chương trình
+  
+    if (today.isBefore(endDate)) {
+      Modal.confirm({
+        title: "Xác nhận hoàn thành chương trình",
+        content: "Chương trình chưa đến ngày kết thúc. Bạn có chắc chắn muốn đánh dấu hoàn thành không?",
+        onOk: async () => {
+          try {
+            await axios.put(`${base_url}/api/training-programs/${id}/complete`, {}, { withCredentials: true });
+            setIsCompleted(true);
+            message.success("Chương trình đào tạo đã được đánh dấu hoàn thành.");
+            navigate("/training-programs");
+          } catch (error) {
+            console.error("Error completing training program:", error);
+            message.error("Đánh dấu hoàn thành chương trình đào tạo thất bại.");
+          }
+        },
+        onCancel() {
+          // Người dùng không xác nhận
+        },
+      });
+    } else {
+      // Nếu đã tới ngày kết thúc
+      Modal.confirm({
+        title: "Xác nhận hoàn thành chương trình",
+        content: "Bạn có chắc chắn muốn đánh dấu hoàn thành chương trình không?",
+        onOk: async () => {
+          try {
+            await axios.put(`${base_url}/api/training-programs/${id}/complete`, {}, { withCredentials: true });
+            setIsCompleted(true);
+            message.success("Chương trình đào tạo đã được đánh dấu hoàn thành.");
+            navigate("/training-programs");
+          } catch (error) {
+            console.error("Error completing training program:", error);
+            message.error("Đánh dấu hoàn thành chương trình đào tạo thất bại.");
+          }
+        },
+        onCancel() {
+          // Người dùng không xác nhận
+        },
+      });
     }
   };
-
   if (loading) {
-    return <Spin tip="Đang tải..."></Spin>;
+    return <Spin tip="Đang tải..." />;
   }
 
   if (!trainingProgram) {
@@ -143,25 +165,29 @@ const TrainingProgramDetails = () => {
   }
 
   return (
-    <Card title="Chi Tiết Chương Trình Đào Tạo" style={{ margin: "20px" }}>
+    <Card title="Chi Tiết Chương Trình Đào Tạo" style={{ margin: "20px", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)" }}>
       <Descriptions bordered column={1} style={{ marginBottom: "20px" }}>
-        <Descriptions.Item label="Tiêu Đề">{trainingProgram.title}</Descriptions.Item>
-        <Descriptions.Item label="Mô Tả">{trainingProgram.description}</Descriptions.Item>
-        <Descriptions.Item label="Ngày Bắt Đầu">{trainingProgram.startDate}</Descriptions.Item>
-        <Descriptions.Item label="Ngày Kết Thúc">{trainingProgram.endDate}</Descriptions.Item>
-        <Descriptions.Item label="Số Người Tham Gia">{participants.length}</Descriptions.Item>
+        <Descriptions.Item label="Tiêu Đề" labelStyle={{ fontWeight: "bold" }}>{trainingProgram.title}</Descriptions.Item>
+        <Descriptions.Item label="Mô Tả" labelStyle={{ fontWeight: "bold" }}>{trainingProgram.description}</Descriptions.Item>
+        <Descriptions.Item label="Ngày Bắt Đầu" labelStyle={{ fontWeight: "bold" }}>{trainingProgram.startDate}</Descriptions.Item>
+        <Descriptions.Item label="Ngày Kết Thúc" labelStyle={{ fontWeight: "bold" }}>{trainingProgram.endDate}</Descriptions.Item>
+        <Descriptions.Item label="Số Người Tham Gia" labelStyle={{ fontWeight: "bold" }}>{participants.length}</Descriptions.Item>
       </Descriptions>
 
-      <Button
-        type="primary"
-        onClick={handleCompleteProgram}
-        disabled={isCompleted} // Chỉ cho phép đánh dấu hoàn thành một lần
-        style={{ marginBottom: "20px" }}
-      >
-        {isCompleted ? "Chương Trình Đã Hoàn Thành" : "Đánh Dấu Hoàn Thành Chương Trình"}
-      </Button>
+      <h3 style={{ textAlign: "center", marginBottom: "10px", fontWeight: "bold" }}>Danh Sách Tham Gia</h3>
+      {userRole === "ADMIN" && (
+        <div style={{ textAlign: "center", marginBottom: "20px" }}>
+          <Button
+            type="primary"
+            onClick={handleCompleteProgram}
+            disabled={isCompleted} 
+            style={{ backgroundColor: isCompleted ? "#52c41a" : "#1890ff", borderColor: isCompleted ? "#52c41a" : "#1890ff" }}
+          >
+            {isCompleted ? "Chương Trình Đã Hoàn Thành" : "Đánh Dấu Hoàn Thành Chương Trình"}
+          </Button>
+        </div>
+      )}
 
-      <h3 style={{ marginBottom: "10px" }}>Danh Sách Tham Gia</h3>
       <List
         bordered
         dataSource={participants}
@@ -169,22 +195,23 @@ const TrainingProgramDetails = () => {
           <List.Item>
             <List.Item.Meta
               avatar={<Avatar>{participant.fullName ? participant.fullName.charAt(0) : "?"}</Avatar>}
-              title={participant.fullName || "Tên không xác định"}
+              title={<span style={{ fontWeight: "bold" }}>{participant.fullName || "Tên không xác định"}</span>}
               description={participant.email || "Chưa có email"}
             />
-            <Popover
-              content={renderAttendanceButtons(participant.id)}
-              title="Chọn Ngày Điểm Danh"
-              trigger="click"
-              onClick={() => handleAttendanceButtonClick(participant.id)}
-            >
-              <Button
-                type="primary"
-                style={{ marginLeft: "10px" }}
+            {participant.username === username && (
+              <Popover
+                content={renderAttendanceButtons(participant.id)}
+                title="Chọn Ngày Điểm Danh"
+                trigger="click"
               >
-                Điểm Danh
-              </Button>
-            </Popover>
+                <Button
+                  type="primary"
+                  style={{ marginLeft: "10px" }}
+                >
+                  Điểm Danh
+                </Button>
+              </Popover>
+            )}
           </List.Item>
         )}
       />

@@ -27,8 +27,8 @@ const TrainingProgram = () => {
   const fetchTrainingPrograms = async () => {
     setLoading(true);
     try {
-        const response = await axios.get(`${base_url}/api/training-programs/uncompleted`, { withCredentials: true });
-        console.log("Fetched pending training programs:", response.data);
+        const response = await axios.get(`${base_url}/api/training-programs/my-training-programs`, { withCredentials: true });
+        console.log("Fetched training programs:", response.data); // Xem dữ liệu ở đây
         setTrainingPrograms(response.data || []);
     } catch (error) {
         console.error("Error fetching training programs:", error);

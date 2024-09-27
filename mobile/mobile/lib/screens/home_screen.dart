@@ -27,7 +27,6 @@ class HomeScreen extends StatelessWidget {
             _buildUserInfo(context),
             const SizedBox(height: 16),
             Expanded(
-              // Thêm Expanded để GridView chiếm không gian còn lại
               child: _buildFunctionGrid(context),
             ),
           ],
@@ -189,6 +188,15 @@ class HomeScreen extends StatelessWidget {
           color: const Color(0xFFFF902F),
           onTap: () {
             Navigator.pushNamed(context, "/salary");
+          },
+        ),
+        _buildFunctionCard(
+          icon:
+              Icons.school, // Sử dụng biểu tượng thích hợp cho Training Program
+          title: 'Training Program',
+          color: const Color(0xFFFF902F),
+          onTap: () {
+            Navigator.pushNamed(context, "/training-program");
           },
         ),
       ],

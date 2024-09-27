@@ -101,5 +101,19 @@ public class TrainingProgramController {
         List<TrainingProgramDTO> uncompletedPrograms = trainingProgramService.getUncompletedTrainingPrograms();
         return ResponseEntity.ok(uncompletedPrograms);
     }
-
+    @GetMapping("/my-training-programs")
+    public ResponseEntity<List<TrainingProgramDTO>> getMyTrainingPrograms() {
+        List<TrainingProgramDTO> myPrograms = trainingProgramService.getTrainingProgramsByCurrentUser();
+        return ResponseEntity.ok(myPrograms);
+    }
+    @GetMapping("/completed/{id}")
+    public ResponseEntity<TrainingProgramDTO> getCompletedTrainingProgramById(@PathVariable Long id) {
+        TrainingProgramDTO dto = trainingProgramService.getCompletedTrainingProgramById(id);
+        return ResponseEntity.ok(dto);
+    }
+    @GetMapping("/{programId}/participants")
+    public ResponseEntity<List<Employee>> getParticipantsByProgramId(@PathVariable Long programId) {
+        List<Employee> participants = trainingProgramService.getParticipantsByProgramId(programId);
+        return ResponseEntity.ok(participants);
+    }
 }

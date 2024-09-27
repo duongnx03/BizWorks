@@ -90,7 +90,10 @@ export const SidebarData = [
             menuValue: 'Job Application',
             route: "/job-application-list/admin",
           },
-          
+          {
+            menuValue: 'Completed Training Program',
+            route: "/completed_training_program",
+          },
         ],
       },
     ],

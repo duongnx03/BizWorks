@@ -235,6 +235,8 @@ import FavoriteJobPostings from "../../views/pages/Employees/FavoriteJobPostings
 import ViolationUser from "../../views/pages/Employees/ViolationUser.jsx";
 import ViolationComplaint from "../../views/pages/Employees/ViolationComplaint.jsx";
 import SalaryUser from "../../views/pages/HR/Payroll/EmployeeSalary.jsx/SalaryUser.jsx";
+import CompletedTrainingPrograms from "../../views/pages/Employees/CompletedTrainingPrograms.jsx";
+import CompletedProgramDetail from "../../views/pages/Employees/CompletedProgramDetail.jsx";
 const AppContainer = () => {
   useEffect(() => {
     localStorage.setItem("colorschema", "orange");
@@ -1158,7 +1160,16 @@ const AppContainer = () => {
       path: "salaries_user",      
       element: <SalaryUser  />
     },
-
+    {
+      id: 160,
+      path: "completed_training_program",      
+      element: <CompletedTrainingPrograms  />
+    },
+    {
+      id: 161,
+      path: "completed_training_program/:id",      
+      element: <CompletedProgramDetail  />
+    },
     
   ];
 
