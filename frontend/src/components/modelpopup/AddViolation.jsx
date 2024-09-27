@@ -4,7 +4,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import Select from "react-select";
 import axios from "axios";
 import { base_url } from "../../base_urls";
-import { Spin } from "antd"; // Import Spin component from Ant Design
+import { Spin } from "antd";
 
 const AddViolation = ({ onAdd }) => {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -26,60 +26,66 @@ const AddViolation = ({ onAdd }) => {
   const closeButtonRef = useRef(null);
 
   useEffect(() => {
-    const fetchDepartmentsAndEmployees = async () => {
+    const fetchDepartments = async () => {
       try {
-        const [departmentsResponse, employeesResponse] = await Promise.all([
-          axios.get(`${base_url}/api/departments`, { withCredentials: true }),
-          axios.get(`${base_url}/api/employee/getEmployeesByRole`, {
-            withCredentials: true,
-          }),
-        ]);
+        const response = await axios.get(`${base_url}/api/departments`, { withCredentials: true });
 
-        // Process departments
-        const departmentOptions = departmentsResponse.data.map((dept) => ({
-          value: dept.id,
-          label: dept.name,
-        }));
+        if (response.data && Array.isArray(response.data)) {
+          const departmentOptions = response.data.map((dept) => ({
+            value: dept.id,
+            label: dept.departmentName,
+            positions: Array.isArray(dept.positions) ? dept.positions.map((pos) => ({
+              value: pos.id,
+              label: pos.positionName,
+            })) : [], 
+          }));
         setDepartments(departmentOptions);
+      } else {
+        throw new Error("Unexpected response structure");
+      }
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+      }
+    };
 
-        // Process employees
-        const employeeOptions = employeesResponse.data.data.map((emp) => ({
+    const fetchEmployeesByRole = async () => {
+      try {
+        const response = await axios.get(`${base_url}/api/employee/getEmployeesByRole`, { withCredentials: true });
+        const employeeOptions = response.data.data.map((emp) => ({
           value: emp.id,
           label: `${emp.fullname} - ${emp.empCode}`,
-          department: emp.department, // Add department info for filtering
+          department: emp.department,
         }));
         setEmployees(employeeOptions);
         setFilteredEmployees(employeeOptions); // Initially set all employees
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching employees:", error);
       }
     };
 
     const fetchViolationTypes = async () => {
       try {
-        const response = await axios.get(`${base_url}/api/violation-types`, {
-          withCredentials: true,
-        });
-        const data = response.data.map((vt) => ({
+        const response = await axios.get(`${base_url}/api/violation-types`, { withCredentials: true });
+        const violationOptions = response.data.map((vt) => ({
           value: vt.id,
           label: vt.type,
         }));
-        setViolationTypes(data);
+        setViolationTypes(violationOptions);
       } catch (error) {
         console.error("Error fetching violation types:", error);
       }
     };
 
-    fetchDepartmentsAndEmployees();
+    // Call the functions
+    fetchDepartments();
+    fetchEmployeesByRole();
     fetchViolationTypes();
   }, []);
 
   // Filter employees based on selected department
   useEffect(() => {
     if (selectedDepartment) {
-      const filtered = employees.filter(
-        (emp) => emp.department === selectedDepartment.label
-      );
+      const filtered = employees.filter(emp => emp.department === selectedDepartment.label);
       setFilteredEmployees(filtered);
     } else {
       setFilteredEmployees(employees); // If no department selected, show all employees
@@ -90,7 +96,6 @@ const AddViolation = ({ onAdd }) => {
     setSelectedDate(date);
     if (errors.date) setErrors((prev) => ({ ...prev, date: "" }));
   };
-  
 
   const validateForm = () => {
     let valid = true;
@@ -112,9 +117,18 @@ const AddViolation = ({ onAdd }) => {
     if (!selectedDate) {
       newErrors.date = "Please select a date.";
       valid = false;
-    } else if (selectedDate > new Date()) {
-      newErrors.date = "The date cannot be in the future.";
-      valid = false;
+    } else {
+      const now = new Date();
+      const oneYearAgo = new Date(now);
+      oneYearAgo.setFullYear(now.getFullYear() - 1);
+  
+      if (selectedDate > now) {
+        newErrors.date = "The date cannot be in the future.";
+        valid = false;
+      } else if (selectedDate < oneYearAgo) {
+        newErrors.date = "The date cannot be more than one year in the past.";
+        valid = false;
+      }
     }
     if (!description) {
       newErrors.description = "Please enter a description.";
@@ -295,17 +309,15 @@ const AddViolation = ({ onAdd }) => {
                   <div className="text-danger">{errors.description}</div>
                 )}
               </div>
+              {errors.form && <div className="text-danger">{errors.form}</div>}
               <div className="submit-section">
                 <button
-                  className="btn btn-primary submit-btn"
                   type="submit"
+                  className="btn btn-primary submit-btn"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? <Spin size="small" /> : "Submit"}
+                  {isSubmitting ? <Spin /> : "Add Violation"}
                 </button>
-                {errors.form && (
-                  <div className="text-danger">{errors.form}</div>
-                )}
               </div>
             </form>
           </div>
@@ -313,7 +325,6 @@ const AddViolation = ({ onAdd }) => {
       </div>
     </div>
   );
-  
 };
 
 export default AddViolation;

@@ -37,4 +37,6 @@ public class ViolationComplaint {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    private int updateCount = 0;
+
 }

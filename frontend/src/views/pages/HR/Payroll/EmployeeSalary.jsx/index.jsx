@@ -110,16 +110,22 @@ const EmployeeSalary = () => {
       const response = await axios.get(`${base_url}/api/departments`, {
         withCredentials: true,
       });
-      setDepartmentOptions(
-        response.data.map((department) => ({
-          value: department.id,
-          label: department.name,
-        }))
-      );
+      
+      if (response.data && Array.isArray(response.data)) {
+        setDepartmentOptions(
+          response.data.map((department) => ({
+            value: department.id,
+            label: department.departmentName,
+          }))
+        );
+      } else {
+        console.error("Unexpected response format:", response.data);
+      }
     } catch (error) {
       console.error("Error fetching departments:", error);
     }
   };
+  
 
   const handleEmployeeNameFocus = () => setEmployeeNameFocused(true);
   const handleEmployeeNameBlur = () =>

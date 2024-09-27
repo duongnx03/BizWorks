@@ -30,4 +30,6 @@ public class Violation {
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    private int updateCount = 0;
 }

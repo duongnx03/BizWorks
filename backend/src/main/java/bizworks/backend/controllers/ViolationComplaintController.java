@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -81,12 +82,15 @@ public class ViolationComplaintController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.notfound(null, "Complaint not found"));
             }
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode())
+                    .body(ApiResponse.errorServer(ex.getReason(), "BAD_REQUEST"));
         } catch (AccessDeniedException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.errorClient(null, ex.getMessage(), "FORBIDDEN"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.errorServer("An error occurred while updating the complaint", "INTERNAL_SERVER_ERROR"));
+                    .body(ApiResponse.errorServer("An error occurred while updating the complaint: " + e.getMessage(), "INTERNAL_SERVER_ERROR"));
         }
     }
 
@@ -111,12 +115,15 @@ public class ViolationComplaintController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.notfound(null, "Complaint not found"));
             }
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode())
+                    .body(ApiResponse.errorServer(ex.getReason(), "BAD_REQUEST"));
         } catch (AccessDeniedException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.errorClient(null, ex.getMessage(), "FORBIDDEN"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.errorServer("An error occurred while updating complaint status", "INTERNAL_SERVER_ERROR"));
+                    .body(ApiResponse.errorServer("An error occurred while updating complaint status: " + e.getMessage(), "INTERNAL_SERVER_ERROR"));
         }
     }
 

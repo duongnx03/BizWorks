@@ -26,4 +26,7 @@
 
         List<Violation> findByEmployeeIdAndViolationDateBetween(Long employeeId, LocalDateTime startDate, LocalDateTime endDate);
         List<Violation> findByStatus(String status);
+
+        List<Violation> findByEmployeeIdAndViolationDateAndViolationTypeIdIn(
+                Long employeeId, LocalDate violationDate, List<Long> violationTypeIds);
     }

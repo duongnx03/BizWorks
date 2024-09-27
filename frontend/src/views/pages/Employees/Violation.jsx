@@ -166,8 +166,9 @@ const Violation = () => {
       openNotificationWithSuccess("Violation added successfully.");
       return true;
     } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || "Unknown error";
       openNotificationWithError(
-        `Error adding violation: ${error.response?.data || error.message}`
+        ` ${errorMessage}`
       );
       return false;
     } finally {
@@ -181,26 +182,26 @@ const Violation = () => {
       const response = await axios.get(`${base_url}/api/violations/${id}`, {
         withCredentials: true,
       });
-
+  
       if (response.data.status === "SUCCESS" && response.data.data) {
-        setEditViolationData(response.data); // Đảm bảo rằng dữ liệu đúng
+        setEditViolationData(response.data);
         setShowEditModal(true);
       } else {
         openNotificationWithError(
-          `Invalid violation data: ${response.data.data}`
+          `Invalid violation data: ${response.data.message || response.data.data}`
         );
       }
     } catch (error) {
-      openNotificationWithError(`Error fetching violation data: ${error}`);
+      openNotificationWithError(`Error fetching violation data: ${error.message || error}`);
     }
   };
-
+  
   const handleSaveEdit = async (data) => {
     if (!data.id) {
       openNotificationWithError("Violation ID is missing");
       return;
     }
-
+  
     try {
       const response = await axios.put(
         `${base_url}/api/violations/${data.id}`,
@@ -209,23 +210,33 @@ const Violation = () => {
           withCredentials: true,
         }
       );
+      
       if (response.data.status === "SUCCESS") {
         fetchViolations();
         openNotificationWithSuccess("Violation updated successfully.");
         setShowEditModal(false);
       } else {
-        openNotificationWithError(
-          `Error updating violation: ${
-            response.data.message || "Unknown error"
-          }`
-        );
+        // Kiểm tra lỗi từ máy chủ
+        if (response.data.message) {
+          openNotificationWithError(`Error updating violation: ${response.data.message}`);
+        } else {
+          openNotificationWithError(`Error updating violation: Unknown error`);
+        }
       }
     } catch (error) {
-      openNotificationWithError(`Error updating violation: ${error}`);
+      // Kiểm tra lỗi từ máy chủ
+      const errorMessage = error.response?.data?.message || error.message || "Unknown error";
+      openNotificationWithError(`Error updating violation: ${errorMessage}`);
     }
   };
+  
 
   const handleStatusChange = async (violationId, newStatus) => {
+    const currentViolation = violations.find(v => v.id === violationId);
+    if (currentViolation && currentViolation.status === newStatus) {
+      openNotificationWithError("The new state is no different from the current state.");
+      return;
+    }
     try {
       await axios.put(
         `${base_url}/api/violations/${violationId}/status`,
@@ -237,9 +248,11 @@ const Violation = () => {
       );
       fetchViolations();
     } catch (error) {
-      openNotificationWithError(`Error updating status: ${error}`);
+      const errorMessage = error.response?.data?.message || error.message;
+      openNotificationWithError(`Error updating status: ${errorMessage}`);
     }
   };
+  
 
   const handleClose = () => {
     setShowDeleteModal(false);

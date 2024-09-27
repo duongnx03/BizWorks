@@ -169,7 +169,6 @@ const ViolationUser = () => {
     }
   };
 
-
   return (
     <>
       <style>
@@ -226,8 +225,9 @@ const ViolationUser = () => {
 
       <div className="page-wrapper">
         <div className="content container-fluid">
-        <h2>Your Violation Records</h2>
-        <h5>Dashboard / My Violations </h5><br/>
+          <h2>Your Violation Records</h2>
+          <h5>Dashboard / My Violations </h5>
+          <br />
           <div className="search-filters">
             <Input
               placeholder="Search"
@@ -264,33 +264,39 @@ const ViolationUser = () => {
               <div className="row">
                 <div className="col-md-12">
                   <div className="message-list">
-                    {filteredViolations.map((violation) => (
-                      <div key={violation.id} className="violation-message">
-                        <div className="message-header">
-                          <Avatar
-                            src={violation.employee.avatar || Avatar_02}
-                          />
-                          <strong>{violation.employee.fullname} </strong>
-                          <span className="message-date">
-                            {new Date(
-                              violation.violationDate
-                            ).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <div className="message-body">
-                          <p>
-                            {violation.violationType.type}:{" "}
-                            {violation.description.substring(0, 20)}...
-                          </p>
-                          <Button
-                            type="link"
-                            onClick={() => handleViewDetails(violation)}
-                          >
-                            View Details
-                          </Button>
-                        </div>
+                    {filteredViolations.length === 0 ? (
+                      <div style={{ textAlign: "center", padding: "20px" }}>
+                        <strong>No Data</strong>
                       </div>
-                    ))}
+                    ) : (
+                      filteredViolations.map((violation) => (
+                        <div key={violation.id} className="violation-message">
+                          <div className="message-header">
+                            <Avatar
+                              src={violation.employee.avatar || Avatar_02}
+                            />
+                            <strong>{violation.employee.fullname} </strong>
+                            <span className="message-date">
+                              {new Date(
+                                violation.violationDate
+                              ).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="message-body">
+                            <p>
+                              {violation.violationType.type}:{" "}
+                              {violation.description.substring(0, 20)}...
+                            </p>
+                            <Button
+                              type="link"
+                              onClick={() => handleViewDetails(violation)}
+                            >
+                              View Details
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -304,9 +310,9 @@ const ViolationUser = () => {
         visible={!!selectedViolation}
         onCancel={handleCloseDetails}
         footer={[
-          <Button 
-            key="complaint" 
-            type="primary" 
+          <Button
+            key="complaint"
+            type="primary"
             onClick={showComplaintModal}
             disabled={hasComplaint} // Khóa nút nếu đã có khiếu nại
           >

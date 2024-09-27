@@ -21,6 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -53,15 +54,14 @@ public class ViolationService {
     }
     public ViolationDTO createViolation(ViolationDTO dto) {
         User currentUser = authenticationService.getCurrentUser();
-        checkRole(currentUser, Arrays.asList("EMPLOYEE","LEADER", "MANAGE", "ADMIN"));
+        checkRole(currentUser, Arrays.asList("EMPLOYEE", "LEADER", "MANAGE", "ADMIN"));
 
-        Violation violation = new Violation();
+        // Kiểm tra nhân viên
         Employee employee = employeeRepository.findById(dto.getEmployee().getId()).orElse(null);
         if (employee == null) {
             throw new IllegalArgumentException("Employee not found.");
         }
 
-        // Kiểm tra role của employee dựa trên vai trò của currentUser
         if ("LEADER".equals(currentUser.getRole())) {
             // LEADER chỉ được tạo vi phạm cho employee có role là EMPLOYEE
             if (!"EMPLOYEE".equals(employee.getUser().getRole())) {
@@ -74,9 +74,16 @@ public class ViolationService {
                 throw new AccessDeniedException("Manage can only create violations for EMPLOYEE or LEADER.");
             }
         }
-        violation.setStatus("Pending");
+        List<Long> violationTypeIds = Arrays.asList(1L, 2L, 3L);
+        LocalDate violationDate = dto.getViolationDate();
 
-        // Tiếp tục gán các thông tin còn lại cho violation
+        if (!canCreateViolation(employee.getId(), violationTypeIds, violationDate)) {
+            throw new IllegalArgumentException("Employee already has a violation of this type for the selected date.");
+        }
+
+        // Tạo mới vi phạm
+        Violation violation = new Violation();
+        violation.setStatus("Pending");
         violation.setEmployee(employee);
         violation.setViolationType(violationTypeRepository.findById(dto.getViolationType().getId()).orElse(null));
         violation.setViolationDate(dto.getViolationDate());
@@ -87,21 +94,24 @@ public class ViolationService {
         // Lưu vi phạm
         Violation saved = violationRepository.save(violation);
         sendViolationEmail(saved, "created");
-
-//        if ("LEADER".equals(currentUser.getRole()) ||"MANAGE".equals(currentUser.getRole()) || "ADMIN".equals(currentUser.getRole())) {
-//            sendViolationEmail(saved, "created");
-//        }
         updateSalaryForEmployee(saved.getEmployee().getId());
 
         return convertToViolationDTO(saved);
     }
+
+    private boolean canCreateViolation(Long employeeId, List<Long> violationTypeIds, LocalDate violationDate) {
+        List<Violation> existingViolations = violationRepository.findByEmployeeIdAndViolationDateAndViolationTypeIdIn(
+                employeeId, violationDate, violationTypeIds);
+
+        return existingViolations.isEmpty();
+    }
+
 
     @Scheduled(fixedRate = 3600000) // 1 giờ (3600000 ms)
     public void autoApprovePendingViolations() {
         List<Violation> pendingViolations = violationRepository.findByStatus("Pending");
 
         for (Violation violation : pendingViolations) {
-            // Kiểm tra nếu vi phạm đã được tạo quá 24 giờ
             if (violation.getCreatedAt().isBefore(LocalDateTime.now().minusHours(24))) {
                 // Cập nhật trạng thái thành "Approved"
                 violation.setStatus("Approved");
@@ -163,8 +173,14 @@ public class ViolationService {
                             hasChanges = true;
                         }
                         if (dto.getStatus() != null && !dto.getStatus().equals(v.getStatus())) {
-                            v.setStatus(dto.getStatus());
-                            hasChanges = true;
+                            // Kiểm tra số lần cập nhật status
+                            if (v.getUpdateCount() < 2) {
+                                v.setStatus(dto.getStatus());
+                                v.setUpdateCount(v.getUpdateCount() + 1); // Tăng số lần cập nhật
+                                hasChanges = true;
+                            } else {
+                                throw new IllegalArgumentException("Violation status can only be updated a maximum of two times.");
+                            }
                         }
                     }
                     v.setUpdatedAt(LocalDateTime.now());
@@ -315,6 +331,10 @@ public class ViolationService {
                 .ifPresent(violation -> {
                     String currentStatus = violation.getStatus();
 
+                    // Kiểm tra số lần cập nhật trạng thái
+                    if (violation.getUpdateCount() >= 2) {
+                        throw new IllegalArgumentException("Violation status can only be updated a maximum of two times.");
+                    }
                     // Nếu trạng thái hiện tại và trạng thái mới giống nhau, bỏ qua cập nhật
                     if (currentStatus.equals(status)) {
                         throw new RuntimeException("Violation is already in the '" + status + "' status.");
@@ -322,6 +342,8 @@ public class ViolationService {
 
                     // Tiếp tục nếu trạng thái không trùng
                     violation.setStatus(status);
+                    violation.setUpdateCount(violation.getUpdateCount() + 1);  // Tăng số lần cập nhật
+                    violation.setUpdatedAt(LocalDateTime.now());  // Cập nhật thời gian chỉnh sửa
                     violationRepository.save(violation);
 
                     // Cập nhật email và lương nếu cần
@@ -329,6 +351,7 @@ public class ViolationService {
                     updateSalaryForEmployee(violation.getEmployee().getId());
                 });
     }
+
 
     private void sendViolationEmail(Violation violation, String action) {
         String to = violation.getEmployee().getEmail();

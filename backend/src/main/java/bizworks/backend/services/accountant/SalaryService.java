@@ -114,7 +114,6 @@ public class SalaryService {
 
             Salary saved = salaryRepository.save(salary);
             createdSalaries.add(convertToDTO(saved));
-            sendSalaryEmail(saved, "created");
         }
         ApiResponse<List<SalaryDTO>> successResponse = ApiResponse.success(createdSalaries, "Salaries created successfully");
         return new ResponseEntity<>(successResponse, HttpStatus.OK);

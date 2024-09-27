@@ -29,12 +29,15 @@ public class ViolationController {
             // Trả về lỗi 403 Forbidden nếu gặp lỗi AccessDeniedException
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.errorClient(null, ex.getMessage(), "FORBIDDEN"));
+        } catch (IllegalArgumentException ex) {
+            // Trả về lỗi 400 Bad Request nếu nhân viên đã có vi phạm tương tự trong ngày
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.errorClient(null, ex.getMessage(), "BAD_REQUEST"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.errorServer("An error occurred while creating the violation: "+ e.getMessage(), "INTERNAL_SERVER_ERROR"));
+                    .body(ApiResponse.errorServer("An error occurred while creating the violation: " + e.getMessage(), "INTERNAL_SERVER_ERROR"));
         }
     }
-
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<ViolationDTO>>> getAllViolations() {
@@ -80,20 +83,29 @@ public class ViolationController {
     public ResponseEntity<ApiResponse<ViolationDTO>> updateViolation(@PathVariable Long id, @RequestBody ViolationDTO dto) {
         try {
             ViolationDTO updated = violationService.updateViolation(id, dto);
+
             if (updated != null) {
                 return ResponseEntity.ok(ApiResponse.success(updated, "Violation updated successfully"));
             } else {
+                // Trường hợp không tìm thấy vi phạm
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.notfound(null, "Violation not found"));
             }
         } catch (AccessDeniedException ex) {
+            // Xử lý khi người dùng không có quyền truy cập
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.errorClient(null, ex.getMessage(), "FORBIDDEN"));
+        } catch (IllegalArgumentException ex) {
+            // Xử lý khi có lỗi đầu vào (ví dụ: số lần cập nhật vượt quá giới hạn)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.errorClient(null, ex.getMessage(), "BAD_REQUEST"));
         } catch (Exception e) {
+            // Xử lý các lỗi không mong muốn khác
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.errorServer("An error occurred while updating the violation", "INTERNAL_SERVER_ERROR"));
         }
     }
+
 
 
     @DeleteMapping("/{id}")
@@ -134,6 +146,10 @@ public class ViolationController {
         try {
             violationService.updateViolationStatus(id, status);
             return ResponseEntity.ok(ApiResponse.success(null, "Violation status updated successfully"));
+        } catch (IllegalArgumentException ex) {
+            // Nếu vi phạm giới hạn số lần cập nhật, trả về lỗi 400 Bad Request
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.errorClient(null, ex.getMessage(), "LIMIT_REACHED"));
         } catch (AccessDeniedException ex) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ApiResponse.errorClient(null, ex.getMessage(), "FORBIDDEN"));
@@ -142,6 +158,7 @@ public class ViolationController {
                     .body(ApiResponse.errorServer("An error occurred while updating violation status", "INTERNAL_SERVER_ERROR"));
         }
     }
+
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {

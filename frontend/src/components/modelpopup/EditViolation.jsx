@@ -114,9 +114,18 @@ const EditViolation = ({ violationData, onSave, onClose, userRole }) => {
     if (!selectedDate) {
       newErrors.date = "Please select a date.";
       valid = false;
-    } else if (selectedDate > new Date()) {
-      newErrors.date = "The date cannot be in the future.";
-      valid = false;
+    } else {
+      const now = new Date();
+      const oneYearAgo = new Date(now);
+      oneYearAgo.setFullYear(now.getFullYear() - 1);
+  
+      if (selectedDate > now) {
+        newErrors.date = "The date cannot be in the future.";
+        valid = false;
+      } else if (selectedDate < oneYearAgo) {
+        newErrors.date = "The date cannot be more than one year in the past.";
+        valid = false;
+      }
     }
     if (!description) {
       newErrors.description = "Description is required.";
