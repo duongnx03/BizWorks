@@ -1,11 +1,10 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Spin, Avatar, Button, Popover, Card, List, Descriptions, message } from "antd";
+import { Spin, Avatar, Button, Popover, Card, List, Descriptions, message, Modal } from "antd";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { base_url } from "../../../base_urls";
 import moment from "moment";
 import { AuthContext } from "../../../Routes/AuthContext";
-import { Modal } from "antd"; // Nhớ import Modal
 
 const TrainingProgramDetails = () => {
   const { id } = useParams();
@@ -35,7 +34,6 @@ const TrainingProgramDetails = () => {
     try {
       const response = await axios.get(`${base_url}/api/training-programs/${id}`, { withCredentials: true });
       setTrainingProgram(response.data);
-
       const { startDate, endDate } = response.data;
 
       if (new Date(startDate) > new Date(endDate)) {
@@ -90,6 +88,39 @@ const TrainingProgramDetails = () => {
       message.error(errorMessage);
     }
   };
+  const handleCompletion = async (participantId, completed) => {
+    try {
+        await axios.put(
+            `${base_url}/api/training-programs/${id}/employee/${participantId}/status?completed=${completed}`, // Gửi completed như tham số truy vấn
+            {},
+            { withCredentials: true }
+        );
+  
+        message.success(`Đã đánh dấu ${completed ? "hoàn thành" : "không hoàn thành"} cho nhân viên!`);
+    } catch (error) {
+        console.error("Error updating completion status:", error);
+        message.error("Cập nhật trạng thái hoàn thành thất bại.");
+    }
+};
+  const renderCompletionButtons = (participantId) => {
+    return (
+      <div>
+        <Button
+          type="primary"
+          onClick={() => handleCompletion(participantId, true)}
+          style={{ marginRight: "10px" }}
+        >
+          Hoàn Thành
+        </Button>
+        <Button
+          type="default"
+          onClick={() => handleCompletion(participantId, false)}
+        >
+          Không Hoàn Thành
+        </Button>
+      </div>
+    );
+  };
 
   const renderAttendanceButtons = (participantId) => {
     const today = moment().format("YYYY-MM-DD");
@@ -112,50 +143,29 @@ const TrainingProgramDetails = () => {
   };
 
   const handleCompleteProgram = () => {
-    const today = moment().startOf('day'); // Ngày hiện tại
-    const endDate = moment(trainingProgram.endDate).startOf('day'); // Ngày kết thúc chương trình
+    const today = moment().startOf('day');
+    const endDate = moment(trainingProgram.endDate).startOf('day');
   
-    if (today.isBefore(endDate)) {
-      Modal.confirm({
-        title: "Xác nhận hoàn thành chương trình",
-        content: "Chương trình chưa đến ngày kết thúc. Bạn có chắc chắn muốn đánh dấu hoàn thành không?",
-        onOk: async () => {
-          try {
-            await axios.put(`${base_url}/api/training-programs/${id}/complete`, {}, { withCredentials: true });
-            setIsCompleted(true);
-            message.success("Chương trình đào tạo đã được đánh dấu hoàn thành.");
-            navigate("/training-programs");
-          } catch (error) {
-            console.error("Error completing training program:", error);
-            message.error("Đánh dấu hoàn thành chương trình đào tạo thất bại.");
-          }
-        },
-        onCancel() {
-          // Người dùng không xác nhận
-        },
-      });
-    } else {
-      // Nếu đã tới ngày kết thúc
-      Modal.confirm({
-        title: "Xác nhận hoàn thành chương trình",
-        content: "Bạn có chắc chắn muốn đánh dấu hoàn thành chương trình không?",
-        onOk: async () => {
-          try {
-            await axios.put(`${base_url}/api/training-programs/${id}/complete`, {}, { withCredentials: true });
-            setIsCompleted(true);
-            message.success("Chương trình đào tạo đã được đánh dấu hoàn thành.");
-            navigate("/training-programs");
-          } catch (error) {
-            console.error("Error completing training program:", error);
-            message.error("Đánh dấu hoàn thành chương trình đào tạo thất bại.");
-          }
-        },
-        onCancel() {
-          // Người dùng không xác nhận
-        },
-      });
-    }
+    Modal.confirm({
+      title: "Xác nhận hoàn thành chương trình",
+      content: today.isBefore(endDate) ? "Chương trình chưa đến ngày kết thúc. Bạn có chắc chắn muốn đánh dấu hoàn thành không?" : "Bạn có chắc chắn muốn đánh dấu hoàn thành chương trình không?",
+      onOk: async () => {
+        try {
+          await axios.put(`${base_url}/api/training-programs/${id}/complete`, {}, { withCredentials: true });
+          setIsCompleted(true);
+          message.success("Chương trình đào tạo đã được đánh dấu hoàn thành.");
+          navigate("/training-programs");
+        } catch (error) {
+          console.error("Error completing training program:", error);
+          message.error("Đánh dấu hoàn thành chương trình đào tạo thất bại.");
+        }
+      },
+      onCancel() {
+        // Người dùng không xác nhận
+      },
+    });
   };
+
   if (loading) {
     return <Spin tip="Đang tải..." />;
   }
@@ -198,20 +208,23 @@ const TrainingProgramDetails = () => {
               title={<span style={{ fontWeight: "bold" }}>{participant.fullName || "Tên không xác định"}</span>}
               description={participant.email || "Chưa có email"}
             />
-            {participant.username === username && (
-              <Popover
-                content={renderAttendanceButtons(participant.id)}
-                title="Chọn Ngày Điểm Danh"
-                trigger="click"
-              >
-                <Button
-                  type="primary"
-                  style={{ marginLeft: "10px" }}
+            <div>
+              {renderCompletionButtons(participant.id)}
+              {participant.username === username && (
+                <Popover
+                  content={renderAttendanceButtons(participant.id)}
+                  title="Chọn Ngày Điểm Danh"
+                  trigger="click"
                 >
-                  Điểm Danh
-                </Button>
-              </Popover>
-            )}
+                  <Button
+                    type="primary"
+                    style={{ marginLeft: "10px" }}
+                  >
+                    Điểm Danh
+                  </Button>
+                </Popover>
+              )}
+            </div>
           </List.Item>
         )}
       />

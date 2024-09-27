@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/models/AttendanceDTO.dart';
 import 'package:mobile/models/JobPostingDTO.dart';
+import 'package:mobile/models/TrainingProgramDTO.dart';
 import 'package:mobile/providers/attendance_complaint_provider.dart';
 import 'package:mobile/providers/attendance_provider.dart';
 import 'package:mobile/providers/auth_provider.dart';
@@ -29,6 +30,7 @@ import 'package:mobile/screens/overtime_list_screen.dart';
 import 'package:mobile/screens/overtime_screen.dart';
 import 'package:mobile/screens/profile_screen.dart';
 import 'package:mobile/screens/salary_screen.dart';
+import 'package:mobile/screens/training_program_details_screen.dart';
 import 'package:mobile/screens/training_program_screen.dart';
 import 'package:mobile/screens/violation_screen.dart';
 import 'package:mobile/services/dio_client.dart';
@@ -150,7 +152,12 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(
                 builder: (context) =>
                     TrainingProgramScreen()); // Tạo mới TrainingProgramScreen
-
+          case '/training-program-details':
+            final trainingProgram = settings.arguments as TrainingProgramDTO;
+            return MaterialPageRoute(
+              builder: (context) => TrainingProgramDetailsScreen(
+                  trainingProgram: trainingProgram),
+            );
           default:
             return MaterialPageRoute(builder: (context) => const LoginForm());
         }

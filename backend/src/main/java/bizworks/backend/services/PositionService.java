@@ -64,18 +64,25 @@ public class PositionService {
     public Position createPosition(PositionDTO positionDTO) {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "LEADER", "ADMIN"));
+
         Position position = new Position();
         position.setPositionName(positionDTO.getPositionName());
         position.setDescription(positionDTO.getDescription());
         position.setBasicSalary(positionDTO.getBasicSalary());
-        if (positionDTO.getDepartment() != null && positionDTO.getDepartment().getId() != null) {
-            Department department = departmentRepository.findById(positionDTO.getDepartment().getId())
+
+        // Debug log to check if departmentId is set
+        if (positionDTO.getDepartmentId() != null) {
+            Department department = departmentRepository.findById(positionDTO.getDepartmentId())
                     .orElseThrow(() -> new RuntimeException("Department not found"));
             position.setDepartment(department);
+        } else {
+            // Log a warning if departmentId is null
+            System.out.println("Warning: departmentId is null");
         }
 
         return positionRepository.save(position);
     }
+
 
     public Position updatePosition(Long id, PositionDTO positionDTO) {
         User currentUser = authenticationService.getCurrentUser();
@@ -91,11 +98,6 @@ public class PositionService {
         if (positionDTO.getBasicSalary() != null && !positionDTO.getBasicSalary().equals(position.getBasicSalary())) {
             position.setBasicSalary(positionDTO.getBasicSalary());
             updateSalariesForPosition(position);
-        }
-        if (positionDTO.getDepartment() != null && positionDTO.getDepartment().getId() != null) {
-            Department department = departmentRepository.findById(positionDTO.getDepartment().getId())
-                    .orElseThrow(() -> new RuntimeException("Department not found"));
-            position.setDepartment(department);
         }
     }
 

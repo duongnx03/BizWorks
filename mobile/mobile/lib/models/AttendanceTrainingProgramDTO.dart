@@ -5,16 +5,16 @@ class AttendanceTrainingProgramDTO {
   final int id;
   final TrainingProgramDTO trainingProgram;
   final EmployeeResponseDTO employee;
-  final DateTime? attendedAt;
-  final DateTime? attendanceDate;
+  final DateTime attendedAt;
+  final DateTime attendanceDate;
   final AttendanceStatus status;
 
   AttendanceTrainingProgramDTO({
     required this.id,
     required this.trainingProgram,
     required this.employee,
-    this.attendedAt,
-    this.attendanceDate,
+    required this.attendedAt,
+    required this.attendanceDate,
     required this.status,
   });
 
@@ -23,12 +23,8 @@ class AttendanceTrainingProgramDTO {
       id: json['id'] as int,
       trainingProgram: TrainingProgramDTO.fromJson(json['trainingProgram']),
       employee: EmployeeResponseDTO.fromJson(json['employee']),
-      attendedAt: json['attendedAt'] != null
-          ? DateTime.tryParse(json['attendedAt'])
-          : null,
-      attendanceDate: json['attendanceDate'] != null
-          ? DateTime.tryParse(json['attendanceDate'])
-          : null,
+      attendedAt: DateTime.parse(json['attendedAt']),
+      attendanceDate: DateTime.parse(json['attendanceDate']),
       status: AttendanceStatus.values.firstWhere(
           (e) => e.toString() == 'AttendanceStatus.${json['status']}'),
     );
@@ -39,8 +35,8 @@ class AttendanceTrainingProgramDTO {
       'id': id,
       'trainingProgram': trainingProgram.toJson(),
       'employee': employee.toJson(),
-      'attendedAt': attendedAt?.toIso8601String(),
-      'attendanceDate': attendanceDate?.toIso8601String(),
+      'attendedAt': attendedAt.toIso8601String(),
+      'attendanceDate': attendanceDate.toIso8601String(),
       'status': status.toString().split('.').last,
     };
   }

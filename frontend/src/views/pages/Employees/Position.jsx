@@ -215,12 +215,12 @@ const Position = () => {
             </div>
 
             <PositionModal 
-                visible={positionModalOpen} 
-                onPositionCreated={handlePositionCreated} 
-                onClose={() => setPositionModalOpen(false)} 
-                position={selectedPosition} 
-                departmentId={departmentId} 
-            />
+    visible={positionModalOpen} 
+    onPositionCreated={handlePositionCreated} 
+    onClose={() => setPositionModalOpen(false)} 
+    position={selectedPosition} 
+    departmentId={departmentId} // Make sure this is a valid department ID
+/>
 
             {deleteModalOpen && (
                 <DeleteModal

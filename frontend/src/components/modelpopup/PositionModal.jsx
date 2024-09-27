@@ -1,65 +1,49 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Form, Input, Button, Select, message } from "antd";
+import { Modal, Form, Input, Button, message } from "antd";
 import axios from "axios";
 import { base_url } from "../../base_urls";
 
-const { Option } = Select;
-
 const PositionModal = ({ visible, onClose, onPositionCreated, position, departmentId }) => {
   const [form] = Form.useForm();
-  const [employees, setEmployees] = useState([]);
-  const [loadingEmployees, setLoadingEmployees] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (visible) {
-      fetchEmployees();
-    }
-    if (position) {
-      form.setFieldsValue({
-        positionName: position.positionName,
-        basicSalary: position.basicSalary,
-        description: position.description,
-        employeeIds: position.employees ? position.employees.map(emp => emp.id) : [], // Set employeeIds if available
-      });
-    } else {
-      form.resetFields();
+      if (position) {
+        form.setFieldsValue({
+          positionName: position.positionName,
+          basicSalary: position.basicSalary,
+          description: position.description,
+        });
+      } else {
+        form.resetFields();
+      }
     }
   }, [visible, position, form]);
 
-  const fetchEmployees = async () => {
-    try {
-      const response = await axios.get(`${base_url}/api/employee/getAllEmployees`, { withCredentials: true });
-      if (response.data.status === "SUCCESS" && Array.isArray(response.data.data)) {
-        setEmployees(response.data.data);
-      } else {
-        console.error("Unexpected response format:", response.data);
-        message.error("Unexpected response format");
-      }
-    } catch (error) {
-      console.error("Error fetching employees:", error);
-      message.error("Failed to fetch employees");
-    } finally {
-      setLoadingEmployees(false);
-    }
-  };
-
   const handleSubmit = async (values) => {
+    setLoading(true);
     try {
+      const payload = {
+        ...values,
+        departmentId, // Directly set departmentId instead of using an object
+      };
+
       if (position) {
-        await axios.put(`${base_url}/api/positions/${position.id}`, {
-          ...values,
-          department: { id: departmentId },
-        }, { withCredentials: true });
+        await axios.put(`${base_url}/api/positions/${position.id}`, payload, { withCredentials: true });
+        message.success("Position updated successfully.");
       } else {
-        await axios.post(`${base_url}/api/positions`, {
-          ...values,
-          department: { id: departmentId },
-        }, { withCredentials: true });
+        await axios.post(`${base_url}/api/positions`, payload, { withCredentials: true });
+        message.success("Position created successfully.");
       }
-      message.success(`Position ${position ? 'updated' : 'created'} successfully.`);
+
       onPositionCreated();
+      onClose();
     } catch (error) {
-      message.error("Failed to save position.");
+      console.error("Error saving position:", error);
+      message.error("Failed to save position. Please ensure the department ID is valid.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,9 +65,9 @@ const PositionModal = ({ visible, onClose, onPositionCreated, position, departme
         <Form.Item
           name="basicSalary"
           label="Basic Salary"
-          rules={[{ required: true, message: 'Please input the basic Salary!' }]}
+          rules={[{ required: true, message: 'Please input the basic salary!' }]}
         >
-          <Input />
+          <Input type="number" />
         </Form.Item>
         <Form.Item
           name="description"
@@ -93,7 +77,7 @@ const PositionModal = ({ visible, onClose, onPositionCreated, position, departme
         </Form.Item>
       
         <Form.Item>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" loading={loading}>
             {position ? "Update" : "Create"}
           </Button>
         </Form.Item>

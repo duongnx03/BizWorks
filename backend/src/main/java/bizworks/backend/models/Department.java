@@ -27,5 +27,6 @@ public class Department {
     @JsonManagedReference
     private List<Employee> employees;
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
-    private List<Position> positions; // Kiểm tra lại cấu hình này
+    @JsonManagedReference
+    private List<Position> positions;
 }

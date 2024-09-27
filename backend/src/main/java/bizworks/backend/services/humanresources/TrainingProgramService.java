@@ -199,6 +199,7 @@ public class TrainingProgramService {
                 .orElseThrow(() -> new ResourceNotFoundException("Training Program not found with ID: " + programId));
         return trainingProgram.getParticipants(); // Lấy danh sách nhân viên tham gia
     }
+
     public TrainingProgramDTO convertToDTO(TrainingProgram trainingProgram) {
         TrainingProgramDTO dto = new TrainingProgramDTO();
         dto.setId(trainingProgram.getId());

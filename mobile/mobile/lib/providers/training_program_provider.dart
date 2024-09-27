@@ -30,6 +30,24 @@ class TrainingProgramProvider with ChangeNotifier {
     }
   }
 
+  // Fetch all training programs
+  Future<void> fetchMyTrainingPrograms() async {
+    try {
+      final response = await _dioClient.dio
+          .get('/api/training-programs/my-training-programs');
+      if (response.statusCode == 200) {
+        _trainingPrograms = (response.data as List)
+            .map((program) => TrainingProgramDTO.fromJson(program))
+            .toList();
+        notifyListeners();
+      } else {
+        throw Exception('Failed to load training programs');
+      }
+    } catch (e) {
+      print('Error fetching training programs: $e');
+    }
+  }
+
   // Create a new training program
   Future<void> createTrainingProgram(TrainingProgramDTO dto) async {
     try {

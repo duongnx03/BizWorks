@@ -10,14 +10,23 @@ public class PositionDTO {
     private String positionName;
     private String description;
     private Double basicSalary;
-    private Department department;
+    private Long departmentId; // Use departmentId instead of DepartmentDTO
+
+
     public static PositionDTO from(Position position) {
         PositionDTO dto = new PositionDTO();
         dto.setId(position.getId());
         dto.setPositionName(position.getPositionName());
         dto.setDescription(position.getDescription());
         dto.setBasicSalary(position.getBasicSalary());
-        dto.setDepartment(position.getDepartment());
+
+        // Just set the department ID instead of converting the whole Department
+        if (position.getDepartment() != null) {
+            dto.setDepartmentId(position.getDepartment().getId());
+        } else {
+            dto.setDepartmentId(null);
+        }
+
         return dto;
     }
 }

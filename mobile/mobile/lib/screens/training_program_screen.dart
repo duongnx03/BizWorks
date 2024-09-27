@@ -15,7 +15,7 @@ class _TrainingProgramScreenState extends State<TrainingProgramScreen> {
     // Fetch training programs when the screen is initialized
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<TrainingProgramProvider>(context, listen: false)
-          .fetchAllTrainingPrograms();
+          .fetchMyTrainingPrograms();
     });
   }
 
@@ -45,13 +45,10 @@ class _TrainingProgramScreenState extends State<TrainingProgramScreen> {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Description: ${trainingProgram.description}'),
+                      Text('Start Date: ${trainingProgram.startDate}'),
+                      Text('End Date: ${trainingProgram.endDate}'),
                       Text(
-                          'Start Date: ${trainingProgram.startDate?.toLocal().toString().split(' ')[0] ?? 'N/A'}'),
-                      Text(
-                          'End Date: ${trainingProgram.endDate?.toLocal().toString().split(' ')[0] ?? 'N/A'}'),
-                      Text(
-                          'Status: ${trainingProgram.completed ? 'Completed' : 'Not Completed'}'),
+                          'Status: ${trainingProgram.completed ? 'Completed' : 'In Progress'}'),
                     ],
                   ),
                   onTap: () {

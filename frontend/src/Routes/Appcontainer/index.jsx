@@ -1170,7 +1170,7 @@ const AppContainer = () => {
       path: "completed_training_program/:id",      
       element: <CompletedProgramDetail  />
     },
-    
+
   ];
 
   const ChatRoutingeObjects = [
