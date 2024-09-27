@@ -13,6 +13,8 @@ const Header = () => {
             <Nav.Link href="/job-board">Job Board</Nav.Link>
             <Nav.Link href="/about">About Us</Nav.Link>
             <Nav.Link href="/contact">Contact Us</Nav.Link>
+            <Nav.Link href="/CompanyAchievements">Company Achievements</Nav.Link>
+            <Nav.Link href="/OrganizationalChart">OrganizationalChart</Nav.Link>
 
           </Nav>
           <Nav className="ms-auto">
