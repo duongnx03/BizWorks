@@ -23,7 +23,12 @@ public class InterviewSchedule {
     private JobApplication jobApplication;
 
     private LocalDateTime interviewDate;
-    @ElementCollection // Sử dụng ElementCollection để lưu danh sách ID
+
+    @ElementCollection
     private List<Long> interviewers;
+
     private String location;
+
+    @Enumerated(EnumType.STRING)
+    private InterviewStatus status;
 }

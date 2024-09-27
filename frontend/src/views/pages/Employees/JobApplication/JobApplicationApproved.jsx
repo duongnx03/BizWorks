@@ -116,11 +116,13 @@ const JobApplicationApproved = () => {
         interviewers: values.interviewers,
         location: values.location,
       };
-
+  
       await axios.post(`${base_url}/api/interview-schedules`, interviewData, { withCredentials: true });
       message.success("Interview scheduled successfully");
       setIsModalVisible(false);
-      fetchApprovedRequests();
+      
+      // Navigate to the scheduled interviews page after scheduling
+      navigate("/job_application_with_interviews");
     } catch (error) {
       console.error("Error scheduling interview:", error);
       message.error("Failed to schedule interview. Please check the information and try again.");

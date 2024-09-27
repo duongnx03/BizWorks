@@ -238,6 +238,8 @@ import SalaryUser from "../../views/pages/HR/Payroll/EmployeeSalary.jsx/SalaryUs
 import CompletedTrainingPrograms from "../../views/pages/Employees/CompletedTrainingPrograms.jsx";
 import CompletedProgramDetail from "../../views/pages/Employees/CompletedProgramDetail.jsx";
 import LeaveRequestsLeader from "../../views/pages/Employees/LeaveRequestsLeader";
+import JobApplicationInterviewStatus from "../../views/pages/Employees/JobApplicationInterviewStatus.jsx";
+import CompletedInterviewScheduleList from "../../views/pages/Employees/CompletedInterviewScheduleList.jsx";
 const AppContainer = () => {
   useEffect(() => {
     localStorage.setItem("colorschema", "orange");
@@ -1176,7 +1178,16 @@ const AppContainer = () => {
       path: "leave-requests-leader",      
       element: <LeaveRequestsLeader />,
     },
-
+    {
+      id: 163,
+      path: "interview-status",      
+      element: <JobApplicationInterviewStatus />,
+    },
+    {
+      id: 164,
+      path: "completed-interviews",      
+      element: <CompletedInterviewScheduleList />,
+    },
   ];
 
   const ChatRoutingeObjects = [

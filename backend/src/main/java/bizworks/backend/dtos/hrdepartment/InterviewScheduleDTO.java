@@ -1,5 +1,6 @@
 package bizworks.backend.dtos.hrdepartment;
 
+import bizworks.backend.models.hrdepartment.InterviewStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,8 +13,9 @@ import java.util.List;
 @AllArgsConstructor
 public class InterviewScheduleDTO {
     private Long id;
-    private Long jobApplicationId;
-    private LocalDateTime interviewDate;
-    private List<Long> interviewers;
-    private String location;
+    private Long jobApplicationId; // Giữ nguyên kiểu Long
+    private LocalDateTime interviewDate; // Kiểu LocalDateTime
+    private List<Long> interviewers; // Danh sách ID
+    private String location; // Địa điểm phỏng vấn
+    private InterviewStatus status; // Trạng thái vẫn là enum
 }

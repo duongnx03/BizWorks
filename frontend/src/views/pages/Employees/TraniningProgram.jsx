@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Table, message, Button, Input, DatePicker, Form } from "antd";
 import axios from "axios";
@@ -6,17 +6,19 @@ import DeleteModal from "../../../components/modelpopup/DeleteModal";
 import SearchBox from "../../../components/SearchBox";
 import TrainingProgramModal from "../../../components/modelpopup/TrainingProgramModal";
 import { base_url } from "../../../base_urls";
+import { AuthContext } from "../../../Routes/AuthContext"; // Adjust the path
 
 const { RangePicker } = DatePicker;
 
 const TrainingProgram = () => {
+  const { userRole } = useContext(AuthContext); // Access userRole from context
   const [trainingPrograms, setTrainingPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [trainingProgramToDelete, setTrainingProgramToDelete] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [dateRange, setDateRange] = useState([]); // Đặt mặc định là mảng rỗng
+  const [dateRange, setDateRange] = useState([]);
 
   const navigate = useNavigate();
 
@@ -27,17 +29,17 @@ const TrainingProgram = () => {
   const fetchTrainingPrograms = async () => {
     setLoading(true);
     try {
-        const response = await axios.get(`${base_url}/api/training-programs/my-training-programs`, { withCredentials: true });
-        console.log("Fetched training programs:", response.data); // Xem dữ liệu ở đây
-        setTrainingPrograms(response.data || []);
+      const response = await axios.get(`${base_url}/api/training-programs/my-training-programs`, { withCredentials: true });
+      console.log("Fetched training programs:", response.data);
+      setTrainingPrograms(response.data || []);
     } catch (error) {
-        console.error("Error fetching training programs:", error);
-        message.error("Failed to fetch training programs");
-        setTrainingPrograms([]);
+      console.error("Error fetching training programs:", error);
+      message.error("Failed to fetch training programs");
+      setTrainingPrograms([]);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
+  };
 
   const handleTrainingProgramCreated = () => {
     fetchTrainingPrograms();
@@ -79,10 +81,9 @@ const TrainingProgram = () => {
     description: program.description,
     startDate: new Date(program.startDate).toLocaleDateString(),
     endDate: new Date(program.endDate).toLocaleDateString(),
-    isCompleted: program.isCompleted // Thêm thuộc tính hoàn thành
+    isCompleted: program.isCompleted
   }));
 
-  // Hàm để lọc danh sách chương trình đào tạo theo tìm kiếm
   const filteredTrainingPrograms = trainingProgramElements.filter((program) => {
     const isTitleMatch = program.title.toLowerCase().includes(searchText.toLowerCase());
     const isDescriptionMatch = program.description.toLowerCase().includes(searchText.toLowerCase());
@@ -90,7 +91,7 @@ const TrainingProgram = () => {
       ? new Date(program.startDate) >= dateRange[0] && new Date(program.endDate) <= dateRange[1]
       : true;
 
-    return (isTitleMatch || isDescriptionMatch) && isDateInRange && !program.isCompleted; // Lọc ra chương trình đã hoàn thành
+    return (isTitleMatch || isDescriptionMatch) && isDateInRange && !program.isCompleted;
   });
 
   const columns = [
@@ -129,26 +130,14 @@ const TrainingProgram = () => {
       className: "text-end",
       render: (text, record) => (
         <div className="dropdown dropdown-action text-end">
-          <Link
-            to="#"
-            className="action-icon dropdown-toggle"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
+          <Link to="#" className="action-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
             <i className="material-icons">more_vert</i>
           </Link>
           <div className="dropdown-menu dropdown-menu-right">
-            <Link
-              className="dropdown-item"
-              to="#"
-              onClick={() => openDeleteModal(record.id)}
-            >
+            <Link className="dropdown-item" to="#" onClick={() => openDeleteModal(record.id)}>
               <i className="fa fa-trash m-r-5" /> Delete
             </Link>
-            <Link
-              className="dropdown-item"
-              to={`/training-programs/${record.id}`} // Link to View Details
-            >
+            <Link className="dropdown-item" to={`/training-programs/${record.id}`}>
               <i className="fa fa-eye m-r-5" /> View Details
             </Link>
           </div>
@@ -159,8 +148,8 @@ const TrainingProgram = () => {
   ];
 
   const resetFilters = () => {
-    setSearchText(""); // Đặt lại nội dung tìm kiếm về rỗng
-    setDateRange([]); // Đặt lại khoảng thời gian về mảng rỗng
+    setSearchText("");
+    setDateRange([]);
   };
 
   return (
@@ -171,11 +160,13 @@ const TrainingProgram = () => {
             <div className="col-md-12">
               <div className="table-responsive">
                 <SearchBox />
-                <div className="d-flex justify-content-end mb-3">
-                  <Button onClick={openTrainingProgramModal} type="primary">
-                    Add Training Program
-                  </Button>
-                </div>
+                {userRole === 'ADMIN' && ( // Conditionally render the button based on user role
+                  <div className="d-flex justify-content-end mb-3">
+                    <Button onClick={openTrainingProgramModal} type="primary">
+                      Add Training Program
+                    </Button>
+                  </div>
+                )}
                 <Form layout="vertical" style={{ marginBottom: 20 }}>
                   <Form.Item label="Search by title or description">
                     <Input
@@ -186,7 +177,7 @@ const TrainingProgram = () => {
                   </Form.Item>
                   <Form.Item label="Date Range">
                     <RangePicker
-                      value={dateRange} // Đảm bảo rằng giá trị được đặt đúng
+                      value={dateRange}
                       onChange={(dates) => setDateRange(dates)}
                       style={{ width: '100%' }}
                     />

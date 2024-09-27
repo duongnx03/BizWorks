@@ -88,39 +88,8 @@ const TrainingProgramDetails = () => {
       message.error(errorMessage);
     }
   };
-  const handleCompletion = async (participantId, completed) => {
-    try {
-        await axios.put(
-            `${base_url}/api/training-programs/${id}/employee/${participantId}/status?completed=${completed}`, // Gửi completed như tham số truy vấn
-            {},
-            { withCredentials: true }
-        );
-  
-        message.success(`Đã đánh dấu ${completed ? "hoàn thành" : "không hoàn thành"} cho nhân viên!`);
-    } catch (error) {
-        console.error("Error updating completion status:", error);
-        message.error("Cập nhật trạng thái hoàn thành thất bại.");
-    }
-};
-  const renderCompletionButtons = (participantId) => {
-    return (
-      <div>
-        <Button
-          type="primary"
-          onClick={() => handleCompletion(participantId, true)}
-          style={{ marginRight: "10px" }}
-        >
-          Hoàn Thành
-        </Button>
-        <Button
-          type="default"
-          onClick={() => handleCompletion(participantId, false)}
-        >
-          Không Hoàn Thành
-        </Button>
-      </div>
-    );
-  };
+
+
 
   const renderAttendanceButtons = (participantId) => {
     const today = moment().format("YYYY-MM-DD");
@@ -209,7 +178,6 @@ const TrainingProgramDetails = () => {
               description={participant.email || "Chưa có email"}
             />
             <div>
-              {renderCompletionButtons(participant.id)}
               {participant.username === username && (
                 <Popover
                   content={renderAttendanceButtons(participant.id)}

@@ -1,17 +1,21 @@
 package bizworks.backend.services.humanresources;
 
+import bizworks.backend.dtos.hrdepartment.TrainingEvaluationDTO;
 import bizworks.backend.dtos.hrdepartment.TrainingProgramDTO;
 import bizworks.backend.helpers.ResourceNotFoundException;
 import bizworks.backend.models.Employee;
 import bizworks.backend.models.User;
 import bizworks.backend.models.hrdepartment.AttendanceTrainingProgram;
+import bizworks.backend.models.hrdepartment.TrainingEvaluation;
 import bizworks.backend.models.hrdepartment.TrainingProgram;
 import bizworks.backend.repositories.EmployeeRepository;
 import bizworks.backend.repositories.UserRepository;
 import bizworks.backend.repositories.hrdepartment.AttendanceTrainingProgramRepository;
+import bizworks.backend.repositories.hrdepartment.TrainingEvaluationRepository;
 import bizworks.backend.repositories.hrdepartment.TrainingProgramEmployeeRepository;
 import bizworks.backend.repositories.hrdepartment.TrainingProgramRepository;
 import bizworks.backend.services.NotificationService;
+import io.jsonwebtoken.lang.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -37,7 +41,8 @@ public class TrainingProgramService {
     private NotificationService notificationService;
     @Autowired
     private TrainingProgramEmployeeRepository trainingProgramEmployeeRepository;
-
+    @Autowired
+    private TrainingEvaluationRepository trainingEvaluationRepository;
     public List<TrainingProgramDTO> getAllTrainingPrograms() {
         List<TrainingProgram> allPrograms = trainingProgramRepository.findAll();
         return allPrograms.stream().map(this::convertToDTO).collect(Collectors.toList());
@@ -173,14 +178,6 @@ public class TrainingProgramService {
         trainingProgramRepository.save(trainingProgram);
     }
 
-    public User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            String email = ((UserDetails) authentication.getPrincipal()).getUsername();
-            return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-        }
-        throw new RuntimeException("No user is authenticated");
-    }
 
     public List<TrainingProgramDTO> getTrainingProgramsByCurrentUser() {
         User currentUser = getCurrentUser();
@@ -221,4 +218,51 @@ public class TrainingProgramService {
         return convertToDTO(trainingProgram);
 
     }
+    public TrainingEvaluationDTO createTrainingEvaluation(TrainingEvaluationDTO dto) {
+        Assert.notNull(dto.getTrainingProgramId(), "Training Program ID must not be null");
+        Assert.notNull(dto.getEmployeeId(), "Employee ID must not be null");
+
+        TrainingEvaluation evaluation = new TrainingEvaluation();
+        evaluation.setTrainingProgram(trainingProgramRepository.findById(dto.getTrainingProgramId())
+                .orElseThrow(() -> new ResourceNotFoundException("Training Program not found with ID: " + dto.getTrainingProgramId())));
+        evaluation.setEmployee(employeeRepository.findById(dto.getEmployeeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + dto.getEmployeeId())));
+        evaluation.setRating(dto.getRating());
+        evaluation.setFeedback(dto.getFeedback());
+
+        TrainingEvaluation savedEvaluation = trainingEvaluationRepository.save(evaluation);
+        return convertToEvaluationDTO(savedEvaluation);
+    }
+
+    public List<TrainingEvaluationDTO> getEvaluationsByProgramId(Long programId) {
+        List<TrainingEvaluation> evaluations = trainingEvaluationRepository.findByTrainingProgramId(programId);
+        return evaluations.stream()
+                .map(this::convertToEvaluationDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<TrainingEvaluationDTO> getEvaluationsByEmployeeId(Long employeeId) {
+        List<TrainingEvaluation> evaluations = trainingEvaluationRepository.findByEmployeeId(employeeId);
+        return evaluations.stream()
+                .map(this::convertToEvaluationDTO)
+                .collect(Collectors.toList());
+    }
+
+   private TrainingEvaluationDTO convertToEvaluationDTO(TrainingEvaluation evaluation) {
+        return new TrainingEvaluationDTO(
+                evaluation.getTrainingProgram().getId(),
+                evaluation.getEmployee().getId(),
+                evaluation.getRating(),
+                evaluation.getFeedback()
+        );
+    }
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            String email = ((UserDetails) authentication.getPrincipal()).getUsername();
+            return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        }
+        throw new RuntimeException("No user is authenticated");
+    }
+
 }

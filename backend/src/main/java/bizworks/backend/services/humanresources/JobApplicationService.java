@@ -3,10 +3,7 @@
         import bizworks.backend.dtos.hrdepartment.InterviewScheduleDTO;
         import bizworks.backend.dtos.hrdepartment.JobApplicationDTO;
         import bizworks.backend.models.Employee;
-        import bizworks.backend.models.hrdepartment.InterviewSchedule;
-        import bizworks.backend.models.hrdepartment.JobApplication;
-        import bizworks.backend.models.hrdepartment.JobPosting;
-        import bizworks.backend.models.hrdepartment.StatusChangeRequest;
+        import bizworks.backend.models.hrdepartment.*;
         import bizworks.backend.repositories.hrdepartment.*;
         import bizworks.backend.services.DepartmentService;
         import bizworks.backend.services.EmailService;
@@ -65,6 +62,7 @@
 
                 return convertToDTO(interviewSchedule);
             }
+
             public List<InterviewSchedule> getAllInterviewSchedules() {
                 return interviewScheduleRepository.findAll();
             }
@@ -74,9 +72,11 @@
                         interviewSchedule.getJobApplication().getId(),
                         interviewSchedule.getInterviewDate(),
                         interviewSchedule.getInterviewers(),
-                        interviewSchedule.getLocation()
+                        interviewSchedule.getLocation(),
+                        interviewSchedule.getStatus() // Giữ nguyên trạng thái dưới dạng enum
                 );
             }
+
 
             public StatusChangeRequest requestStatusChange(Long applicationId, String newStatus, String reason) {
                 JobApplication jobApplication = jobApplicationRepository.findById(applicationId)
@@ -121,6 +121,27 @@
                 emailService.sendEmail(applicantEmail, subject, body);
 
                 return statusChangeRequest;
+            }
+            public InterviewScheduleDTO updateInterviewScheduleStatus(Long interviewScheduleId, InterviewStatus newStatus) {
+                InterviewSchedule interviewSchedule = interviewScheduleRepository.findById(interviewScheduleId)
+                        .orElseThrow(() -> new RuntimeException("Interview schedule not found"));
+
+                // Cập nhật trạng thái
+                interviewSchedule.setStatus(newStatus);
+
+                // Lưu lịch phỏng vấn đã cập nhật
+                interviewSchedule = interviewScheduleRepository.save(interviewSchedule);
+
+                // Gửi thông báo email nếu cần
+                String applicantEmail = interviewSchedule.getJobApplication().getApplicantEmail();
+                String subject = "Interview Schedule Status Updated";
+                String body = "Dear " + interviewSchedule.getJobApplication().getApplicantName() + ",\n\n"
+                        + "The status of your interview schedule has been updated to: " + newStatus + ".\n\n"
+                        + "Thank you.";
+
+                emailService.sendEmail(applicantEmail, subject, body); // Gửi email thông báo
+
+                return convertToDTO(interviewSchedule);
             }
             public List<StatusChangeRequest> getPendingStatusChangeRequests() {
                 return statusChangeRequestRepository.findByApproved(false);
@@ -268,4 +289,11 @@
             public String getUploadDir() {
                 return uploadDir;
             }
+            public List<InterviewScheduleDTO> getCompletedInterviewSchedules() {
+                List<InterviewSchedule> completedSchedules = interviewScheduleRepository.findByStatus(InterviewStatus.COMPLETED);
+                return completedSchedules.stream()
+                        .map(this::convertToDTO)
+                        .collect(Collectors.toList());
+
+               }
         }

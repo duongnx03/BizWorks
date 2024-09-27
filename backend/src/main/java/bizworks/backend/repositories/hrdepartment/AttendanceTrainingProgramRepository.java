@@ -12,5 +12,6 @@ public interface AttendanceTrainingProgramRepository extends JpaRepository<Atten
     List<AttendanceTrainingProgram> findByTrainingProgram(TrainingProgram trainingProgram);
     boolean existsByTrainingProgramAndEmployeeAndAttendanceDate(TrainingProgram trainingProgram, Employee employee, LocalDate attendanceDate);
     List<AttendanceTrainingProgram> findByEmployee(Employee employee);
+    List<AttendanceTrainingProgram> findByEmployeeId(Long employeeId);
 
 }

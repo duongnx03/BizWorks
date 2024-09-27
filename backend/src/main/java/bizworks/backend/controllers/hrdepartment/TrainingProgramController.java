@@ -1,15 +1,21 @@
 package bizworks.backend.controllers.hrdepartment;
 
+import bizworks.backend.dtos.hrdepartment.TrainingEvaluationDTO;
 import bizworks.backend.dtos.hrdepartment.TrainingProgramDTO;
 import bizworks.backend.models.Employee;
 import bizworks.backend.models.User;
 import bizworks.backend.models.hrdepartment.AttendanceTrainingProgram;
 import bizworks.backend.models.hrdepartment.TrainingProgram;
+import bizworks.backend.repositories.UserRepository;
 import bizworks.backend.repositories.hrdepartment.TrainingProgramRepository;
 import bizworks.backend.services.UserService;
 import bizworks.backend.services.humanresources.TrainingProgramService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -22,6 +28,8 @@ public class TrainingProgramController {
     private TrainingProgramService trainingProgramService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 @Autowired private TrainingProgramRepository trainingProgramRepository;
 @GetMapping
     public ResponseEntity<List<TrainingProgramDTO>> getAllTrainingPrograms() {
@@ -67,6 +75,7 @@ public class TrainingProgramController {
     public ResponseEntity<List<Employee>> getNewEmployees() {
         return ResponseEntity.ok(trainingProgramService.getNewEmployees());
     }
+
     @PostMapping("/{programId}/attendance/{employeeId}")
     public ResponseEntity<Void> recordAttendance(
             @PathVariable Long programId,
@@ -115,5 +124,38 @@ public class TrainingProgramController {
     public ResponseEntity<List<Employee>> getParticipantsByProgramId(@PathVariable Long programId) {
         List<Employee> participants = trainingProgramService.getParticipantsByProgramId(programId);
         return ResponseEntity.ok(participants);
+    }
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            String email = ((UserDetails) authentication.getPrincipal()).getUsername();
+            return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        }
+        throw new RuntimeException("No user is authenticated");
+    }
+
+    @PostMapping("/{programId}/evaluations")
+    public ResponseEntity<?> createTrainingEvaluation(
+            @PathVariable Long programId,
+            @RequestBody TrainingEvaluationDTO dto) {
+        User currentUser = getCurrentUser();
+        Long employeeId = currentUser.getId();
+        dto.setEmployeeId(employeeId);
+        dto.setTrainingProgramId(programId);
+
+        TrainingEvaluationDTO createdEvaluation = trainingProgramService.createTrainingEvaluation(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdEvaluation);
+    }
+
+    @GetMapping("/{programId}/evaluations")
+    public ResponseEntity<List<TrainingEvaluationDTO>> getEvaluationsByProgramId(@PathVariable Long programId) {
+        List<TrainingEvaluationDTO> evaluations = trainingProgramService.getEvaluationsByProgramId(programId);
+        return ResponseEntity.ok(evaluations);
+    }
+
+    @GetMapping("/employee/{employeeId}/evaluations")
+    public ResponseEntity<List<TrainingEvaluationDTO>> getEvaluationsByEmployeeId(@PathVariable Long employeeId) {
+        List<TrainingEvaluationDTO> evaluations = trainingProgramService.getEvaluationsByEmployeeId(employeeId);
+        return ResponseEntity.ok(evaluations);
     }
 }

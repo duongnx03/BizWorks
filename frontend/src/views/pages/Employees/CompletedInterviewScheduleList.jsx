@@ -1,15 +1,15 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Table, message, Select, Card, Typography, Row, Col, Spin, Tooltip } from "antd";
 import axios from "axios";
-import { base_url } from "../../../../base_urls";
-import { AuthContext } from "../../../../Routes/AuthContext";
+import { base_url } from "../../../base_urls";
+import { AuthContext } from "../../../Routes/AuthContext";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 
 const { Option } = Select;
 const { Title } = Typography;
 
-const InterviewScheduleList = () => {
+const CompletedInterviewScheduleList = () => {
   const { isLoggedIn, userRole } = useContext(AuthContext);
   const [interviewSchedules, setInterviewSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +25,7 @@ const InterviewScheduleList = () => {
 
   const fetchInterviewSchedules = async () => {
     try {
-      const response = await axios.get(`${base_url}/api/interview-schedules`, { withCredentials: true });
+      const response = await axios.get(`${base_url}/api/interview-schedules/completed`, { withCredentials: true });
       setInterviewSchedules(response.data);
     } catch (error) {
       console.error("Error fetching interview schedules:", error);
@@ -46,7 +46,6 @@ const InterviewScheduleList = () => {
       message.error("Failed to update status");
     }
   };
-
   const columns = [
     {
       title: "ID",
@@ -86,39 +85,21 @@ const InterviewScheduleList = () => {
     {
       title: "Interview Date",
       dataIndex: "interviewDate",
-      width: "20%",
+      width: "25%",
       render: (date) => moment(date).format("YYYY-MM-DD HH:mm"),
     },
     {
       title: "Interviewers",
       dataIndex: "interviewers",
       width: "20%",
-      render: (interviewers) => interviewers.join(", "),
+      render: (interviewers) => interviewers.join(", "), // Adjust based on your data structure
     },
     {
       title: "Location",
       dataIndex: "location",
       width: "20%",
     },
-    {
-      title: "Status",
-      dataIndex: "status",
-      width: "15%",
-      render: (status, record) => (
-        <Select
-          defaultValue={status}
-          onChange={(value) => handleStatusChange(record.id, value)}
-          style={{ width: "100%" }}
-        >
-          <Option value="PENDING" style={{ color: 'orange' }}>PENDING</Option>
-          <Option value="COMPLETED" style={{ color: 'green' }}>ACCEPTED</Option>
-          <Option value="CANCELLED" style={{ color: 'red' }}>NOT ACCEPTED</Option>
-          <Option value="RESCHEDULED" style={{ color: 'blue' }}>RESCHEDULED</Option>
-        </Select>
-      ),
-    },
   ];
-
   return (
     <div className="page-wrapper">
       <div className="content container-fluid">
@@ -151,4 +132,4 @@ const InterviewScheduleList = () => {
   );
 };
 
-export default InterviewScheduleList;
+export default CompletedInterviewScheduleList;

@@ -41,11 +41,10 @@ public class DepartmentService {
     }
 
     public List<DepartmentDTO> getAllDepartments() {
-        User currentUser = authenticationService.getCurrentUser();
-        checkRole(currentUser, Arrays.asList("MANAGE", "ADMIN"));
-        return departmentRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+        return departmentRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
-
     public Department createDepartment(DepartmentDTO departmentDTO) {
         User currentUser = authenticationService.getCurrentUser();
         checkRole(currentUser, Arrays.asList("MANAGE", "ADMIN"));
