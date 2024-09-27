@@ -15,7 +15,7 @@ class _TrainingProgramScreenState extends State<TrainingProgramScreen> {
     // Fetch training programs when the screen is initialized
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<TrainingProgramProvider>(context, listen: false)
-          .fetchTrainingPrograms();
+          .fetchMyTrainingPrograms();
     });
   }
 
@@ -45,11 +45,10 @@ class _TrainingProgramScreenState extends State<TrainingProgramScreen> {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Description: ${trainingProgram.description}'),
                       Text('Start Date: ${trainingProgram.startDate}'),
                       Text('End Date: ${trainingProgram.endDate}'),
                       Text(
-                          'Participants: ${trainingProgram.participantIds.join(", ")}'), // Hiển thị IDs
+                          'Status: ${trainingProgram.completed ? 'Completed' : 'In Progress'}'),
                     ],
                   ),
                   onTap: () {
@@ -57,8 +56,7 @@ class _TrainingProgramScreenState extends State<TrainingProgramScreen> {
                     Navigator.pushNamed(
                       context,
                       '/training-program-details',
-                      arguments:
-                          trainingProgram, // Truyền đối tượng TrainingProgramDTO đã chọn
+                      arguments: trainingProgram,
                     );
                   },
                 ),

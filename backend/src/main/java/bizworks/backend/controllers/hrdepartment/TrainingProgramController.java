@@ -28,7 +28,9 @@ public class TrainingProgramController {
     private TrainingProgramService trainingProgramService;
     @Autowired
     private UserService userService;
-
+    @Autowired
+    private UserRepository userRepository;
+@Autowired private TrainingProgramRepository trainingProgramRepository;
 @GetMapping
     public ResponseEntity<List<TrainingProgramDTO>> getAllTrainingPrograms() {
         List<TrainingProgramDTO> trainingPrograms = trainingProgramService.getAllTrainingPrograms();
@@ -123,27 +125,37 @@ public class TrainingProgramController {
         List<Employee> participants = trainingProgramService.getParticipantsByProgramId(programId);
         return ResponseEntity.ok(participants);
     }
-    @PostMapping("/{programId}/evaluation")
-    public ResponseEntity<TrainingEvaluationDTO> evaluateTrainingProgram(
-            @PathVariable Long programId, @RequestBody TrainingEvaluationDTO dto) {
-        dto.setTrainingProgramId(programId);
-        TrainingEvaluationDTO createdEvaluationDTO = trainingProgramService.evaluateTrainingProgram(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdEvaluationDTO);
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            String email = ((UserDetails) authentication.getPrincipal()).getUsername();
+            return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        }
+        throw new RuntimeException("No user is authenticated");
     }
 
-    @GetMapping("/employee/{employeeId}/training-programs")
-    public ResponseEntity<List<TrainingProgramDTO>> getTrainingProgramsByEmployeeId(@PathVariable Long employeeId) {
-        List<TrainingProgramDTO> programs = trainingProgramService.getTrainingProgramsByEmployeeId(employeeId);
-        return new ResponseEntity<>(programs, HttpStatus.OK);
+    @PostMapping("/{programId}/evaluations")
+    public ResponseEntity<?> createTrainingEvaluation(
+            @PathVariable Long programId,
+            @RequestBody TrainingEvaluationDTO dto) {
+        User currentUser = getCurrentUser();
+        Long employeeId = currentUser.getId();
+        dto.setEmployeeId(employeeId);
+        dto.setTrainingProgramId(programId);
+
+        TrainingEvaluationDTO createdEvaluation = trainingProgramService.createTrainingEvaluation(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdEvaluation);
     }
+
     @GetMapping("/{programId}/evaluations")
     public ResponseEntity<List<TrainingEvaluationDTO>> getEvaluationsByProgramId(@PathVariable Long programId) {
-        List<TrainingEvaluationDTO> evaluations = trainingProgramService.getEvaluationsByTrainingProgramId(programId);
+        List<TrainingEvaluationDTO> evaluations = trainingProgramService.getEvaluationsByProgramId(programId);
         return ResponseEntity.ok(evaluations);
     }
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<TrainingProgram>> getUserTrainingPrograms(@PathVariable int userId) {
-        List<TrainingProgram> programs = trainingProgramService.getProgramsByUserId(userId);
-        return new ResponseEntity<>(programs, HttpStatus.OK);
+
+    @GetMapping("/employee/{employeeId}/evaluations")
+    public ResponseEntity<List<TrainingEvaluationDTO>> getEvaluationsByEmployeeId(@PathVariable Long employeeId) {
+        List<TrainingEvaluationDTO> evaluations = trainingProgramService.getEvaluationsByEmployeeId(employeeId);
+        return ResponseEntity.ok(evaluations);
     }
 }

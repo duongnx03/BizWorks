@@ -16,12 +16,12 @@ class DioClient {
     _dio = Dio()
       ..interceptors.add(CookieManager(_cookieJar))
       ..options = BaseOptions(
-        baseUrl: 'http://10.0.2.2:8080/',
+        baseUrl: 'http://10.0.2.2:8080/', 
         connectTimeout: const Duration(milliseconds: 10000),
         receiveTimeout: const Duration(milliseconds: 10000),
         headers: {
           'Content-Type': 'application/json',
-        },
+        },  
       );
   }
 

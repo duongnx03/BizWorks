@@ -178,14 +178,6 @@ public class TrainingProgramService {
         trainingProgramRepository.save(trainingProgram);
     }
 
-    public User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            String email = ((UserDetails) authentication.getPrincipal()).getUsername();
-            return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-        }
-        throw new RuntimeException("No user is authenticated");
-    }
 
     public List<TrainingProgramDTO> getTrainingProgramsByCurrentUser() {
         User currentUser = getCurrentUser();
@@ -199,22 +191,12 @@ public class TrainingProgramService {
                     .collect(Collectors.toList());
         }
     }
-
-    public List<TrainingProgramDTO> getTrainingProgramsByEmployeeId(Long employeeId) {
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
-
-        List<TrainingProgram> trainingPrograms = trainingProgramRepository.findByParticipantsContains(employee);
-        return trainingPrograms.stream().map(this::convertToDTO).collect(Collectors.toList());
-    }
     public List<Employee> getParticipantsByProgramId(Long programId) {
         TrainingProgram trainingProgram = trainingProgramRepository.findById(programId)
                 .orElseThrow(() -> new ResourceNotFoundException("Training Program not found with ID: " + programId));
         return trainingProgram.getParticipants(); // Lấy danh sách nhân viên tham gia
     }
-    public List<TrainingProgram> getProgramsByUserId(int userId) {
-        return trainingProgramRepository.findByParticipantId(userId);
-    }
+
     public TrainingProgramDTO convertToDTO(TrainingProgram trainingProgram) {
         TrainingProgramDTO dto = new TrainingProgramDTO();
         dto.setId(trainingProgram.getId());
@@ -236,21 +218,15 @@ public class TrainingProgramService {
         return convertToDTO(trainingProgram);
 
     }
-
-    public TrainingEvaluationDTO evaluateTrainingProgram(TrainingEvaluationDTO dto) {
-        TrainingProgram trainingProgram = trainingProgramRepository.findById(dto.getTrainingProgramId())
-                .orElseThrow(() -> new ResourceNotFoundException("Training Program not found"));
-
-        Employee employee = employeeRepository.findById(dto.getEmployeeId())
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
-
-        if (!trainingProgram.isCompleted()) {
-            throw new RuntimeException("Cannot evaluate a training program that is not completed");
-        }
+    public TrainingEvaluationDTO createTrainingEvaluation(TrainingEvaluationDTO dto) {
+        Assert.notNull(dto.getTrainingProgramId(), "Training Program ID must not be null");
+        Assert.notNull(dto.getEmployeeId(), "Employee ID must not be null");
 
         TrainingEvaluation evaluation = new TrainingEvaluation();
-        evaluation.setTrainingProgram(trainingProgram);
-        evaluation.setEmployee(employee);
+        evaluation.setTrainingProgram(trainingProgramRepository.findById(dto.getTrainingProgramId())
+                .orElseThrow(() -> new ResourceNotFoundException("Training Program not found with ID: " + dto.getTrainingProgramId())));
+        evaluation.setEmployee(employeeRepository.findById(dto.getEmployeeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with ID: " + dto.getEmployeeId())));
         evaluation.setRating(dto.getRating());
         evaluation.setFeedback(dto.getFeedback());
 
@@ -258,24 +234,35 @@ public class TrainingProgramService {
         return convertToEvaluationDTO(savedEvaluation);
     }
 
-    private TrainingEvaluationDTO convertToEvaluationDTO(TrainingEvaluation evaluation) {
-        TrainingEvaluationDTO dto = new TrainingEvaluationDTO();
-        dto.setTrainingProgramId(evaluation.getTrainingProgram().getId());
-        dto.setEmployeeId(evaluation.getEmployee().getId());
-        dto.setRating(evaluation.getRating());
-        dto.setFeedback(evaluation.getFeedback());
-        return dto;
+    public List<TrainingEvaluationDTO> getEvaluationsByProgramId(Long programId) {
+        List<TrainingEvaluation> evaluations = trainingEvaluationRepository.findByTrainingProgramId(programId);
+        return evaluations.stream()
+                .map(this::convertToEvaluationDTO)
+                .collect(Collectors.toList());
     }
 
-    public List<TrainingEvaluationDTO> getEvaluationsByTrainingProgramId(Long programId) {
-        TrainingProgram trainingProgram = trainingProgramRepository.findById(programId)
-                .orElseThrow(() -> new ResourceNotFoundException("Training Program not found"));
-
-        List<TrainingEvaluation> evaluations = trainingEvaluationRepository.findByTrainingProgram(trainingProgram);
-
-        // Chuyển đổi danh sách đánh giá thành DTO
-        return evaluations.stream().map(this::convertToEvaluationDTO).collect(Collectors.toList());
+    public List<TrainingEvaluationDTO> getEvaluationsByEmployeeId(Long employeeId) {
+        List<TrainingEvaluation> evaluations = trainingEvaluationRepository.findByEmployeeId(employeeId);
+        return evaluations.stream()
+                .map(this::convertToEvaluationDTO)
+                .collect(Collectors.toList());
     }
 
+   private TrainingEvaluationDTO convertToEvaluationDTO(TrainingEvaluation evaluation) {
+        return new TrainingEvaluationDTO(
+                evaluation.getTrainingProgram().getId(),
+                evaluation.getEmployee().getId(),
+                evaluation.getRating(),
+                evaluation.getFeedback()
+        );
+    }
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+            String email = ((UserDetails) authentication.getPrincipal()).getUsername();
+            return userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        }
+        throw new RuntimeException("No user is authenticated");
+    }
 
 }
