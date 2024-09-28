@@ -240,6 +240,7 @@ import CompletedProgramDetail from "../../views/pages/Employees/CompletedProgram
 import LeaveRequestsLeader from "../../views/pages/Employees/LeaveRequestsLeader";
 import JobApplicationInterviewStatus from "../../views/pages/Employees/JobApplicationInterviewStatus.jsx";
 import CompletedInterviewScheduleList from "../../views/pages/Employees/CompletedInterviewScheduleList.jsx";
+import ActivityList from "../../views/pages/Employees/JobApplication/ActivityList.jsx";
 const AppContainer = () => {
   useEffect(() => {
     localStorage.setItem("colorschema", "orange");
@@ -1187,6 +1188,11 @@ const AppContainer = () => {
       id: 164,
       path: "completed-interviews",      
       element: <CompletedInterviewScheduleList />,
+    },
+    {
+      id: 165,
+      path: "activity-list",      
+      element: <ActivityList />,
     },
   ];
 

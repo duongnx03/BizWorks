@@ -15,6 +15,7 @@ import 'package:mobile/providers/training_program_provider.dart';
 import 'package:mobile/providers/violation_complaint_provider.dart';
 import 'package:mobile/providers/violation_provider.dart';
 import 'package:mobile/screens/LoginForm.dart';
+import 'package:mobile/screens/TrainingProgramDetailsScreen.dart';
 import 'package:mobile/screens/job_posting_detail.dart';
 import 'package:mobile/screens/job_posting_screen.dart';
 import 'package:mobile/screens/attendance_complaint_detail_screen.dart';
@@ -30,8 +31,8 @@ import 'package:mobile/screens/overtime_list_screen.dart';
 import 'package:mobile/screens/overtime_screen.dart';
 import 'package:mobile/screens/profile_screen.dart';
 import 'package:mobile/screens/salary_screen.dart';
-import 'package:mobile/screens/training_program_details_screen.dart';
 import 'package:mobile/screens/training_program_screen.dart';
+
 import 'package:mobile/screens/violation_screen.dart';
 import 'package:mobile/services/dio_client.dart';
 import 'package:provider/provider.dart';
@@ -68,7 +69,8 @@ void main() {
         ChangeNotifierProvider(
             create: (context) => LeaveRequestProvider(dioClient: dioClient)),
         ChangeNotifierProvider(
-            create: (context) => TrainingProgramProvider(dioClient: dioClient)),
+          create: (context) => TrainingProgramProvider(dioClient: dioClient),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -148,10 +150,9 @@ class MyApp extends StatelessWidget {
           case '/leave-requests':
             return MaterialPageRoute(
                 builder: (context) => LeaveRequestScreen());
-          case '/training-program': // Thêm route cho TrainingProgramScreen
+          case '/training-programs':
             return MaterialPageRoute(
-                builder: (context) =>
-                    TrainingProgramScreen()); // Tạo mới TrainingProgramScreen
+                builder: (context) => TrainingProgramScreen());
           case '/training-program-details':
             final trainingProgram = settings.arguments as TrainingProgramDTO;
             return MaterialPageRoute(

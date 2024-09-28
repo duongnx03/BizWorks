@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 public class TrainingEvaluationDTO {
     private Long trainingProgramId;
     private Long employeeId;
-    private int rating;
-    private String feedback;
+    private int rating; // Đánh giá từ 1 đến 5
+    private String feedback; // Nhận xét
 }
