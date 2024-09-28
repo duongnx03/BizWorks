@@ -9,7 +9,7 @@ const openNotificationWithError = (message) => {
   notification.error({
     message: "Error",
     description: <span style={{ color: "#ed2d33" }}>{message}</span>,
-    placement: "topRight",
+    placement: "top",
   });
 };
 
@@ -32,7 +32,7 @@ const openNotificationWithSuccess = (message) => {
         </button>
       </div>
     ),
-    placement: "topRight",
+    placement: "top",
     icon: <CheckCircleOutlined style={{ color: "#52c41a" }} />,
   });
 };
@@ -208,7 +208,7 @@ const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose, userRole }) => {
       overtime: overtime || "0",
       advanceSalary: advanceSalary || "0",
       deductions: deductions || "0",
-      updatedBy: updatedBy || "Human Resources",
+      updatedBy: updatedBy || "Duong Manage",
       notes: notes || "",
     };
 
@@ -363,6 +363,7 @@ const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose, userRole }) => {
                           className="form-control"
                           type="text"
                           value={eval(field)}
+                          readOnly
                           onChange={(e) =>
                             eval(
                               `set${
@@ -394,13 +395,14 @@ const EditSalaryModal = ({ salaryId, onUpdateSuccess, onClose, userRole }) => {
                 </div>
                 <div className="col-sm-6">
                   <div className="input-block mb-3">
-                    <label className="col-form-label">Updater Name</label>
+                    <label className="col-form-label">Updater By</label>
                     <input
                       className="form-control"
                       type="text"
                       value={updatedBy}
                       onChange={(e) => setUpdatedBy(e.target.value)}
                       placeholder="Enter updater's name"
+                      readOnly
                     />
                   </div>
                 </div>

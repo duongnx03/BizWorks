@@ -426,6 +426,7 @@ public class ViolationService {
                         violation.getEmployee().getPhone(),
                         violation.getEmployee().getAvatar(),
                         violation.getEmployee().getStartDate(),
+                        violation.getEmployee().getEndDate(),
                         violation.getEmployee().getDepartment() != null ? violation.getEmployee().getDepartment().getName() : null,
                         violation.getEmployee().getPosition() != null ? violation.getEmployee().getPosition().getPositionName() : null
                 ) : null,

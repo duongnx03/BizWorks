@@ -37,7 +37,7 @@ const PaySlip = () => {
                       <li>BizWorks</li>
                       <li>391A Nam Ky Khoi Nghia Street,</li>
                       <li>Ward 14, District 3,</li>
-                      <li>HCM City, Vietnam, </li>
+                      <li>HCM City, Vietnam</li>
                     </ul>
                   </div>
                   <div className="col-sm-6 m-b-20">
@@ -62,7 +62,7 @@ const PaySlip = () => {
                       <li>
                         <span>{salary.employee?.position}</span>
                       </li>
-                      <li>Joining Date: {new Date(salary.employee?.startDate).toLocaleDateString()}</li>
+                      {/* <li>Joining Date: {new Date(salary.employee?.startDate).toLocaleDateString()}</li> */}
                     </ul>
                   </div>
                 </div>

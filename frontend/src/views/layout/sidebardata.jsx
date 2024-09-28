@@ -397,14 +397,14 @@ export const SidebarData = [
             menuValue: "Salary",
             route: "/salary",
           },
-          {
-            menuValue: "Payroll Items",
-            route: "/payroll-items",
-          },
-          {
-            menuValue: "Taxes",
-            route: "/taxes",
-          },
+          // {
+          //   menuValue: "Payroll Items",
+          //   route: "/payroll-items",
+          // },
+          // {
+          //   menuValue: "Taxes",
+          //   route: "/taxes",
+          // },
           {
             menuValue: "ViolationType",
             route: "/violation-types",
@@ -415,34 +415,34 @@ export const SidebarData = [
           },
         ],
       },
-      {
-        menuValue: "Sales",
-        hasSubRoute: true,
-        showSubRoute: false,
-        icon: "la la-files-o",
-        subMenus: [
-          // {
-          //   menuValue: "Estimates",
-          //   route: "/estimates",
-          // },
-          // {
-          //   menuValue: "Invoices",
-          //   route: "/invoices",
-          // },
-          {
-            menuValue: "Payments",
-            route: "/payments",
-          },
-          {
-            menuValue: "Expenses",
-            route: "/expenses",
-          },
-          // {
-          //   menuValue: "Provident Fund",
-          //   route: "/provident-fund",
-          // },
-        ],
-      },
+      // {
+      //   menuValue: "Sales",
+      //   hasSubRoute: true,
+      //   showSubRoute: false,
+      //   icon: "la la-files-o",
+      //   subMenus: [
+      //     // {
+      //     //   menuValue: "Estimates",
+      //     //   route: "/estimates",
+      //     // },
+      //     // {
+      //     //   menuValue: "Invoices",
+      //     //   route: "/invoices",
+      //     // },
+      //     {
+      //       menuValue: "Payments",
+      //       route: "/payments",
+      //     },
+      //     {
+      //       menuValue: "Expenses",
+      //       route: "/expenses",
+      //     },
+      //     // {
+      //     //   menuValue: "Provident Fund",
+      //     //   route: "/provident-fund",
+      //     // },
+      //   ],
+      // },
       {
         menuValue: "Reports",
         hasSubRoute: true,

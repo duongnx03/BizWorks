@@ -4,6 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import Header from "./Header";
 import FeaturedEmployees from "./FeaturedEmployees";
 import CompanyEvents from "./CompanyEvents";
+import Footer from "./Footer";
 
 const Home = () => {
   return (
@@ -83,6 +84,7 @@ const Home = () => {
 
     <FeaturedEmployees />
     <CompanyEvents/>
+    <Footer/>
     </>
   );
 };

@@ -9,7 +9,7 @@ const openNotificationWithError = (message) => {
   notification.error({
     message: "Error",
     description: <span style={{ color: "#ed2d33" }}>{message}</span>,
-    placement: "topRight",
+    placement: "top",
   });
 };
 
@@ -32,7 +32,7 @@ const openNotificationWithSuccess = (message) => {
         </button>
       </div>
     ),
-    placement: "topRight",
+    placement: "top",
     icon: <CheckCircleOutlined style={{ color: "#52c41a" }} />,
   });
 };
@@ -70,7 +70,7 @@ const AddSalaryModal = ({ onAddSuccess }) => {
       try {
         const [departmentsResponse, employeesResponse] = await Promise.all([
           axios.get(`${base_url}/api/departments`, { withCredentials: true }),
-          axios.get(`${base_url}/api/employee/getAllEmployees`, {
+          axios.get(`${base_url}/api/employee/getAllEmployeesWithoutEndDate`, {
             withCredentials: true,
           }),
         ]);
@@ -147,16 +147,16 @@ const AddSalaryModal = ({ onAddSuccess }) => {
     }
 
     if (!selectedMonth) {
-      newErrors.month = "Please select a month.";
-    } else {
-      const currentMonth = new Date().getMonth() + 1; // Tháng hiện tại
-      const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1; // Tháng kế tiếp
-  
-      // Kiểm tra xem tháng đã chọn có hợp lệ không
-      if (selectedMonth.value !== currentMonth && selectedMonth.value !== nextMonth) {
-        newErrors.month = "Month must be the current month or the next month.";
-      }
+    newErrors.month = "Please select a month.";
+  } else {
+    const currentMonth = new Date().getMonth() + 1; // Tháng hiện tại
+    const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1; // Tháng kế tiếp
+
+    // Kiểm tra xem tháng đã chọn có hợp lệ không
+    if (selectedMonth.value !== currentMonth && selectedMonth.value !== nextMonth) {
+      newErrors.month = "Month must be the current month or the next month.";
     }
+  }
 
     setError(newErrors);
 
@@ -292,7 +292,7 @@ const AddSalaryModal = ({ onAddSuccess }) => {
                   )}
                 </div>
               </div>
-              {error.submit && <p className="text-danger">{error.submit}</p>}
+              {/* {error.submit && <p className="text-danger">{error.submit}</p>} */}
               <div className="submit-section">
                 <button
                   className="btn btn-primary submit-btn"

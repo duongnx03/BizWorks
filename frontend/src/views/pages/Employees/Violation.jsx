@@ -16,7 +16,7 @@ const openNotificationWithError = (message) => {
   notification.error({
     message: "Error",
     description: <span style={{ color: "#ed2d33" }}>{message}</span>,
-    placement: "topRight",
+    placement: "top",
   });
 };
 
@@ -39,7 +39,7 @@ const openNotificationWithSuccess = (message) => {
         </button>
       </div>
     ),
-    placement: "topRight",
+    placement: "top",
     icon: <CheckCircleOutlined style={{ color: "#52c41a" }} />,
   });
 };

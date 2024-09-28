@@ -35,7 +35,7 @@ public class EmployeeDTO {
     private List<Long> operationalActivityIds; // List of operational activity IDs
     private List<Long> strategicPlanIds; // List of strategic plan IDs
 
-    public EmployeeDTO(Long id,String empCode, String fullname, String email, String phone, String avatar, LocalDate startDate, String departmentName, String positionName) {
+    public EmployeeDTO(Long id,String empCode, String fullname, String email, String phone, String avatar, LocalDate startDate,LocalDate endDate, String departmentName, String positionName) {
         this.id = id;
         this.empCode = empCode;
         this.fullname = fullname;
@@ -43,6 +43,7 @@ public class EmployeeDTO {
         this.phone = phone;
         this.avatar = avatar;
         this.startDate = startDate;
+        this.endDate = endDate;
         this.departmentName = departmentName;
         this.positionName = positionName;
     }

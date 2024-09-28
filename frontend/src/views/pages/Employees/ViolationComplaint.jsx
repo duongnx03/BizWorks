@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, notification, Modal, Select } from "antd";
+import { Table, notification, Modal, Select, Input } from "antd";
 import { Link } from "react-router-dom";
 import { CloseCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import axios from "axios";
@@ -10,7 +10,7 @@ const openNotificationWithError = (message) => {
   notification.error({
     message: 'Error',
     description: <span style={{ color: '#ed2d33' }}>{message}</span>,
-    placement: 'topRight',
+    placement: 'top',
   });
 };
 
@@ -33,22 +33,26 @@ const openNotificationWithSuccess = (message) => {
         </button>
       </div>
     ),
-    placement: 'topRight',
+    placement: 'top',
     icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
   });
 };
+
+const { Option } = Select;
 
 const ViolationComplaint = () => {
   const [complaints, setComplaints] = useState([]);
   const [statsData, setStatsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [userRole, setUserRole] = useState(() => sessionStorage.getItem("userRole"));
-  const [visibleModal, setVisibleModal] = useState(false); // State for modal visibility
-  const [selectedDescription, setSelectedDescription] = useState(""); // State for selected description
+  const [visibleModal, setVisibleModal] = useState(false);
+  const [selectedDescription, setSelectedDescription] = useState("");
   const [filteredComplaints, setFilteredComplaints] = useState([]);
   const [statusFilter, setStatusFilter] = useState("");
   const [employeeFilter, setEmployeeFilter] = useState("");
   const [violationTypeFilter, setViolationTypeFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState(""); // New state for date filter
+  const [searchFilter, setSearchFilter] = useState(""); // New state for employee name or code filter
 
   const fetchComplaints = async () => {
     setLoading(true);
@@ -56,7 +60,7 @@ const ViolationComplaint = () => {
       const response = await axios.get(`${base_url}/api/violation_complaints`, { withCredentials: true });
       const sortedComplaints = response.data.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setComplaints(sortedComplaints);
-      setFilteredComplaints(sortedComplaints); // Cập nhật danh sách đã lọc
+      setFilteredComplaints(sortedComplaints);
       updateStats(sortedComplaints);
     } catch (error) {
       openNotificationWithError(`Error fetching complaints: ${error.response?.data || error.message}`);
@@ -67,25 +71,25 @@ const ViolationComplaint = () => {
 
   const handleStatusChange = async (violationId, newStatus) => {
     try {
-        const response = await axios.put(
-            `${base_url}/api/violation_complaints/${violationId}/status`,
-            null,
-            { params: { newStatus }, withCredentials: true }
+      const response = await axios.put(
+        `${base_url}/api/violation_complaints/${violationId}/status`,
+        null,
+        { params: { newStatus }, withCredentials: true }
+      );
+
+      if (response.data.status === 'SUCCESS') {
+        setComplaints((prevComplaints) =>
+          prevComplaints.map((complaint) =>
+            complaint.id === violationId ? { ...complaint, status: newStatus } : complaint
+          )
         );
 
-        if (response.data.status === 'SUCCESS') {
-            setComplaints((prevComplaints) =>
-                prevComplaints.map((complaint) =>
-                    complaint.id === violationId ? { ...complaint, status: newStatus } : complaint
-                )
-            );
-
-            openNotificationWithSuccess(response.data.message);
-        } else {
-            openNotificationWithError(response.data.message || 'Failed to update status.');
-        }
+        openNotificationWithSuccess(response.data.message);
+      } else {
+        openNotificationWithError(response.data.message || 'Failed to update status.');
+      }
     } catch (error) {
-        openNotificationWithError(`${error.response?.data?.message || error.message}`);
+      openNotificationWithError(`${error.response?.data?.message || error.message}`);
     }
   };
 
@@ -113,6 +117,15 @@ const ViolationComplaint = () => {
     if (violationTypeFilter) {
       filtered = filtered.filter(complaint => complaint.violation?.violationType?.type === violationTypeFilter);
     }
+    if (dateFilter) {
+      filtered = filtered.filter(complaint => new Date(complaint.createdAt).toISOString().split('T')[0] === dateFilter);
+    }
+    if (searchFilter) {
+      filtered = filtered.filter(complaint => 
+        complaint.employee?.fullname.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        complaint.employee?.empCode.toLowerCase().includes(searchFilter.toLowerCase())
+      );
+    }
 
     setFilteredComplaints(filtered);
   };
@@ -123,15 +136,14 @@ const ViolationComplaint = () => {
 
   useEffect(() => {
     handleFilterChange();
-  }, [statusFilter, employeeFilter, violationTypeFilter]); 
-
+  }, [statusFilter, employeeFilter, violationTypeFilter, dateFilter, searchFilter]);
 
   const handleDescriptionClick = (description) => {
-    setSelectedDescription(description); 
-    setVisibleModal(true); 
+    setSelectedDescription(description);
+    setVisibleModal(true);
   };
 
-  const userElements = complaints.map((item, index) => ({
+  const userElements = filteredComplaints.map((item, index) => ({
     key: index,
     id: item.id,
     index: index + 1,
@@ -147,16 +159,16 @@ const ViolationComplaint = () => {
 
   const truncateDescription = (description) => {
     if (description.length > 25) {
-      return description.slice(0, 25) + '...'; 
+      return description.slice(0, 25) + '...';
     }
-    return description; 
+    return description;
   };
 
   const formatDateTime = (dateTime) => {
     const date = new Date(dateTime);
-    const formattedDate = date.toISOString().split('T')[0]; // Lấy phần ngày
-    const formattedTime = date.toTimeString().split(' ')[0]; // Lấy phần giờ
-    return `${formattedDate} - ${formattedTime}`; // Trả về định dạng mong muốn
+    const formattedDate = date.toISOString().split('T')[0];
+    const formattedTime = date.toTimeString().split(' ')[0];
+    return `${formattedDate} - ${formattedTime}`;
   };
 
   const columns = [
@@ -187,7 +199,7 @@ const ViolationComplaint = () => {
           style={{ color: 'green', cursor: 'pointer' }}
           onClick={() => handleDescriptionClick(record.description)}
         >
-          {truncateDescription(record.description)} {/* Sử dụng hàm cắt chuỗi */}
+          {truncateDescription(record.description)}
         </span>
       ),
     },
@@ -196,10 +208,10 @@ const ViolationComplaint = () => {
       dataIndex: "violationType",
     },
     {
-    title: "Date",
-    dataIndex: "date",
-    render: (text, record) => formatDateTime(record.date), // Sử dụng hàm định dạng ở đây
-  },
+      title: "Date",
+      dataIndex: "date",
+      render: (text, record) => formatDateTime(record.date),
+    },
     {
       title: "Status",
       dataIndex: "status",
@@ -265,51 +277,63 @@ const ViolationComplaint = () => {
 
   return (
     <>
-      <div className="page-wrapper">
-        <div className="content container-fluid">
-          {loading ? (
-            <div className="text-center w-100">
-              <div className="spinner-border" role="status">
-                <span className="sr-only">Loading...</span>
-              </div>
-            </div>
-          ) : (
-            <>
-            
+    <div className="page-wrapper">
+      <div className="content container-fluid">
+        <div className="row">
+          <div className="col-12">
+            <h3 className="page-title">Violation Complaints</h3>
+            <div className="page-header">
               <div className="row">
-                {statsData.map((data, index) => (
-                  <div className="col-md-4" key={index}>
-                    <div className="stats-info">
-                      <h6>{data.title}</h6>
-                      <h4>{data.value} <small>{data.month}</small></h4>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="row">
-                <div className="col-md-12">
-                  <div className="table-responsive">
-                    <Table
-                      columns={columns}
-                      dataSource={userElements}
-                      pagination={{ pageSize: 10 }}
+                <div className="col-sm-6">
+                  <h6 className="">Dashboard /
+                  Complaints</h6>
+                </div>
+                <div className="col-sm-6">
+                  <div className="form-group float-end">
+                    <Input
+                      placeholder="Search by employee name or code"
+                      onChange={(e) => setSearchFilter(e.target.value)}
+                      style={{ width: 200, marginRight: 10 }}
+                    />
+                    <Select
+                      placeholder="Select Status"
+                      onChange={(value) => setStatusFilter(value)}
+                      style={{ width: 120, marginRight: 10 }}
+                    >
+                      <Option value="">All</Option>
+                      <Option value="Pending">Pending</Option>
+                      <Option value="Resolved">Resolved</Option>
+                      <Option value="Resolved">Rejected</Option>
+                    </Select>
+                    <Input
+                      type="date"
+                      onChange={(e) => setDateFilter(e.target.value)}
+                      style={{ width: 150 }}
                     />
                   </div>
                 </div>
               </div>
-            </>
-          )}
+            </div>
+            <Table
+              className="table table-responsive"
+              rowKey="key"
+              columns={columns}
+              dataSource={userElements}
+              loading={loading}
+              pagination={{ pageSize: 10 }}
+            />
+          </div>
         </div>
       </div>
-
       <Modal
-        title="Describe your complaint in detail: "
+        title="Description"
         visible={visibleModal}
         onCancel={() => setVisibleModal(false)}
         footer={null}
       >
         <p>{selectedDescription}</p>
       </Modal>
+      </div>
     </>
   );
 };

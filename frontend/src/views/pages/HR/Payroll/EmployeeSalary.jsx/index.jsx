@@ -6,7 +6,6 @@ import { Table, Button } from "antd";
 import Breadcrumbs from "../../../../../components/Breadcrumbs";
 import AddSalaryModal from "../../../../../components/modelpopup/AddSalaryModal";
 import EditSalaryModal from "../../../../../components/modelpopup/EditSalaryModal";
-import DeleteModal from "../../../../../components/modelpopup/deletePopup";
 import { base_url } from "../../../../../base_urls";
 
 const EmployeeSalary = () => {

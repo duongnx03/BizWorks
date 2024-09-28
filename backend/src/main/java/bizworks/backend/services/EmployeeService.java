@@ -61,6 +61,10 @@ public class EmployeeService {
         return employeeRepository.findByUser_RoleIn(roles);
     }
 
+    public List<Employee> getAllEmployeesWithoutEndDate() {
+        return employeeRepository.findByEndDateIsNull();
+    }
+
     // Tìm tất cả nhân viên theo vai trò
     public List<Employee> findByRole(String role) {
         return employeeRepository.findByUser_Role(role);

@@ -131,7 +131,7 @@ public class EmployeeController {
                     employees = employeeService.findByRoleIn(List.of("MANAGE", "LEADER", "EMPLOYEE"));
                     break;
                 case "MANAGE":
-                    employees = employeeService.findByRoleIn(List.of("LEADER", "EMPLOYEE"));
+                    employees = employeeService.findByRoleIn(List.of("MANAGE","LEADER", "EMPLOYEE"));
                     break;
                 case "LEADER":
                     employees = employeeService.findByRole("EMPLOYEE");
@@ -146,4 +146,22 @@ public class EmployeeController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
         }
     }
+
+    @GetMapping("/getAllEmployeesWithoutEndDate")
+    public ResponseEntity<ApiResponse<?>> getAllEmployeesWithoutEndDate() {
+        try {
+            List<Employee> employees = employeeService.getAllEmployeesWithoutEndDate();
+            if (employees.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.notfound(null, "No employees found without end date"));
+            }
+            List<EmployeeResponseDTO> employeeDTOs = employees.stream()
+                    .map(employeeService::convertToDTO)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(employeeDTOs, "Get employees without end date successfully"));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.errorServer(ex.getMessage(), "ERROR_SERVER"));
+        }
+    }
+
 }
