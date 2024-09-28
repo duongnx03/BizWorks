@@ -152,7 +152,7 @@ const LeaveRequestsEmployee = () => {
   const canUpdateRequest = (request) => {
     return  request.status === 'Pending' && 
             request.leaderStatus !== 'Approved' &&
-           (new Date() - new Date(request.createdAt)) / (1000 * 60) <= 60;
+           (new Date() - new Date(request.createdAt)) / (1000 * 60) <= 5;
   };
 
   const handleOpenUpdateModal = (leaveRequest) => {
@@ -190,15 +190,13 @@ const LeaveRequestsEmployee = () => {
   };
 
   const checkDateOverlap = (currentRequestId, newStartDate, newEndDate) => {
-    let invalidStartDate = null; // Khởi tạo biến để lưu ngày không hợp lệ
+    let invalidStartDate = null; 
     leaveRequests.forEach(request => {
         const requestStart = new Date(request.startDate);
         const requestEnd = new Date(request.endDate);
-        // Chỉ kiểm tra yêu cầu khác ngoài yêu cầu hiện tại
         if (request.id !== currentRequestId && newStartDate <= requestEnd && newEndDate >= requestStart) {
-            // Nếu ngày mới trùng với yêu cầu hiện có
             if (!invalidStartDate || requestEnd > invalidStartDate) {
-                invalidStartDate = requestEnd; // Cập nhật ngày không hợp lệ
+                invalidStartDate = requestEnd; 
             }
         }
     });
@@ -439,7 +437,6 @@ const LeaveRequestsEmployee = () => {
                       const newStartDate = e.target.value;
                       setSelectedLeaveRequest({...selectedLeaveRequest, startDate: newStartDate});
                     }}
-                    // onChange={(e) => setSelectedLeaveRequest({...selectedLeaveRequest, startDate: e.target.value})}
                     max={selectedLeaveRequest.endDate.split('T')[0]}
                     style={styles.input} 
                   />
@@ -456,7 +453,6 @@ const LeaveRequestsEmployee = () => {
                       const newEndDate = e.target.value;
                       setSelectedLeaveRequest({...selectedLeaveRequest, endDate: newEndDate});
                     }}
-                    // onChange={(e) => setSelectedLeaveRequest({...selectedLeaveRequest, endDate: e.target.value})}
                     min={selectedLeaveRequest.startDate.split('T')[0]}
 
                     style={styles.input} 
@@ -491,7 +487,6 @@ const LeaveRequestsEmployee = () => {
                   backgroundColor: '#f8f9fa',
                   borderRadius: '5px',
                   boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                  // position: 'sticky',
                   top: '0',
                   zIndex: '1000'
                 }}

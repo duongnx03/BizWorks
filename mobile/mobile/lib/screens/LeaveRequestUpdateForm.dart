@@ -46,8 +46,8 @@ class _LeaveRequestUpdateFormState extends State<LeaveRequestUpdateForm> {
   }
 
   bool _validateDates() {
-    final startDate = DateTime.parse(_startDateController.text);
-    final endDate = DateTime.parse(_endDateController.text);
+    DateTime startDate = DateTime.parse(_startDateController.text);
+    DateTime endDate = DateTime.parse(_endDateController.text);
 
     if (endDate.isBefore(startDate)) {
       setState(() {
@@ -58,21 +58,28 @@ class _LeaveRequestUpdateFormState extends State<LeaveRequestUpdateForm> {
 
     final leaveRequestsProvider = Provider.of<LeaveRequestProvider>(context, listen: false);
     final conflictingRequests = leaveRequestsProvider.getApprovedOrPendingRequests().where((request) {
-      return request.id != widget.leaveRequest.id && 
+      return request.id != widget.leaveRequest.id &&
           !(endDate.isBefore(request.startDate) || startDate.isAfter(request.endDate));
     }).toList();
 
     if (conflictingRequests.isNotEmpty) {
-      final conflictingDates = conflictingRequests.map((request) {
-        return "${request.startDate.toLocal().toString().split(' ')[0]} - ${request.endDate.toLocal().toString().split(' ')[0]}";
-      }).join(", ");
+      final nextAvailableDate = conflictingRequests.map((request) => request.endDate).reduce((a, b) => a.isAfter(b) ? a : b).add(Duration(days: 1));
+      _startDateController.text = nextAvailableDate.toLocal().toString().split(' ')[0];
       setState(() {
-        _errorMessage = "Date conflict with existing requests: $conflictingDates";
+        _errorMessage = "You can only request leave from: ${_startDateController.text}.";
       });
       return false;
     }
 
     return true;
+  }
+
+  bool _canUpdate() {
+    final createdAt = widget.leaveRequest.createdAt;
+    final currentTime = DateTime.now();
+    final diffInMinutes = currentTime.difference(createdAt).inMinutes;
+
+    return diffInMinutes <= 5;
   }
 
   void _updateLeaveRequest() async {
@@ -84,6 +91,7 @@ class _LeaveRequestUpdateFormState extends State<LeaveRequestUpdateForm> {
         startDate: DateTime.parse(_startDateController.text),
         endDate: DateTime.parse(_endDateController.text),
         leaveType: _selectedLeaveType,
+        createdAt: widget.leaveRequest.createdAt,
         reason: _reasonController.text,
         status: widget.leaveRequest.status,
         employeeName: widget.leaveRequest.employeeName,
@@ -110,7 +118,7 @@ class _LeaveRequestUpdateFormState extends State<LeaveRequestUpdateForm> {
         }
 
         await leaveRequestsProvider.updateLeaveRequest(widget.leaveRequest.id, updatedLeaveRequest);
-        Navigator.of(context).pop(true); 
+        Navigator.of(context).pop(true);
       } catch (e) {
         setState(() {
           _errorMessage = "Error updating leave request: ${e.toString()}";
@@ -192,10 +200,11 @@ class _LeaveRequestUpdateFormState extends State<LeaveRequestUpdateForm> {
               },
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _updateLeaveRequest,
-              child: Text('Update Leave Request'),
-            ),
+            if (_canUpdate())
+              ElevatedButton(
+                onPressed: _updateLeaveRequest,
+                child: Text('Update Leave Request'),
+              ),
           ],
         ),
       ),

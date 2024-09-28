@@ -93,6 +93,7 @@ bool _validateForm() {
         startDate: DateTime.parse(_startDateController.text),
         endDate: DateTime.parse(_endDateController.text),
         leaveType: _selectedLeaveType!,
+        createdAt: DateTime.now(),
         reason: _reasonController.text,
         status: 'Pending',
         employeeName: '',

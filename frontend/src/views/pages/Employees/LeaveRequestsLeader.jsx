@@ -17,14 +17,14 @@ const LeaveRequestsLeader = () => {
     endDate: '',
     leaveType: '',
     employeeName: '',
-    leaderStatus: ''
+    status: ''
   });
 
   const [employeeStatistics, setEmployeeStatistics] = useState([]);
   const [leaveTypeStatistics, setLeaveTypeStatistics] = useState([]);
 
   const leaveTypes = ["SICK", "MATERNITY", "PERSONAL", "BEREAVEMENT", "MARRIAGE", "CIVIC_DUTY", "OTHER"];
-  const leaderStatuses = ["Pending", "Approved", "Rejected"];
+  const statuses  = ["Pending", "Approved", "Rejected"];
 
   useEffect(() => {
     fetchLeaveRequests();
@@ -66,7 +66,7 @@ const LeaveRequestsLeader = () => {
     if (searchCriteria.endDate) criteria.endDate = searchCriteria.endDate;
     if (searchCriteria.leaveType) criteria.leaveType = searchCriteria.leaveType;
     if (searchCriteria.employeeName) criteria.employeeName = searchCriteria.employeeName;
-    if (searchCriteria.leaderStatus) criteria.status = searchCriteria.leaderStatus;
+    if (searchCriteria.status) criteria.status = searchCriteria.status;
   
     try {
       const response = await axios.post('http://localhost:8080/api/leave-requests/leader/search', criteria, { withCredentials: true });
@@ -124,11 +124,7 @@ const LeaveRequestsLeader = () => {
         if (request.status === 'Pending' && !request.leaderStatus) {
             return <span style={{ color: 'orange' }}>Pending</span>;
         } 
-        // else if(request.status === 'Rejected'){
-        //     return <span style={{ color: 'red' }}>Rejected</span>;
-        // } else if(request.status === 'Approved'){
-        //     return <span style={{ color: 'green' }}>Approved</span>;
-        // }
+      
          else if (request.leaderStatus === 'Rejected') {
             return <span style={{ color: 'red' }}>Rejected</span>;
         } else if (request.leaderStatus === 'Approved' && request.status === 'Approved') {
@@ -136,9 +132,25 @@ const LeaveRequestsLeader = () => {
         } else if (request.leaderStatus === 'Approved' && request.status === 'Pending') {
             return <span style={{ color: 'purple ' }}>Pending A</span>;
         } else if (request.leaderStatus === 'Approved' && request.status === 'Rejected') {
-            return <span style={{ color: 'red ' }}>Reject A</span>;
+            return <span style={{ color: 'red ' }}>Rejected</span>;
         }
         return <span>{request.status}</span>;
+    };
+
+    const filterLeaveRequests = (requests) => {
+      return requests.filter(request => {
+        if (!searchCriteria.status) return true;
+        if (searchCriteria.status === 'Approved') {
+          return request.leaderStatus === 'Approved' && request.status === 'Approved';
+        }
+        if (searchCriteria.status === 'Rejected') {
+          return request.status === 'Rejected';
+        }
+        if (searchCriteria.status === 'Pending') {
+          return request.status === 'Pending' || (request.leaderStatus === 'Approved' && request.status === 'Pending');
+        }
+        return true;
+      });
     };
 
   const fetchStatistics = async (criteria = {}) => {
@@ -223,12 +235,12 @@ const LeaveRequestsLeader = () => {
                     <option value="">Select Leave Type</option>
                     {leaveTypes.map(type => (<option key={type} value={type}>{type}</option>))}
                   </select>
-                  
-                  <select name="leaderStatus" value={searchCriteria.leaderStatus} onChange={handleSearchChange} style={{ padding: '10px', border: '1px solid #ced4da', borderRadius: '5px' }}>
+
+                  <select name="status" value={searchCriteria.status} onChange={handleSearchChange} style={{ padding: '10px', border: '1px solid #ced4da', borderRadius: '5px' }}>
                     <option value="">Select Status</option>
-                    {leaderStatuses.map(leaderStatus => (<option key={leaderStatus} value={leaderStatus}>{leaderStatus}</option>))}
+                    {statuses.map(status => (<option key={status} value={status}>{status}</option>))}
                   </select>
-                  
+
                   <input type="text" name="employeeName" placeholder="Employee Name" value={searchCriteria.employeeName} onChange={handleSearchChange} style={{ padding: '10px', border: '1px solid #ced4da', borderRadius: '5px', minWidth: '200px' }} />
                   
                   <button onClick={handleSearch} className="btn btn-primary" style={{ padding: '10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
@@ -271,14 +283,14 @@ const LeaveRequestsLeader = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {leaveRequests
-                    .sort((a, b) => {
-                      const statusOrder = { 'Pending': 1, 'Approved': 2, 'Rejected': 3 };
-                      if (statusOrder[a.leaderStatus] !== statusOrder[b.leaderStatus]) {
-                        return statusOrder[a.leaderStatus] - statusOrder[b.leaderStatus];
-                      }
-                      return new Date(b.startDate) - new Date(a.startDate);
-                    })
+                  {filterLeaveRequests(leaveRequests)
+                      .sort((a, b) => {
+                        const statusOrder = { 'Pending': 1, 'Approved': 2, 'Rejected': 3 };
+                        if (statusOrder[a.status] !== statusOrder[b.status]) {
+                          return statusOrder[a.status] - statusOrder[b.status];
+                        }
+                        return new Date(b.startDate) - new Date(a.startDate);
+                      })
                     .map(request => (
                       <tr key={request.id}>
                         <td>{request.employeeName || 'Unknown Employee'}</td>
@@ -353,7 +365,7 @@ const LeaveRequestsLeader = () => {
                   </tr>
                 </tbody>
               </table>
-              {!selectedRequest.isActionTaken && selectedRequest.status === 'Pending' && (
+              {selectedRequest.status === 'Pending' && selectedRequest.leaderStatus !== 'Approved' && (
                 <div style={{ textAlign: 'center', marginTop: '20px' }}>
                   <button  onClick={() => handleApprove(selectedRequest.id)} className="btn btn-success" style={{ marginRight: '10px' }}>
                     Approve

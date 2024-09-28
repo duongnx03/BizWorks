@@ -5,6 +5,7 @@ class LeaveRequestDTO {
   late final DateTime startDate;
   late final DateTime endDate;
   late final LeaveType leaveType;
+  late final DateTime createdAt;
   late final String reason;
   late final String status;
   final String employeeName;
@@ -15,6 +16,7 @@ class LeaveRequestDTO {
     required this.startDate,
     required this.endDate,
     required this.leaveType,
+    required this.createdAt, // Sửa từ CreateAt thành createdAt
     required this.reason,
     required this.status,
     required this.employeeName,
@@ -27,6 +29,7 @@ class LeaveRequestDTO {
       startDate: DateTime.parse(json['startDate']),
       endDate: DateTime.parse(json['endDate']),
       leaveType: LeaveType.values.firstWhere((e) => e.toString() == 'LeaveType.${json['leaveType']}'),
+      createdAt: DateTime.parse(json['createdAt']), // Sửa từ createAt thành createdAt
       reason: json['reason'],
       status: json['status'],
       employeeName: json['employeeName'],
@@ -40,6 +43,7 @@ class LeaveRequestDTO {
       'startDate': startDate.toIso8601String(),
       'endDate': endDate.toIso8601String(),
       'leaveType': leaveType.toString().split('.').last,
+      'createdAt': createdAt.toIso8601String(), // Sửa từ createAt thành createdAt
       'reason': reason,
       'status': status,
       'employeeName': employeeName,
